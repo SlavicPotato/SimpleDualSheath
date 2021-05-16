@@ -1,0 +1,121 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\SDS">
+      <UniqueIdentifier>{054743b6-70d2-4ab5-9918-cc811733c90c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\SDS\Util">
+      <UniqueIdentifier>{1dec215e-daeb-45e4-9eaa-d763f6f8b1dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\SDS">
+      <UniqueIdentifier>{bcb555f6-5b9e-41a4-94c4-6629ece96b93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\SDS\Util">
+      <UniqueIdentifier>{ed6884a4-2d0a-4ea0-bf79-edc5b5c7b6c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\SDS\Events">
+      <UniqueIdentifier>{5d7740d6-c392-4f6a-9688-0788af48be8b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
+    <None Include="exports.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="plugin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="skse.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SDS\Util\Common.h">
+      <Filter>Header Files\SDS\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="SDS\Util\Node.h">
+      <Filter>Header Files\SDS\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="SDS\Util\Task.h">
+      <Filter>Header Files\SDS\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="SDS\Data.h">
+      <Filter>Header Files\SDS</Filter>
+    </ClInclude>
+    <ClInclude Include="SDS\StringHolder.h">
+      <Filter>Header Files\SDS</Filter>
+    </ClInclude>
+    <ClInclude Include="SDS\Controller.h">
+      <Filter>Header Files\SDS</Filter>
+    </ClInclude>
+    <ClInclude Include="SDS\Config.h">
+      <Filter>Header Files\SDS</Filter>
+    </ClInclude>
+    <ClInclude Include="SDS\Main.h">
+      <Filter>Header Files\SDS</Filter>
+    </ClInclude>
+    <ClInclude Include="SDS\Events\Dispatcher.h">
+      <Filter>Header Files\SDS\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="SDS\Events\CreateWeaponNodesEvent.h">
+      <Filter>Header Files\SDS\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="SDS\EngineExtensions.h">
+      <Filter>Header Files\SDS</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="skse.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SDS\Util\Common.cpp">
+      <Filter>Source Files\SDS\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="SDS\Util\Node.cpp">
+      <Filter>Source Files\SDS\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="SDS\Util\Task.cpp">
+      <Filter>Source Files\SDS\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="SDS\Data.cpp">
+      <Filter>Source Files\SDS</Filter>
+    </ClCompile>
+    <ClCompile Include="SDS\StringHolder.cpp">
+      <Filter>Source Files\SDS</Filter>
+    </ClCompile>
+    <ClCompile Include="SDS\Controller.cpp">
+      <Filter>Source Files\SDS</Filter>
+    </ClCompile>
+    <ClCompile Include="SDS\Config.cpp">
+      <Filter>Source Files\SDS</Filter>
+    </ClCompile>
+    <ClCompile Include="SDS\Main.cpp">
+      <Filter>Source Files\SDS</Filter>
+    </ClCompile>
+    <ClCompile Include="SDS\EngineExtensions.cpp">
+      <Filter>Source Files\SDS</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

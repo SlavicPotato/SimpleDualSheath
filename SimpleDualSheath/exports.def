@@ -1,0 +1,4 @@
+LIBRARY "SimpleDualSheath"
+EXPORTS
+    SKSEPlugin_Query
+    SKSEPlugin_Load
