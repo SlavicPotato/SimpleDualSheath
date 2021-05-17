@@ -167,6 +167,7 @@
       <ForcedIncludeFiles>common/IPrefix.h</ForcedIncludeFiles>
       <UseFullPaths>false</UseFullPaths>
       <BufferSecurityCheck>false</BufferSecurityCheck>
+      <StringPooling>true</StringPooling>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -186,6 +187,7 @@
   <ItemGroup>
     <None Include="cpp.hint" />
     <None Include="exports.def" />
+    <None Include="SimpleDualSheath.ini" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -200,6 +202,7 @@
     <ClInclude Include="SDS\Main.h" />
     <ClInclude Include="SDS\StringHolder.h" />
     <ClInclude Include="SDS\Util\Common.h" />
+    <ClInclude Include="SDS\Util\Logging.h" />
     <ClInclude Include="SDS\Util\Node.h" />
     <ClInclude Include="SDS\Util\Task.h" />
     <ClInclude Include="skse.h" />
@@ -220,6 +223,7 @@
     <ClCompile Include="SDS\Main.cpp" />
     <ClCompile Include="SDS\StringHolder.cpp" />
     <ClCompile Include="SDS\Util\Common.cpp" />
+    <ClCompile Include="SDS\Util\Logging.cpp" />
     <ClCompile Include="SDS\Util\Node.cpp" />
     <ClCompile Include="SDS\Util\Task.cpp" />
     <ClCompile Include="skse.cpp" />

@@ -8,12 +8,14 @@
 
 namespace SDS
 {
-    class EngineExtensions
+    class EngineExtensions : ILog
     {
     public:
 
         static void Initialize(const std::shared_ptr<Controller>& a_controller);
         static bool ValidateMemory(const Controller* a_controller);
+
+        FN_NAMEPROC("EngineExtensions");
 
     private:
         EngineExtensions(const std::shared_ptr<Controller>& a_controller);
@@ -27,7 +29,7 @@ namespace SDS
         decltype(CreateWeaponNodes_Hook)* m_createWeaponNodes_o;
         static NiAVObject* CreateArmorNode_Hook(NiAVObject* a_obj, Biped* a_info, BipedParam* a_params);
 
-        static NiNode* GetScbAttachmentNode(TESObjectREFR* a_actor, TESForm* a_form, NiAVObject* a_sheatheNode, bool a_checkEquippedLeft);
+        static NiNode* GetScbAttachmentNode_Hook(TESObjectREFR* a_actor, TESForm* a_form, NiAVObject* a_sheatheNode, bool a_checkEquippedLeft);
 
         struct
         {

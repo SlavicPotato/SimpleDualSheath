@@ -19,16 +19,16 @@ namespace SDS
 
         auto& config = a_controller->GetConfig();
 
-        if ((config.m_shield & Data::Flags::kEnabled) != Data::Flags::kNone)
-        {
-            Patch_CreateArmorNode();
-            m_dispatchers.m_createArmorNode.AddSink(a_controller.get());
-        }
-
         if (config.m_scb)
         {
             Patch_SCB_Attach();
             Patch_SCB_Detach();
+        }
+
+        if ((config.m_shield & Data::Flags::kEnabled) != Data::Flags::kNone)
+        {
+            Patch_CreateArmorNode();
+            m_dispatchers.m_createArmorNode.AddSink(a_controller.get());
         }
 
         m_dispatchers.m_createWeaponNodes.AddSink(a_controller.get());
@@ -58,8 +58,9 @@ namespace SDS
 
         if ((config.m_shield & Data::Flags::kEnabled) != Data::Flags::kNone)
         {
-            constexpr std::uint8_t d_createArmorNodev1[]{ 0x48, 0x85, 0xC0, 0x74, 0x0D };
-            constexpr std::uint8_t d_createArmorNodev2[]{ 0xE9 };
+            constexpr std::uint8_t 
+                d_createArmorNodev1[]{ 0x48, 0x85, 0xC0, 0x74, 0x0D }, 
+                d_createArmorNodev2[]{ 0xE9 };
 
             if (!validate_mem(m_createArmorNode_a, d_createArmorNodev1) && 
                 !validate_mem(m_createArmorNode_a, d_createArmorNodev2)) 
@@ -101,10 +102,13 @@ namespace SDS
             }
         };
 
-        Assembly code(m_createWeaponNodes_a);
-        m_createWeaponNodes_o = code.get<decltype(m_createWeaponNodes_o)>();
-
-        ISKSE::GetBranchTrampoline().Write6Branch(m_createWeaponNodes_a, std::uintptr_t(CreateWeaponNodes_Hook));
+        LogPatchBegin("CreateWeaponNodes");
+        {
+            Assembly code(m_createWeaponNodes_a);
+            m_createWeaponNodes_o = code.get<decltype(m_createWeaponNodes_o)>();
+            ISKSE::GetBranchTrampoline().Write6Branch(m_createWeaponNodes_a, std::uintptr_t(CreateWeaponNodes_Hook));
+        }
+        LogPatchEnd("CreateWeaponNodes");
     }
 
     void EngineExtensions::Patch_CreateArmorNode()
@@ -154,15 +158,18 @@ namespace SDS
             }
         };
 
-        std::uintptr_t jmpAddr;
-        bool chain = ::Hook::GetDst5<0xE9>(m_createArmorNode_a, jmpAddr); // if cbp already hooked here
-        if (!chain) {
-            jmpAddr = m_createArmorNode_a;
+        LogPatchBegin("CreateArmorNode");
+        {
+            std::uintptr_t jmpAddr;
+            bool chain = ::Hook::GetDst5<0xE9>(m_createArmorNode_a, jmpAddr); // if cbp already hooked here
+            if (!chain) {
+                jmpAddr = m_createArmorNode_a;
+            }
+
+            Assembly code(jmpAddr, chain);
+            ISKSE::GetBranchTrampoline().Write5Branch(m_createArmorNode_a, code.get());
         }
-
-        Assembly code(jmpAddr, chain);
-        ISKSE::GetBranchTrampoline().Write5Branch(m_createArmorNode_a, code.get());
-
+        LogPatchEnd("CreateArmorNode");
     }
 
     void EngineExtensions::Patch_SCB_Attach()
@@ -203,7 +210,7 @@ namespace SDS
 
                 test(rdx, rdx);
                 je(skip);
-                mov(rsi, rdx); // rsi: should be unused after scb is attached
+                mov(rsi, rdx); // rsi: not used after scb is attached
 
                 L(cont);
                 jmp(ptr[rip + exitContinue]);
@@ -218,12 +225,16 @@ namespace SDS
                 dq(targetAddr + 0x24);
 
                 L(callLabel);
-                dq(std::uintptr_t(GetScbAttachmentNode));
+                dq(std::uintptr_t(GetScbAttachmentNode_Hook));
             }
         };
 
-        Assembly code(m_scbAttach_a);
-        ISKSE::GetBranchTrampoline().Write6Branch(m_scbAttach_a, code.get());
+        LogPatchBegin("SCB_Attach");
+        {
+            Assembly code(m_scbAttach_a);
+            ISKSE::GetBranchTrampoline().Write6Branch(m_scbAttach_a, code.get());
+        }
+        LogPatchEnd("SCB_Attach");
     }
 
     void EngineExtensions::Patch_SCB_Detach()
@@ -265,12 +276,16 @@ namespace SDS
                 dq(targetAddr + 0x6);
 
                 L(callLabel);
-                dq(std::uintptr_t(GetScbAttachmentNode));
+                dq(std::uintptr_t(GetScbAttachmentNode_Hook));
             }
         };
 
-        Assembly code(m_scbDetach_a);
-        ISKSE::GetBranchTrampoline().Write6Branch(m_scbDetach_a, code.get());
+        LogPatchBegin("SCB_Detach");
+        {
+            Assembly code(m_scbDetach_a);
+            ISKSE::GetBranchTrampoline().Write6Branch(m_scbDetach_a, code.get());
+        }
+        LogPatchEnd("SCB_Detach");
     }
 
     void EngineExtensions::CreateWeaponNodes_Hook(
@@ -306,7 +321,7 @@ namespace SDS
         return a_obj;
     }
 
-    NiNode* EngineExtensions::GetScbAttachmentNode(
+    NiNode* EngineExtensions::GetScbAttachmentNode_Hook(
         TESObjectREFR* a_actor,
         TESForm* a_form,
         NiAVObject* a_sheatheNode,

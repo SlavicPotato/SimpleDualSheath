@@ -56,7 +56,7 @@ namespace SDS
 
         FlagParser flagParser;
 
-        m_scb = reader.Get("General", "ShowLeftWeaponHolster", true);
+        m_scb = reader.Get("General", "EnableLeftScabbards", true);
 
         m_sword = flagParser.Parse(reader.Get("Sword", "Flags", "Player|NPC"));
         m_axe = flagParser.Parse(reader.Get("Axe", "Flags", "Player|NPC"));
@@ -64,7 +64,7 @@ namespace SDS
         m_dagger = flagParser.Parse(reader.Get("Dagger", "Flags", "Player|NPC"));
         m_staff = flagParser.Parse(reader.Get("Staff", "Flags", "Player|NPC|Right"), true);
 
-        m_shield = flagParser.Parse(reader.Get("Shield", "Flags", ""));
+        m_shield = flagParser.Parse(reader.Get("ShieldOnBack", "Flags", ""));
 
         return (m_loaded = (reader.ParseError() == 0));
     }

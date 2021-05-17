@@ -32,6 +32,7 @@
   <ItemGroup>
     <None Include="cpp.hint" />
     <None Include="exports.def" />
+    <None Include="SimpleDualSheath.ini" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -82,6 +83,9 @@
     <ClInclude Include="SDS\Events\CreateArmorNodeEvent.h">
       <Filter>Header Files\SDS\Events</Filter>
     </ClInclude>
+    <ClInclude Include="SDS\Util\Logging.h">
+      <Filter>Header Files\SDS\Util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -119,6 +123,9 @@
     </ClCompile>
     <ClCompile Include="SDS\EngineExtensions.cpp">
       <Filter>Source Files\SDS</Filter>
+    </ClCompile>
+    <ClCompile Include="SDS\Util\Logging.cpp">
+      <Filter>Source Files\SDS\Util</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

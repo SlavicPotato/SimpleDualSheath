@@ -33,7 +33,7 @@ namespace SDS
         Controller(const Config& a_conf);
 
         void InitializeData();
-        NiNode* GetScbAttachmentNode(TESObjectREFR* a_actor, TESForm* a_form, NiAVObject* a_sheatheNode, bool a_checkEquippedLeft) const;
+        [[nodiscard]] NiNode* GetScbAttachmentNode(TESObjectREFR* a_actor, TESForm* a_form, NiAVObject* a_sheatheNode, bool a_checkEquippedLeft) const;
 
         [[nodiscard]] SKMP_FORCEINLINE const auto& GetConfig() const {
             return m_conf;
@@ -47,16 +47,17 @@ namespace SDS
         void ProcessWeaponDrawnChange(Actor* a_actor, bool a_drawn) const;
         void QueueProcessWeaponDrawnChange(TESObjectREFR* a_actor, DrawnState a_drawnState) const;
 
+        [[nodiscard]] bool IsShieldAllowed(Actor* a_actor) const;
         void ProcessEquippedShield(Actor* a_actor, const Util::Node::NiRootNodes& a_roots, TESObjectARMO* a_armor, bool a_drawn) const;
         void DoProcessEquippedShield( Actor* a_actor, DrawnState a_drawnState) const;
         void QueueProcessEquippedShield(Actor* a_actor, DrawnState a_drawnState) const;
 
-        static bool GetIsDrawn(Actor* a_actor, DrawnState a_state);
+        [[nodiscard]] static bool GetIsDrawn(Actor* a_actor, DrawnState a_state);
 
         // Beth
         virtual EventResult	ReceiveEvent(TESObjectLoadedEvent* a_evn, EventDispatcher<TESObjectLoadedEvent>* a_dispatcher) override;
         virtual EventResult	ReceiveEvent(TESInitScriptEvent* a_evn, EventDispatcher<TESInitScriptEvent>* a_dispatcher) override;
-        virtual EventResult	ReceiveEvent(TESEquipEvent* evn, EventDispatcher<TESEquipEvent>* dispatcher) override;
+        virtual EventResult	ReceiveEvent(TESEquipEvent* evn, EventDispatcher<TESEquipEvent>* dispatcher) override; // shield only
 
         // SKSE
         virtual EventResult	ReceiveEvent(SKSENiNodeUpdateEvent* a_evn, EventDispatcher<SKSENiNodeUpdateEvent>* a_dispatcher) override;
@@ -65,7 +66,7 @@ namespace SDS
 
         // EngineExtensions
         virtual void Receive(const Events::CreateWeaponNodesEvent& a_evn) override;
-        virtual void Receive(const Events::CreateArmorNodeEvent& a_evn) override;
+        virtual void Receive(const Events::CreateArmorNodeEvent& a_evn) override; // shield only
 
         Config m_conf;
 

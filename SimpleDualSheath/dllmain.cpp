@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "SDS/Main.h"
+#include "SDS/Util/Logging.h"
 
 static bool Initialize(const SKSEInterface* a_skse)
 {
@@ -27,11 +28,8 @@ static bool Initialize(const SKSEInterface* a_skse)
         auto usageBranch = skse.GetTrampolineUsage(TrampolineID::kBranch);
         auto usageLocal = skse.GetTrampolineUsage(TrampolineID::kLocal);
 
-        gLog.Message("Loaded OK, trampolines: branch:[%zu/%zu] codegen:[%zu/%zu]", 
+        gLog.Message("Loaded, trampolines: branch:[%zu/%zu] codegen:[%zu/%zu]", 
             usageBranch.used, usageBranch.total, usageLocal.used, usageLocal.total);
-    }
-    else {
-        gLog.FatalError("Initialization failed");
     }
 
     return ret;
@@ -46,6 +44,8 @@ extern "C"
 
     bool SKSEPlugin_Load(const SKSEInterface* a_skse)
     {
+        using namespace SDS::Util::Logging;
+
         gLog.Message("Initializing %s version %s (runtime %u.%u.%u.%u)",
             PLUGIN_NAME, PLUGIN_VERSION_VERSTRING,
             GET_EXE_VERSION_MAJOR(a_skse->runtimeVersion),
@@ -55,8 +55,16 @@ extern "C"
 
         bool ret = Initialize(a_skse);
 
+        if (!ret)
+        {
+            AbortPopup(
+                "Plugin initialization failed\n\n"
+                "See log for more information"
+            );
+        }
+
         IAL::Release();
-        gLog.Close();
+        //gLog.Close();
 
         return ret;
     }

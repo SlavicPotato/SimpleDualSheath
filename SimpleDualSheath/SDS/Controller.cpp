@@ -99,7 +99,7 @@ namespace SDS
 
             NiPointer<NiNode> sheathedNode, drawnNode;
             if (!GetParentNodes(entry, root, a_left, sheathedNode, drawnNode)) {
-                return;
+                continue;
             }
 
             auto& sourceNode = a_drawn ? sheathedNode : drawnNode;
@@ -141,7 +141,7 @@ namespace SDS
                 if ((m_conf.m_shield & Flags::kEnabled) != Flags::kNone)
                 {
                     auto armor = static_cast<TESObjectARMO*>(form);
-                    if ((armor->flags & TESObjectARMO::kFlag_Shield) == TESObjectARMO::kFlag_Shield)
+                    if (armor->IsShield())
                     {
                         ProcessEquippedShield(a_actor, roots, armor, a_drawn);
                     }
@@ -170,23 +170,32 @@ namespace SDS
         );
     }
 
+    bool Controller::IsShieldAllowed(Actor* a_actor) const
+    {
+        if (a_actor == *g_thePlayer)
+        {
+            if ((m_conf.m_shield & Flags::kPlayer) != Flags::kPlayer) {
+                return false;
+            }
+        }
+        else
+        {
+            if ((m_conf.m_shield & Flags::kNPC) != Flags::kNPC) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     void Controller::ProcessEquippedShield(
         Actor* a_actor,
         const NiRootNodes& a_roots,
         TESObjectARMO* a_armor,
         bool a_drawn) const
     {
-        if (a_actor == *g_thePlayer)
-        {
-            if ((m_conf.m_shield & Flags::kPlayer) != Flags::kPlayer) {
-                return;
-            }
-        }
-        else
-        {
-            if ((m_conf.m_shield & Flags::kNPC) != Flags::kNPC) {
-                return;
-            }
+        if (!IsShieldAllowed(a_actor)) {
+            return;
         }
 
         for (std::size_t i = 0; i < std::size(a_roots.m_arr); i++)
@@ -203,12 +212,12 @@ namespace SDS
 
             NiPointer sheathedNode = FindNode(root, m_strings->m_shieldBack);
             if (!sheathedNode) {
-                return;
+                continue;
             }
 
             NiPointer drawnNode = FindNode(root, m_strings->m_shield);
             if (!drawnNode) {
-                return;
+                continue;
             }
 
             auto& sourceNode = a_drawn ? sheathedNode : drawnNode;
@@ -219,6 +228,7 @@ namespace SDS
             for (size_type i = 0; i < a_armor->armorAddons.count; i++)
             {
                 TESObjectARMA* arma(nullptr);
+
                 if (!a_armor->armorAddons.GetNthItem(i, arma)) {
                     continue;
                 }
@@ -230,15 +240,9 @@ namespace SDS
                 char buf[MAX_PATH];
                 arma->GetNodeName(buf, a_actor, a_armor, -1.0f);
 
-                BSFixedString nodeName(buf);
-
-                NiPointer<NiAVObject> armorNode = sourceNode->GetObjectByName(&nodeName.data);
-                if (!armorNode) {
-                    continue;
+                if (NiPointer armorNode = GetNiObject(sourceNode, buf); armorNode) {
+                    AttachToNode(armorNode, targetNode);
                 }
-
-                AttachToNode(armorNode, targetNode);
-
             }
         }
     }
@@ -263,7 +267,7 @@ namespace SDS
 
         auto armor = static_cast<TESObjectARMO*>(form);
 
-        if ((armor->flags & TESObjectARMO::kFlag_Shield) == TESObjectARMO::kFlag_Shield)
+        if (armor->IsShield())
         {
             ProcessEquippedShield(a_actor, a_actor, armor, GetIsDrawn(a_actor, a_drawnState));
         }
@@ -285,7 +289,7 @@ namespace SDS
         TESForm* a_form,
         NiAVObject* a_sheatheNode,
         bool a_checkEquippedLeft) const
-    {        
+    {
         auto actor = static_cast<Actor*>(a_actor);
 
         if (a_checkEquippedLeft)
@@ -368,7 +372,7 @@ namespace SDS
     auto Controller::ReceiveEvent(TESEquipEvent* a_evn, EventDispatcher<TESEquipEvent>*)
         -> EventResult
     {
-        if (a_evn && a_evn->equipped && a_evn->actor != nullptr)
+        if (a_evn && a_evn->equipped && a_evn->actor)
         {
             if (a_evn->actor->formType == Actor::kTypeID)
             {
@@ -376,8 +380,7 @@ namespace SDS
                 if (form && form->formType == TESObjectARMO::kTypeID)
                 {
                     auto armor = static_cast<TESObjectARMO*>(form);
-
-                    if ((armor->flags & TESObjectARMO::kFlag_Shield) == TESObjectARMO::kFlag_Shield)
+                    if (armor->IsShield())
                     {
                         QueueProcessEquippedShield(static_cast<Actor*>(a_evn->actor.get()), DrawnState::Determine);
                     }
