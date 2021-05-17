@@ -11,7 +11,7 @@ namespace SDS
     {
         {"NPC", {Flags::kNPC, false}},
         {"Player", {Flags::kPlayer, false}},
-        {"NoFirstPerson", {Flags::kNoFirstPerson, false}},
+        {"FirstPerson", {Flags::kFirstPerson, false}},
         {"Right", {Flags::kRight, true}},
         {"Swap", {Flags::kSwap, true}}
     }
@@ -45,14 +45,18 @@ namespace SDS
 
     }
 
+    Config::Config(const std::string& a_path)
+    {
+        Load(a_path);
+    }
+
     bool Config::Load(const std::string& a_path)
     {
-        INIReader reader;
-
-        reader.Load(a_path);
-        bool ret = reader.ParseError() == 0;
+        INIReader reader(a_path);
 
         FlagParser flagParser;
+
+        m_scb = reader.Get("General", "ShowLeftWeaponHolster", true);
 
         m_sword = flagParser.Parse(reader.Get("Sword", "Flags", "Player|NPC"));
         m_axe = flagParser.Parse(reader.Get("Axe", "Flags", "Player|NPC"));
@@ -60,9 +64,9 @@ namespace SDS
         m_dagger = flagParser.Parse(reader.Get("Dagger", "Flags", "Player|NPC"));
         m_staff = flagParser.Parse(reader.Get("Staff", "Flags", "Player|NPC|Right"), true);
 
-        m_scb = reader.Get("General", "ShowLeftWeaponHolster", true);
+        m_shield = flagParser.Parse(reader.Get("Shield", "Flags", ""));
 
-        return ret;
+        return (m_loaded = (reader.ParseError() == 0));
     }
 
 }

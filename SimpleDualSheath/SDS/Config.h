@@ -24,15 +24,23 @@ namespace SDS
     public:
 
         Config() = default;
+        Config(const std::string& a_path);
 
         bool Load(const std::string& a_path);
+        SKMP_FORCEINLINE bool IsLoaded() const {
+            return m_loaded;
+        }
 
-        Data::Flags m_sword{ Data::Flags::kNone };
-        Data::Flags m_axe{ Data::Flags::kNone };
-        Data::Flags m_mace{ Data::Flags::kNone };
-        Data::Flags m_dagger{ Data::Flags::kNone };
-        Data::Flags m_staff{ Data::Flags::kNone };
+        Data::Flags m_sword;
+        Data::Flags m_axe;
+        Data::Flags m_mace;
+        Data::Flags m_dagger;
+        Data::Flags m_staff;
+        bool m_scb;
 
-        bool m_scb{ true };
+        Data::Flags m_shield;
+    private:
+
+        bool m_loaded{ false };
     };
 }

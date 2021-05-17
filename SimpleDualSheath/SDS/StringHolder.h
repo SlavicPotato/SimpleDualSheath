@@ -21,10 +21,14 @@ namespace SDS
         static inline constexpr auto NINODE_STAFF = "WeaponStaff";
         static inline constexpr auto NINODE_STAFF_LEFT = "WeaponStaffLeft";
 
+        static inline constexpr auto NINODE_SHIELD_BACK = "ShieldBack";
+
         static inline constexpr auto NINODE_SHIELD = "SHIELD";
         static inline constexpr auto NINODE_WEAPON = "WEAPON";
 
         StringHolder();
+
+        BSFixedString m_shieldBack;
 
         BSFixedString m_shield;
         BSFixedString m_weapon;

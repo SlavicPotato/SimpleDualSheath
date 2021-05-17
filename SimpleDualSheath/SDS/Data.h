@@ -12,7 +12,7 @@ namespace SDS
             kPlayer = 1u << 1,
             kRight = 1u << 2,
             kSwap = 1u << 3,
-            kNoFirstPerson = 1u << 4,
+            kFirstPerson = 1u << 4,
 
             kEnabled = (kPlayer | kNPC)
         };

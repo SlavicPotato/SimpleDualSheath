@@ -8,19 +8,18 @@ namespace SDS
     {
         namespace Node
         {
-            void GetNiObject(
-                const BSFixedString& a_name,
+            NiAVObject* GetNiObject(
                 NiNode* a_root,
-                NiPointer<NiAVObject>& a_result)
+                const BSFixedString& a_name)
             {
-                a_result = a_root->GetObjectByName(std::addressof(a_name.data));
+                return a_root->GetObjectByName(std::addressof(a_name.data));
             }
 
             NiNode* FindNode(
                 NiNode* a_root,
                 const BSFixedString& a_name)
             {
-                auto object = a_root->GetObjectByName(std::addressof(a_name.data));
+                auto object = GetNiObject(a_root, a_name);
                 if (!object) {
                     return nullptr;
                 }
@@ -39,6 +38,13 @@ namespace SDS
                     a_node->AttachChild(a_object, true);
                 }
             }
+            
+            void ClearCull(NiAVObject* a_object)
+            {
+                if ((a_object->m_flags & NiAVObject::kFlag_Cull) == NiAVObject::kFlag_Cull) {
+                    a_object->m_flags &= ~NiAVObject::kFlag_Cull;
+                }
+            }
 
             NiRootNodes::NiRootNodes(
                 TESObjectREFR* const a_ref,
@@ -53,12 +59,6 @@ namespace SDS
                 if (m_nodes.firstPerson == m_nodes.thirdPerson) {
                     m_nodes.firstPerson = nullptr;
                 }
-            }
-
-            bool NiRootNodes::MatchesAny(
-                NiNode* const a_node)
-            {
-                return a_node == m_nodes.thirdPerson || a_node == m_nodes.firstPerson;
             }
 
         }

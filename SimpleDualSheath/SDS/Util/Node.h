@@ -6,19 +6,21 @@ namespace SDS
     {
         namespace Node
         {
-            void GetNiObject(
-                const BSFixedString& a_name,
-                NiNode* a_root,
-                NiPointer<NiAVObject>& a_result);
+            NiAVObject* GetNiObject(NiNode* a_root, const BSFixedString& a_name);
 
             [[nodiscard]] NiNode* FindNode(NiNode* a_root, const BSFixedString& a_name);
             void AttachToNode(NiAVObject* a_object, NiNode* a_node);
+            void ClearCull(NiAVObject* a_object);
 
             struct NiRootNodes
             {
                 NiRootNodes(TESObjectREFR* const a_ref, bool a_no1p = false);
 
-                [[nodiscard]] bool MatchesAny(NiNode* const a_node);
+                [[nodiscard]] SKMP_FORCEINLINE bool MatchesAny(
+                    NiNode* const a_node)
+                {
+                    return a_node == m_nodes.thirdPerson || a_node == m_nodes.firstPerson;
+                }
 
                 union
                 {

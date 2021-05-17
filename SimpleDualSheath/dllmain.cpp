@@ -16,11 +16,11 @@ static bool Initialize(const SKSEInterface* a_skse)
 
     auto& skse = ISKSE::GetSingleton();
 
-    if (!skse.Initialize(a_skse)) {
+    if (!skse.QueryInterfaces(a_skse)) {
         return false;
     }
 
-    auto ret = SDS::Initialize();
+    auto ret = SDS::Initialize(a_skse);
 
     if (ret) 
     {
@@ -31,7 +31,7 @@ static bool Initialize(const SKSEInterface* a_skse)
             usageBranch.used, usageBranch.total, usageLocal.used, usageLocal.total);
     }
     else {
-        gLog.FatalError("Initialization failed!");
+        gLog.FatalError("Initialization failed");
     }
 
     return ret;

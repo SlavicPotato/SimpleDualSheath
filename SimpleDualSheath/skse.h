@@ -7,8 +7,8 @@ class ISKSE :
     SKSEInterfaceFlags::kMessaging |
     SKSEInterfaceFlags::kTrampoline |
     SKSEInterfaceFlags::kTask,
-    24ui64,
-    182ui64>
+    64ui64,
+    512ui64>
 {
 public:
 
@@ -31,7 +31,8 @@ private:
     virtual const char* GetLogPath() const override;
     virtual const char* GetPluginName() const override;
     virtual UInt32 GetPluginVersion() const override;
-    virtual bool CheckRuntimeVersion(UInt32 a_version) const;
+    virtual bool CheckRuntimeVersion(UInt32 a_version) const override;
+    //virtual bool CheckInterfaceVersion(UInt32 a_interfaceID, UInt32 a_interfaceVersion, UInt32 a_compiledInterfaceVersion) const override;
 
     static ISKSE m_Instance;
 };

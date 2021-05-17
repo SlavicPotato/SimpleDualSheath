@@ -13,7 +13,9 @@ namespace SDS
     using namespace Util::Node;
     using namespace Data;
 
-    Controller::Controller(const Config& a_conf) :
+    Controller::Controller(
+        const Config& a_conf)
+        :
         m_conf(a_conf)
     {
     }
@@ -61,7 +63,7 @@ namespace SDS
             return true;
         case DrawnState::Sheathed:
             return false;
-        default: // Determine
+        default:
             return a_actor->actorState.IsWeaponDrawn();
         };
     }
@@ -91,7 +93,7 @@ namespace SDS
                 continue;
             }
 
-            if (i == 1 && (entry->m_flags & Data::Flags::kNoFirstPerson) == Data::Flags::kNoFirstPerson) {
+            if (i == 1 && (entry->m_flags & Data::Flags::kFirstPerson) != Data::Flags::kFirstPerson) {
                 continue;
             }
 
@@ -103,47 +105,15 @@ namespace SDS
             auto& sourceNode = a_drawn ? sheathedNode : drawnNode;
             auto& targetNode = a_drawn ? drawnNode : sheathedNode;
 
-            NiPointer<NiAVObject> weaponNode;
-            GetNiObject(weaponNodeName, sourceNode, weaponNode);
-
-            if (weaponNode)
+            if (NiPointer weaponNode = GetNiObject(sourceNode, weaponNodeName); weaponNode)
             {
-                weaponNode->m_flags &= ~NiAVObject::kFlag_Cull;
-
-                /*gLog.Debug("[%.8X] [%s] [WEAP: %X | left: %d] Attaching [%s] from [%s] to [%s] [root: %s]",
-                    a_actor->formID.get(),
-                    a_actor->GetReferenceName(),
-                    a_weapon->formID.get(),
-                    a_left,
-                    weaponNode->m_name,
-                    sourceNode->m_name,
-                    targetNode->m_name,
-                    root->m_name);*/
-
-
+                ClearCull(weaponNode);
                 AttachToNode(weaponNode, targetNode);
-
             }
-            else
+            else if (auto weaponNode = GetNiObject(targetNode, weaponNodeName); weaponNode)
             {
                 // if the weapon node is attached to target and invisible just remove the cull flag
-
-                GetNiObject(weaponNodeName, targetNode, weaponNode);
-                if (weaponNode)
-                {
-                    if ((weaponNode->m_flags & NiAVObject::kFlag_Cull) == NiAVObject::kFlag_Cull)
-                    {
-                        /*gLog.Debug("[%.8X] [%s] [WEAP: %X | left: %d] Clearing cull flag [%s] [root: %s]",
-                            a_actor->formID.get(),
-                            a_actor->GetReferenceName(),
-                            a_weapon->formID.get(),
-                            a_left,
-                            weaponNode->m_name,
-                            root->m_name);*/
-
-                        weaponNode->m_flags &= ~NiAVObject::kFlag_Cull;
-                    }
-                }
+                ClearCull(weaponNode);
             }
         }
     }
@@ -165,6 +135,17 @@ namespace SDS
             if (form->formType == TESObjectWEAP::kTypeID)
             {
                 ProcessEquippedWeapon(a_actor, roots, static_cast<TESObjectWEAP*>(form), a_drawn, true);
+            }
+            else if (form->formType == TESObjectARMO::kTypeID)
+            {
+                if ((m_conf.m_shield & Flags::kEnabled) != Flags::kNone)
+                {
+                    auto armor = static_cast<TESObjectARMO*>(form);
+                    if ((armor->flags & TESObjectARMO::kFlag_Shield) == TESObjectARMO::kFlag_Shield)
+                    {
+                        ProcessEquippedShield(a_actor, roots, armor, a_drawn);
+                    }
+                }
             }
         }
 
@@ -189,24 +170,122 @@ namespace SDS
         );
     }
 
+    void Controller::ProcessEquippedShield(
+        Actor* a_actor,
+        const NiRootNodes& a_roots,
+        TESObjectARMO* a_armor,
+        bool a_drawn) const
+    {
+        if (a_actor == *g_thePlayer)
+        {
+            if ((m_conf.m_shield & Flags::kPlayer) != Flags::kPlayer) {
+                return;
+            }
+        }
+        else
+        {
+            if ((m_conf.m_shield & Flags::kNPC) != Flags::kNPC) {
+                return;
+            }
+        }
+
+        for (std::size_t i = 0; i < std::size(a_roots.m_arr); i++)
+        {
+            auto root = a_roots.m_arr[i];
+
+            if (!root) {
+                continue;
+            }
+
+            if (i == 1 && (m_conf.m_shield & Data::Flags::kFirstPerson) != Data::Flags::kFirstPerson) {
+                continue;
+            }
+
+            NiPointer sheathedNode = FindNode(root, m_strings->m_shieldBack);
+            if (!sheathedNode) {
+                return;
+            }
+
+            NiPointer drawnNode = FindNode(root, m_strings->m_shield);
+            if (!drawnNode) {
+                return;
+            }
+
+            auto& sourceNode = a_drawn ? sheathedNode : drawnNode;
+            auto& targetNode = a_drawn ? drawnNode : sheathedNode;
+
+            using size_type = decltype(a_armor->armorAddons.count);
+
+            for (size_type i = 0; i < a_armor->armorAddons.count; i++)
+            {
+                TESObjectARMA* arma(nullptr);
+                if (!a_armor->armorAddons.GetNthItem(i, arma)) {
+                    continue;
+                }
+
+                if (!arma || !arma->isValidRace(a_actor->race)) {
+                    continue;
+                }
+
+                char buf[MAX_PATH];
+                arma->GetNodeName(buf, a_actor, a_armor, -1.0f);
+
+                BSFixedString nodeName(buf);
+
+                NiPointer<NiAVObject> armorNode = sourceNode->GetObjectByName(&nodeName.data);
+                if (!armorNode) {
+                    continue;
+                }
+
+                AttachToNode(armorNode, targetNode);
+
+            }
+        }
+    }
+
+    void Controller::DoProcessEquippedShield(
+        Actor* a_actor,
+        DrawnState a_drawnState) const
+    {
+        auto pm = a_actor->processManager;
+        if (!pm) {
+            return;
+        }
+
+        auto form = pm->equippedObject[ActorProcessManager::kEquippedHand_Left];
+        if (!form) {
+            return;
+        }
+
+        if (form->formType != TESObjectARMO::kTypeID) {
+            return;
+        }
+
+        auto armor = static_cast<TESObjectARMO*>(form);
+
+        if ((armor->flags & TESObjectARMO::kFlag_Shield) == TESObjectARMO::kFlag_Shield)
+        {
+            ProcessEquippedShield(a_actor, a_actor, armor, GetIsDrawn(a_actor, a_drawnState));
+        }
+    }
+
+    void Controller::QueueProcessEquippedShield(
+        Actor* a_actor,
+        DrawnState a_drawnState) const
+    {
+        QueueActorTask(a_actor, [this, a_drawnState](Actor* a_actor)
+            {
+                DoProcessEquippedShield(a_actor, a_drawnState);
+            }
+        );
+    }
+
     NiNode* Controller::GetScbAttachmentNode(
         TESObjectREFR* a_actor,
         TESForm* a_form,
         NiAVObject* a_sheatheNode,
-        bool a_checkEquippedLeft)
-    {
-        if (!a_actor || !a_form) {
-            return nullptr;
-        }
-
-        if (a_actor->formType != Actor::kTypeID) {
-            return nullptr;
-        }
-
-        if (a_form->formType != TESObjectWEAP::kTypeID) {
-            return nullptr;
-        }
-
+        bool a_checkEquippedLeft) const
+    {        
         auto actor = static_cast<Actor*>(a_actor);
 
         if (a_checkEquippedLeft)
@@ -232,7 +311,7 @@ namespace SDS
             return nullptr;
         }
 
-        bool no1p = (entry->m_flags & Data::Flags::kNoFirstPerson) == Data::Flags::kNoFirstPerson;
+        bool no1p = (entry->m_flags & Data::Flags::kFirstPerson) != Data::Flags::kFirstPerson;
 
         NiRootNodes roots(a_actor, no1p);
 
@@ -266,8 +345,10 @@ namespace SDS
         if (a_evn && a_evn->loaded)
         {
             auto form = a_evn->formId.Lookup();
-            if (form && form->formType == Actor::kTypeID) {
-                QueueProcessWeaponDrawnChange(static_cast<TESObjectREFR*>(form), DrawnState::Determine);
+            if (form) {
+                if (form->formType == Actor::kTypeID) {
+                    QueueProcessWeaponDrawnChange(static_cast<TESObjectREFR*>(form), DrawnState::Determine);
+                }
             }
         }
 
@@ -279,6 +360,29 @@ namespace SDS
     {
         if (a_evn) {
             QueueProcessWeaponDrawnChange(a_evn->reference, DrawnState::Determine);
+        }
+
+        return kEvent_Continue;
+    }
+
+    auto Controller::ReceiveEvent(TESEquipEvent* a_evn, EventDispatcher<TESEquipEvent>*)
+        -> EventResult
+    {
+        if (a_evn && a_evn->equipped && a_evn->actor != nullptr)
+        {
+            if (a_evn->actor->formType == Actor::kTypeID)
+            {
+                auto form = a_evn->baseObject.Lookup();
+                if (form && form->formType == TESObjectARMO::kTypeID)
+                {
+                    auto armor = static_cast<TESObjectARMO*>(form);
+
+                    if ((armor->flags & TESObjectARMO::kFlag_Shield) == TESObjectARMO::kFlag_Shield)
+                    {
+                        QueueProcessEquippedShield(static_cast<Actor*>(a_evn->actor.get()), DrawnState::Determine);
+                    }
+                }
+            }
         }
 
         return kEvent_Continue;
@@ -314,8 +418,7 @@ namespace SDS
         return kEvent_Continue;
     }
 
-    // prob pointless
-
+    // pretty sure this is useless
     auto Controller::ReceiveEvent(SKSECameraEvent* a_evn, EventDispatcher<SKSECameraEvent>*)
         -> EventResult
     {
@@ -364,6 +467,24 @@ namespace SDS
             }
         }
         );
+    }
+
+    void Controller::Receive(const Events::CreateArmorNodeEvent& a_evn)
+    {
+        if (!IsREFRValid(a_evn.reference)) {
+            return;
+        }
+
+        if (a_evn.reference->formType != Actor::kTypeID) {
+            return;
+        }
+
+        auto actor = static_cast<Actor*>(a_evn.reference.get());
+
+        DoProcessEquippedShield(actor, DrawnState::Determine);
+
+        // and again just in case (deferred)
+        QueueProcessEquippedShield(actor, DrawnState::Determine);
 
     }
 

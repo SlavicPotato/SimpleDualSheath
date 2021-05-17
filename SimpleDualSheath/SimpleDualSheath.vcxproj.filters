@@ -79,6 +79,9 @@
     <ClInclude Include="SDS\EngineExtensions.h">
       <Filter>Header Files\SDS</Filter>
     </ClInclude>
+    <ClInclude Include="SDS\Events\CreateArmorNodeEvent.h">
+      <Filter>Header Files\SDS\Events</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
