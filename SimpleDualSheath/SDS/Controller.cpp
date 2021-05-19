@@ -30,6 +30,10 @@ namespace SDS
         m_data->Create(TESObjectWEAP::GameData::kType_OneHandMace, StringHolder::NINODE_MACE, StringHolder::NINODE_MACE_LEFT, m_conf.m_mace);
         m_data->Create(TESObjectWEAP::GameData::kType_OneHandDagger, StringHolder::NINODE_DAGGER, StringHolder::NINODE_DAGGER_LEFT, m_conf.m_dagger);
         m_data->Create(TESObjectWEAP::GameData::kType_Staff, StringHolder::NINODE_STAFF, StringHolder::NINODE_STAFF_LEFT, m_conf.m_staff);
+
+        if (!m_conf.m_shield.m_sheathNode.empty()) {
+            m_strings->m_shieldSheathNode.Set(m_conf.m_shield.m_sheathNode.c_str());
+        }
     }
 
     bool Controller::GetParentNodes(
@@ -85,9 +89,9 @@ namespace SDS
 
         BSFixedString weaponNodeName(buf);
 
-        for (std::size_t i = 0; i < std::size(a_roots.m_arr); i++)
+        for (std::size_t i = 0; i < std::size(a_roots.m_nodes); i++)
         {
-            auto root = a_roots.m_arr[i];
+            auto &root = a_roots.m_nodes[i];
 
             if (!root) {
                 continue;
@@ -107,12 +111,33 @@ namespace SDS
 
             if (NiPointer weaponNode = GetNiObject(sourceNode, weaponNodeName); weaponNode)
             {
+                /*gLog.Message("[%.8X] [%s] [WEAP: %X | left: %d] Attaching [%s] from [%s] to [%s] [root: %s] [1p:%zu]",
+                    a_actor->formID.get(),
+                    a_actor->GetReferenceName(),
+                    a_weapon->formID.get(),
+                    a_left,
+                    weaponNode->m_name,
+                    sourceNode->m_name,
+                    targetNode->m_name,
+                    root->m_name,
+                    i);*/
+
+                AttachToNode(weaponNode, targetNode, (entry->m_flags & Flags::kUpdateNodeOnAttach) == Flags::kUpdateNodeOnAttach);
                 ClearCull(weaponNode);
-                AttachToNode(weaponNode, targetNode);
             }
-            else if (auto weaponNode = GetNiObject(targetNode, weaponNodeName); weaponNode)
+            else if (NiPointer weaponNode = GetNiObject(targetNode, weaponNodeName); weaponNode)
             {
                 // if the weapon node is attached to target and invisible just remove the cull flag
+
+                /*gLog.Message("[%.8X] [%s] [WEAP: %X | left: %d] Clearing cull flag [%s] [root: %s] [1p:%zu]",
+                    a_actor->formID.get(),
+                    a_actor->GetReferenceName(),
+                    a_weapon->formID.get(),
+                    a_left,
+                    weaponNode->m_name,
+                    root->m_name,
+                    i);*/
+
                 ClearCull(weaponNode);
             }
         }
@@ -128,6 +153,11 @@ namespace SDS
         }
 
         NiRootNodes roots(a_actor);
+        roots.GetNPCRoots(m_strings->m_npcroot);
+
+#ifdef _SDS_UNUSED
+        ApplyNodeOverrides(roots);
+#endif
 
         auto form = pm->equippedObject[ActorProcessManager::kEquippedHand_Left];
         if (form)
@@ -138,7 +168,7 @@ namespace SDS
             }
             else if (form->formType == TESObjectARMO::kTypeID)
             {
-                if ((m_conf.m_shield & Flags::kEnabled) != Flags::kNone)
+                if ((m_conf.m_shield.m_flags & Flags::kEnabled) != Flags::kNone)
                 {
                     auto armor = static_cast<TESObjectARMO*>(form);
                     if (armor->IsShield())
@@ -174,13 +204,13 @@ namespace SDS
     {
         if (a_actor == *g_thePlayer)
         {
-            if ((m_conf.m_shield & Flags::kPlayer) != Flags::kPlayer) {
+            if ((m_conf.m_shield.m_flags & Flags::kPlayer) != Flags::kPlayer) {
                 return false;
             }
         }
         else
         {
-            if ((m_conf.m_shield & Flags::kNPC) != Flags::kNPC) {
+            if ((m_conf.m_shield.m_flags & Flags::kNPC) != Flags::kNPC) {
                 return false;
             }
         }
@@ -198,19 +228,19 @@ namespace SDS
             return;
         }
 
-        for (std::size_t i = 0; i < std::size(a_roots.m_arr); i++)
+        for (std::size_t i = 0; i < std::size(a_roots.m_nodes); i++)
         {
-            auto root = a_roots.m_arr[i];
+            auto &root = a_roots.m_nodes[i];
 
             if (!root) {
                 continue;
             }
 
-            if (i == 1 && (m_conf.m_shield & Data::Flags::kFirstPerson) != Data::Flags::kFirstPerson) {
+            if (i == 1 && (m_conf.m_shield.m_flags & Data::Flags::kFirstPerson) != Data::Flags::kFirstPerson) {
                 continue;
             }
 
-            NiPointer sheathedNode = FindNode(root, m_strings->m_shieldBack);
+            NiPointer sheathedNode = FindNode(root, m_strings->m_shieldSheathNode);
             if (!sheathedNode) {
                 continue;
             }
@@ -240,8 +270,9 @@ namespace SDS
                 char buf[MAX_PATH];
                 arma->GetNodeName(buf, a_actor, a_armor, -1.0f);
 
-                if (NiPointer armorNode = GetNiObject(sourceNode, buf); armorNode) {
-                    AttachToNode(armorNode, targetNode);
+                if (NiPointer armorNode = GetNiObject(sourceNode, buf); armorNode) 
+                {
+                    AttachToNode(armorNode, targetNode, (m_conf.m_shield.m_flags & Flags::kUpdateNodeOnAttach) == Flags::kUpdateNodeOnAttach);
                 }
             }
         }
@@ -269,7 +300,10 @@ namespace SDS
 
         if (armor->IsShield())
         {
-            ProcessEquippedShield(a_actor, a_actor, armor, GetIsDrawn(a_actor, a_drawnState));
+            NiRootNodes roots(a_actor);
+            roots.GetNPCRoots(m_strings->m_npcroot);
+
+            ProcessEquippedShield(a_actor, roots, armor, GetIsDrawn(a_actor, a_drawnState));
         }
     }
 
@@ -337,6 +371,10 @@ namespace SDS
 
         if (!found) {
             return nullptr;
+        }
+
+        if (auto npcroot = FindNode(found, m_strings->m_npcroot); npcroot) {
+            found = npcroot;
         }
 
         return entry->GetNode(found, true);
@@ -466,7 +504,10 @@ namespace SDS
 
             if (form == object)
             {
-                ProcessEquippedWeapon(a_actor, a_actor, static_cast<TESObjectWEAP*>(form), false, left);
+                NiRootNodes roots(a_actor);
+                roots.GetNPCRoots(m_strings->m_npcroot);
+
+                ProcessEquippedWeapon(a_actor, roots, static_cast<TESObjectWEAP*>(form), false, left);
             }
         }
         );
@@ -484,11 +525,56 @@ namespace SDS
 
         auto actor = static_cast<Actor*>(a_evn.reference.get());
 
-        DoProcessEquippedShield(actor, DrawnState::Determine);
+        if ((m_conf.m_shield.m_flags & Flags::kImmediate) == Flags::kImmediate) {
+            DoProcessEquippedShield(actor, DrawnState::Determine);
+        }
 
         // and again just in case (deferred)
         QueueProcessEquippedShield(actor, DrawnState::Determine);
 
     }
 
+
+
+#ifdef _SDS_UNUSED
+
+    void ApplyNodeOverride(
+        NiNode* a_root,
+        const BSFixedString& a_node,
+        const BSFixedString& a_parent)
+    {
+        if (NiPointer node = a_root->GetObjectByName(&a_node.data); node)
+        {
+            if (NiPointer newParentNode = FindNode(a_root, a_parent); newParentNode)
+            {
+                AttachToNode(node, newParentNode);
+            }
+        }
+    }
+
+    void Controller::ApplyNodeOverrides(
+        const NiRootNodes& a_roots) const
+    {
+        for (auto &root : a_roots.m_nodes)
+        {
+            if (!root) {
+                continue;
+            }
+
+            ApplyNodeOverride(root, m_strings->m_weaponSword, m_strings->m_weaponSwordOnBackMOV);
+            ApplyNodeOverride(root, m_strings->m_weaponSwordLeft, m_strings->m_weaponSwordLeftOnBackMOV);
+
+            ApplyNodeOverride(root, m_strings->m_weaponAxe, m_strings->m_weaponAxeOnBackMOV);
+            ApplyNodeOverride(root, m_strings->m_weaponAxeLeft, m_strings->m_weaponAxeLeftOnBackMOV);
+
+            ApplyNodeOverride(root, m_strings->m_weaponDagger, m_strings->m_weaponDaggerAnkleMOV);
+            ApplyNodeOverride(root, m_strings->m_weaponDaggerLeft, m_strings->m_weaponDaggerLeftAnkleMOV);
+        }
+    }
+
+#endif
+
+
 }
+
+

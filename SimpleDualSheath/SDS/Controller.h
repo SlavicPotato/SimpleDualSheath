@@ -72,5 +72,9 @@ namespace SDS
 
         std::unique_ptr<StringHolder> m_strings;
         std::unique_ptr<Data::WeaponData> m_data;
+
+#ifdef _SDS_UNUSED
+        void Controller::ApplyNodeOverrides(const Util::Node::NiRootNodes& a_roots) const;
+#endif
     };
 }

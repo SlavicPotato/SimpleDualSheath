@@ -9,7 +9,7 @@ namespace SDS
             NiAVObject* GetNiObject(NiNode* a_root, const BSFixedString& a_name);
 
             [[nodiscard]] NiNode* FindNode(NiNode* a_root, const BSFixedString& a_name);
-            void AttachToNode(NiAVObject* a_object, NiNode* a_node);
+            void AttachToNode(NiPointer<NiAVObject>& a_object, NiPointer<NiNode> &a_node, bool a_update = false);
             void ClearCull(NiAVObject* a_object);
 
             struct NiRootNodes
@@ -19,21 +19,12 @@ namespace SDS
                 [[nodiscard]] SKMP_FORCEINLINE bool MatchesAny(
                     NiNode* const a_node)
                 {
-                    return a_node == m_nodes.thirdPerson || a_node == m_nodes.firstPerson;
+                    return a_node == m_nodes[0] || a_node == m_nodes[1];
                 }
 
-                union
-                {
-                    struct
-                    {
-                        NiNode* thirdPerson;
-                        NiNode* firstPerson;
-                    } m_nodes;
+                void GetNPCRoots(const BSFixedString &a_npcroot);
 
-                    NiNode* m_arr[2];
-
-                    static_assert(sizeof(m_arr) == sizeof(m_nodes));
-                };
+                NiPointer<NiNode> m_nodes[2];
             };
 
         }

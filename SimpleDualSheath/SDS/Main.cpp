@@ -21,7 +21,7 @@ namespace SDS
             edl->objectLoadedDispatcher.AddEventSink(s_controller.get());
             edl->initScriptDispatcher.AddEventSink(s_controller.get());
 
-            if ((s_controller->GetConfig().m_shield & Data::Flags::kEnabled) != Data::Flags::kNone)
+            if ((s_controller->GetConfig().m_shield.m_flags & Data::Flags::kEnabled) != Data::Flags::kNone)
             {
                 edl->equipDispatcher.AddEventSink(s_controller.get());
             }

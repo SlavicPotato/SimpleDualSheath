@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "Data.h"
+#include "Config.h"
 #include "Util/Node.h"
 
 namespace SDS
@@ -13,18 +14,18 @@ namespace SDS
         Weapon::Weapon(
             const char* a_nodeName,
             const char* a_nodeNameLeft,
-            Flags a_flags)
+            const Config::ConfigEntry& a_config)
             :
             m_nodeName(a_nodeName),
-            m_nodeNameLeft(a_nodeNameLeft),
-            m_flags(a_flags)
+            m_nodeNameLeft(a_config.m_sheathNode.empty() ? a_nodeNameLeft : a_config.m_sheathNode.c_str()),
+            m_flags(a_config.m_flags)
         {
         }
 
         Weapon::Weapon(
-            Flags a_flags)
+            const Config::ConfigEntry& a_config)
             :
-            m_flags(a_flags)
+            m_flags(a_config.m_flags)
         {
         }
 

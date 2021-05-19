@@ -25,7 +25,7 @@ namespace SDS
             Patch_SCB_Detach();
         }
 
-        if ((config.m_shield & Data::Flags::kEnabled) != Data::Flags::kNone)
+        if ((config.m_shield.m_flags & Data::Flags::kEnabled) != Data::Flags::kNone)
         {
             Patch_CreateArmorNode();
             m_dispatchers.m_createArmorNode.AddSink(a_controller.get());
@@ -56,7 +56,7 @@ namespace SDS
 
         auto& config = a_controller->GetConfig();
 
-        if ((config.m_shield & Data::Flags::kEnabled) != Data::Flags::kNone)
+        if ((config.m_shield.m_flags & Data::Flags::kEnabled) != Data::Flags::kNone)
         {
             constexpr std::uint8_t 
                 d_createArmorNodev1[]{ 0x48, 0x85, 0xC0, 0x74, 0x0D }, 

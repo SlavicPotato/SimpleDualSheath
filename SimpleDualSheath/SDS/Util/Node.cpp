@@ -27,15 +27,21 @@ namespace SDS
                 return object->GetAsNiNode();
             }
 
-            void AttachToNode(NiAVObject* a_object, NiNode* a_node)
+            void AttachToNode(NiPointer<NiAVObject> &a_object, NiPointer<NiNode>& a_node, bool a_update)
             {
-                if (a_object->m_parent != a_node)
+                if (NiPointer parent = a_object->m_parent; parent != a_node)
                 {
-                    if (a_object->m_parent) {
-                        a_object->m_parent->RemoveChild(a_object);
+                    if (parent) {
+                        parent->RemoveChild(a_object);
                     }
 
                     a_node->AttachChild(a_object, true);
+
+                    if (a_update)
+                    {
+                        NiAVObject::ControllerUpdateContext ctx{ 0.0f, 0 };
+                        a_object->UpdateNode(std::addressof(ctx));
+                    }
                 }
             }
             
@@ -49,15 +55,34 @@ namespace SDS
             NiRootNodes::NiRootNodes(
                 TESObjectREFR* const a_ref,
                 bool a_no1p)
-                :
-                m_nodes
             {
-                a_ref->GetNiRootNode(false),
-                a_no1p ? nullptr : a_ref->GetNiRootNode(true)
+                auto root3p = a_ref->GetNiRootNode(false);
+                auto root1p = a_no1p ? nullptr : a_ref->GetNiRootNode(true);
+
+                m_nodes[0] = root3p;
+
+                if (root3p == root1p) {
+                    m_nodes[1] = nullptr;
+                }
+                else {
+                    m_nodes[1] = root1p;
+                }
             }
+
+            void NiRootNodes::GetNPCRoots(const BSFixedString& a_npcroot)
             {
-                if (m_nodes.firstPerson == m_nodes.thirdPerson) {
-                    m_nodes.firstPerson = nullptr;
+                for (std::size_t i = 0; i < std::size(m_nodes); i++)
+                {
+                    auto &root = m_nodes[i];
+
+                    if (!root) {
+                        continue;
+                    }
+
+                    auto n = FindNode(root, a_npcroot);
+                    if (n) {
+                        m_nodes[i] = n;
+                    }
                 }
             }
 

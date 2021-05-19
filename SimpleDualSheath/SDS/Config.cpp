@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "Config.h"
+#include "StringHolder.h"
 
 namespace SDS
 {
@@ -12,6 +13,8 @@ namespace SDS
         {"NPC", {Flags::kNPC, false}},
         {"Player", {Flags::kPlayer, false}},
         {"FirstPerson", {Flags::kFirstPerson, false}},
+        {"Immediate", {Flags::kImmediate, false}},
+        {"UpdateNode", {Flags::kUpdateNodeOnAttach, false}},
         {"Right", {Flags::kRight, true}},
         {"Swap", {Flags::kSwap, true}}
     }
@@ -56,15 +59,37 @@ namespace SDS
 
         FlagParser flagParser;
 
-        m_scb = reader.Get("General", "EnableLeftScabbards", true);
+        m_scb = reader.Get(SECT_GENERAL, "EnableLeftScabbards", true);
 
-        m_sword = flagParser.Parse(reader.Get("Sword", "Flags", "Player|NPC"));
-        m_axe = flagParser.Parse(reader.Get("Axe", "Flags", "Player|NPC"));
-        m_mace = flagParser.Parse(reader.Get("Mace", "Flags", "Player|NPC"));
-        m_dagger = flagParser.Parse(reader.Get("Dagger", "Flags", "Player|NPC"));
-        m_staff = flagParser.Parse(reader.Get("Staff", "Flags", "Player|NPC|Right"), true);
+        m_sword = {
+            flagParser.Parse(reader.Get(SECT_SWORD, KW_FLAGS, "Player|NPC")),
+            reader.Get(SECT_SWORD, KW_SHEATHNODE, StringHolder::NINODE_SWORD_LEFT)
+        };
 
-        m_shield = flagParser.Parse(reader.Get("ShieldOnBack", "Flags", ""));
+        m_axe = {
+            flagParser.Parse(reader.Get(SECT_AXE, KW_FLAGS, "Player|NPC")),
+            reader.Get(SECT_AXE, KW_SHEATHNODE, StringHolder::NINODE_AXE_LEFT)
+        };
+
+        m_mace = {
+            flagParser.Parse(reader.Get(SECT_MACE, KW_FLAGS, "Player|NPC")),
+            reader.Get(SECT_MACE, KW_SHEATHNODE, StringHolder::NINODE_MACE_LEFT)
+        };
+
+        m_dagger = {
+            flagParser.Parse(reader.Get(SECT_DAGGER, KW_FLAGS, "Player|NPC")),
+            reader.Get(SECT_DAGGER, KW_SHEATHNODE, StringHolder::NINODE_DAGGER_LEFT)
+        };
+
+        m_staff = {
+            flagParser.Parse(reader.Get(SECT_STAFF, KW_FLAGS, "Player|NPC|Right"), true),
+            reader.Get(SECT_STAFF, KW_SHEATHNODE, StringHolder::NINODE_STAFF_LEFT)
+        };
+
+        m_shield = {
+            flagParser.Parse(reader.Get(SECT_SHIELD, KW_FLAGS, "")),
+            reader.Get(SECT_SHIELD, KW_SHEATHNODE, StringHolder::NINODE_SHIELD_BACK)
+        };
 
         return (m_loaded = (reader.ParseError() == 0));
     }

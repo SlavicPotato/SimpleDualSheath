@@ -199,6 +199,7 @@
     <ClInclude Include="SDS\Events\CreateWeaponNodesEvent.h" />
     <ClInclude Include="SDS\Events\Dispatcher.h" />
     <ClInclude Include="SDS\EngineExtensions.h" />
+    <ClInclude Include="SDS\Flags.h" />
     <ClInclude Include="SDS\Main.h" />
     <ClInclude Include="SDS\StringHolder.h" />
     <ClInclude Include="SDS\Util\Common.h" />

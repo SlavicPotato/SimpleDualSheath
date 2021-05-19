@@ -20,4 +20,6 @@
 #include "plugin.h"
 #include "skse.h"
 
+//#define _SDS_UNUSED 1
+
 #endif //PCH_H

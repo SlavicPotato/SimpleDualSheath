@@ -1,31 +1,21 @@
 #pragma once
 
+#include "Config.h"
+#include "Flags.h"
+
 namespace SDS
 {
     namespace Data
     {
-        enum class Flags : std::uint32_t
-        {
-            kNone = 0,
-
-            kNPC = 1u << 0,
-            kPlayer = 1u << 1,
-            kRight = 1u << 2,
-            kSwap = 1u << 3,
-            kFirstPerson = 1u << 4,
-
-            kEnabled = (kPlayer | kNPC)
-        };
-
         class Weapon
         {
         public:
             Weapon(
                 const char* a_nodeName,
                 const char* a_nodeNameLeft,
-                Flags a_flags);
+                const SDS::Config::ConfigEntry &a_config);
 
-            Weapon(Flags a_flags);
+            Weapon(const SDS::Config::ConfigEntry& a_config);
 
             [[nodiscard]] const BSFixedString& GetNodeName(bool a_left) const;
             [[nodiscard]] NiNode* GetNode(NiNode* a_root, bool a_left) const;
@@ -57,6 +47,5 @@ namespace SDS
 
         };
 
-        DEFINE_ENUM_CLASS_BITWISE(Flags);
     }
 }

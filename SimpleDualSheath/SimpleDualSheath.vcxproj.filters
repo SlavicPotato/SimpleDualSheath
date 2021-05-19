@@ -86,6 +86,9 @@
     <ClInclude Include="SDS\Util\Logging.h">
       <Filter>Header Files\SDS\Util</Filter>
     </ClInclude>
+    <ClInclude Include="SDS\Flags.h">
+      <Filter>Header Files\SDS</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">

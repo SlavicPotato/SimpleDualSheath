@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Data.h"
+#include "Flags.h"
 
 namespace SDS
 {
@@ -21,7 +21,24 @@ namespace SDS
 
     struct Config
     {
+        inline static constexpr auto SECT_SWORD = "Sword";
+        inline static constexpr auto SECT_GENERAL = "General";
+        inline static constexpr auto SECT_AXE = "Axe";
+        inline static constexpr auto SECT_MACE = "Mace";
+        inline static constexpr auto SECT_DAGGER = "Dagger";
+        inline static constexpr auto SECT_STAFF = "Staff";
+        inline static constexpr auto SECT_SHIELD = "ShieldOnBack";
+
+        inline static constexpr auto KW_FLAGS = "Flags";
+        inline static constexpr auto KW_SHEATHNODE = "SheathNode";
+
     public:
+
+        struct ConfigEntry
+        {
+            Data::Flags m_flags;
+            std::string m_sheathNode;
+        };
 
         Config() = default;
         Config(const std::string& a_path);
@@ -31,14 +48,15 @@ namespace SDS
             return m_loaded;
         }
 
-        Data::Flags m_sword;
-        Data::Flags m_axe;
-        Data::Flags m_mace;
-        Data::Flags m_dagger;
-        Data::Flags m_staff;
+        ConfigEntry m_sword;
+        ConfigEntry m_axe;
+        ConfigEntry m_mace;
+        ConfigEntry m_dagger;
+        ConfigEntry m_staff;
+        ConfigEntry m_shield;
+
         bool m_scb;
 
-        Data::Flags m_shield;
     private:
 
         bool m_loaded{ false };
