@@ -89,6 +89,12 @@
     <ClInclude Include="SDS\Flags.h">
       <Filter>Header Files\SDS</Filter>
     </ClInclude>
+    <ClInclude Include="SDS\Events\OnSetEquipSlot.h">
+      <Filter>Header Files\SDS\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="SDS\EquipManager.h">
+      <Filter>Header Files\SDS</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -129,6 +135,9 @@
     </ClCompile>
     <ClCompile Include="SDS\Util\Logging.cpp">
       <Filter>Source Files\SDS\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="SDS\EquipManager.cpp">
+      <Filter>Source Files\SDS</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

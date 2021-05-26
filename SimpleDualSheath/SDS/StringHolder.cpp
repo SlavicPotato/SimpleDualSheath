@@ -15,6 +15,8 @@ namespace SDS
         m_weaponSwordLeft(NINODE_SWORD_LEFT),
         m_weaponSwordOnBackMOV(NINODE_SWORD_BACK_MOV),
         m_weaponSwordLeftOnBackMOV(NINODE_SWORD_LEFT_BACK_MOV),
+        m_weaponSwordSWPMOV(NINODE_SWORD_SWP_MOV),
+        m_weaponSwordLeftSWPMOV(NINODE_SWORD_LEFT_SWP_MOV),
         m_weaponAxe(NINODE_AXE),
         m_weaponAxeLeft(NINODE_AXE_LEFT),
         m_weaponAxeOnBackMOV(NINODE_AXE_BACK_MOV),

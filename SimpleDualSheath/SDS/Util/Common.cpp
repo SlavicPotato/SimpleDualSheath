@@ -19,6 +19,19 @@ namespace SDS
                 return true;
             }
 
+            bool CanEquipEitherHand(TESForm* item)
+            {
+                auto equipType = RTTI<BGSEquipType>()(item);
+                if (!equipType)
+                    return false;
+
+                auto equipSlot = equipType->GetEquipSlot();
+                if (!equipSlot)
+                    return false;
+
+                return (equipSlot == GetRightHandSlot() || equipSlot == GetEitherHandSlot() || equipSlot == GetLeftHandSlot());
+            }
+
         }
     }
 }

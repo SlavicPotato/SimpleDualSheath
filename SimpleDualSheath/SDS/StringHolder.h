@@ -8,6 +8,7 @@ namespace SDS
 
         static inline constexpr auto NINODE_SWORD = "WeaponSword";
         static inline constexpr auto NINODE_SWORD_LEFT = "WeaponSwordLeft";
+        static inline constexpr auto NINODE_SWORD_LEFT_SWP = "WeaponSwordLeftSWP";
 
         static inline constexpr auto NINODE_AXE = "WeaponAxe";
         static inline constexpr auto NINODE_AXE_LEFT = "WeaponAxeLeft";
@@ -21,6 +22,11 @@ namespace SDS
         static inline constexpr auto NINODE_STAFF = "WeaponStaff";
         static inline constexpr auto NINODE_STAFF_LEFT = "WeaponStaffLeft";
 
+        static inline constexpr auto NINODE_SWORD_ON_BACK_LEFT = "WeaponSwordLeftOnBack";
+        static inline constexpr auto NINODE_AXE_ON_BACK_LEFT = "WeaponAxeLeftOnBack";
+
+        static inline constexpr auto NINODE_WEAPON_BACK = "WeaponBack";
+        static inline constexpr auto NINODE_WEAPON_BACK_SWP = "WeaponBackSWP";
         static inline constexpr auto NINODE_SHIELD_BACK = "ShieldBack";
 
         static inline constexpr auto NINODE_SHIELD = "SHIELD";
@@ -42,6 +48,8 @@ namespace SDS
 
         static inline constexpr auto NINODE_SWORD_BACK_MOV = "MOV WeaponSwordOnBack";
         static inline constexpr auto NINODE_SWORD_LEFT_BACK_MOV = "MOV WeaponSwordLeftOnBack";
+        static inline constexpr auto NINODE_SWORD_SWP_MOV = "MOV WeaponSwordSWP";
+        static inline constexpr auto NINODE_SWORD_LEFT_SWP_MOV = "MOV WeaponSwordLeftSWP";
 
         static inline constexpr auto NINODE_AXE_BACK_MOV = "MOV WeaponAxeOnBack";
         static inline constexpr auto NINODE_AXE_BACK_LEFT_MOV = "MOV WeaponAxeLeftOnBack";
@@ -56,6 +64,8 @@ namespace SDS
         BSFixedString m_weaponSwordLeft;
         BSFixedString m_weaponSwordOnBackMOV;
         BSFixedString m_weaponSwordLeftOnBackMOV;
+        BSFixedString m_weaponSwordSWPMOV;
+        BSFixedString m_weaponSwordLeftSWPMOV;
 
         BSFixedString m_weaponAxe;
         BSFixedString m_weaponAxeLeft;

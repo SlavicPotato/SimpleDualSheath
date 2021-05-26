@@ -13,7 +13,7 @@ namespace SDS
         {"NPC", {Flags::kNPC, false}},
         {"Player", {Flags::kPlayer, false}},
         {"FirstPerson", {Flags::kFirstPerson, false}},
-        {"Immediate", {Flags::kImmediate, false}},
+        {"NoImmediate", {Flags::kNoImmediate, false}},
         {"UpdateNode", {Flags::kUpdateNodeOnAttach, false}},
         {"Right", {Flags::kRight, true}},
         {"Swap", {Flags::kSwap, true}}
@@ -81,6 +81,16 @@ namespace SDS
             reader.Get(SECT_DAGGER, KW_SHEATHNODE, StringHolder::NINODE_DAGGER_LEFT)
         };
 
+        m_2hSword = {
+            flagParser.Parse(reader.Get(SECT_2HSWORD, KW_FLAGS, "")),
+            reader.Get(SECT_2HSWORD, KW_SHEATHNODE, StringHolder::NINODE_SWORD_ON_BACK_LEFT)
+        };
+        
+        m_2hAxe = {
+            flagParser.Parse(reader.Get(SECT_2HAXE, KW_FLAGS, "")),
+            reader.Get(SECT_2HAXE, KW_SHEATHNODE, StringHolder::NINODE_AXE_ON_BACK_LEFT)
+        };
+        
         m_staff = {
             flagParser.Parse(reader.Get(SECT_STAFF, KW_FLAGS, "Player|NPC|Right"), true),
             reader.Get(SECT_STAFF, KW_SHEATHNODE, StringHolder::NINODE_STAFF_LEFT)
@@ -90,6 +100,8 @@ namespace SDS
             flagParser.Parse(reader.Get(SECT_SHIELD, KW_FLAGS, "")),
             reader.Get(SECT_SHIELD, KW_SHEATHNODE, StringHolder::NINODE_SHIELD_BACK)
         };
+
+        m_npcEquipLeft = reader.Get(SECT_NPC, "EquipLeft", false);
 
         return (m_loaded = (reader.ParseError() == 0));
     }

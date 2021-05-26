@@ -4,14 +4,17 @@
 #include "Data.h"
 #include "Util/Node.h"
 #include "Config.h"
+#include "EquipManager.h"
 
 #include "Events/Dispatcher.h"
 #include "Events/CreateWeaponNodesEvent.h"
 #include "Events/CreateArmorNodeEvent.h"
+#include "Events/OnSetEquipSlot.h"
 
 namespace SDS
 {
     class Controller :
+        public EquipExtensions,
         public BSTEventSink <TESObjectLoadedEvent>,
         public BSTEventSink <TESInitScriptEvent>,
         public BSTEventSink <TESEquipEvent>,
@@ -19,7 +22,8 @@ namespace SDS
         public BSTEventSink <SKSEActionEvent>,
         public BSTEventSink <SKSECameraEvent>,
         public Events::EventSink<Events::CreateWeaponNodesEvent>,
-        public Events::EventSink<Events::CreateArmorNodeEvent>
+        public Events::EventSink<Events::CreateArmorNodeEvent>,
+        public Events::EventSink<Events::OnSetEquipSlot>
     {
 
         enum class DrawnState : std::uint8_t
@@ -54,6 +58,10 @@ namespace SDS
 
         [[nodiscard]] static bool GetIsDrawn(Actor* a_actor, DrawnState a_state);
 
+        void OnActorLoad(TESObjectREFR* a_actor);
+        void OnShieldEquip(Actor *a_actor, TESObjectARMO *a_armor);
+        void OnWeaponEquip(Actor *a_actor, TESObjectWEAP *a_weapon);
+
         // Beth
         virtual EventResult	ReceiveEvent(TESObjectLoadedEvent* a_evn, EventDispatcher<TESObjectLoadedEvent>* a_dispatcher) override;
         virtual EventResult	ReceiveEvent(TESInitScriptEvent* a_evn, EventDispatcher<TESInitScriptEvent>* a_dispatcher) override;
@@ -67,6 +75,7 @@ namespace SDS
         // EngineExtensions
         virtual void Receive(const Events::CreateWeaponNodesEvent& a_evn) override;
         virtual void Receive(const Events::CreateArmorNodeEvent& a_evn) override; // shield only
+        virtual void Receive(const Events::OnSetEquipSlot& a_evn) override; 
 
         Config m_conf;
 

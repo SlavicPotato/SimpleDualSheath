@@ -5,10 +5,12 @@
 
 #include <ext/JITASM.h>
 #include <ext/Patching.h>
+#include <ext/VFT.h>
 
 namespace SDS
 {
     using namespace JITASM;
+    using namespace Events;
 
     std::unique_ptr<EngineExtensions> EngineExtensions::m_Instance;
 
@@ -32,6 +34,13 @@ namespace SDS
         }
 
         m_dispatchers.m_createWeaponNodes.AddSink(a_controller.get());
+
+        if (config.HasEnabled2HEntries())
+        {
+            if (Hook_TESObjectWEAP_SetEquipSlot()) {
+                m_dispatchers.m_setEquipSlot.AddSink(a_controller.get());
+            }
+        }
 
         m_controller = a_controller;
     }
@@ -58,12 +67,12 @@ namespace SDS
 
         if ((config.m_shield.m_flags & Data::Flags::kEnabled) != Data::Flags::kNone)
         {
-            constexpr std::uint8_t 
-                d_createArmorNodev1[]{ 0x48, 0x85, 0xC0, 0x74, 0x0D }, 
+            constexpr std::uint8_t
+                d_createArmorNodev1[]{ 0x48, 0x85, 0xC0, 0x74, 0x0D },
                 d_createArmorNodev2[]{ 0xE9 };
 
-            if (!validate_mem(m_createArmorNode_a, d_createArmorNodev1) && 
-                !validate_mem(m_createArmorNode_a, d_createArmorNodev2)) 
+            if (!validate_mem(m_createArmorNode_a, d_createArmorNodev1) &&
+                !validate_mem(m_createArmorNode_a, d_createArmorNodev2))
             {
                 return false;
             }
@@ -288,6 +297,27 @@ namespace SDS
         LogPatchEnd("SCB_Detach");
     }
 
+    bool EngineExtensions::Hook_TESObjectWEAP_SetEquipSlot()
+    {
+        bool result = VTable::Detour2(m_vtbl_TESObjectWEAP, 0x86 + 0x5, TESObjectWEAP_SetEquipSlot_Hook, std::addressof(m_TESObjectWEAP_SetEquipSlot_o));
+        if (result) {
+            Message("[Hook] TESObjectWEAP vtbl @0x8B"); 
+        }
+        else {
+            Error("%s: FAILED", __FUNCTION__);
+        }
+        return result;
+    }
+
+    void EngineExtensions::TESObjectWEAP_SetEquipSlot_Hook(BGSEquipType* a_this, BGSEquipSlot* a_slot)
+    {
+        // this just writes BGSEquipSlot* @rcx+8, but we call here on the off chance that something else hooked it
+        m_Instance->m_TESObjectWEAP_SetEquipSlot_o(a_this, a_slot);
+
+        OnSetEquipSlot evn;
+        m_Instance->m_dispatchers.m_setEquipSlot.SendEvent(evn);
+    }
+
     void EngineExtensions::CreateWeaponNodes_Hook(
         TESObjectREFR* a_actor,
         TESForm* a_object,
@@ -295,7 +325,7 @@ namespace SDS
     {
         m_Instance->m_createWeaponNodes_o(a_actor, a_object, a_left);
 
-        Events::CreateWeaponNodesEvent evn{ a_actor, a_object,  a_left };
+        CreateWeaponNodesEvent evn{ a_actor, a_object,  a_left };
         m_Instance->m_dispatchers.m_createWeaponNodes.SendEvent(evn);
     }
 
@@ -306,14 +336,15 @@ namespace SDS
     {
         if (a_info)
         {
-            Events::CreateArmorNodeEvent evn;
+            CreateArmorNodeEvent evn
+            {
+                nullptr,
+                a_obj,
+                a_info,
+                a_params
+            };
 
-            if (!a_info->handle.LookupREFR(evn.reference)) {
-                evn.reference = nullptr;
-            }
-            evn.object = a_obj;
-            evn.info = a_info;
-            evn.params = a_params;
+            a_info->handle.LookupREFR(evn.reference);
 
             m_Instance->m_dispatchers.m_createArmorNode.SendEvent(evn);
         }

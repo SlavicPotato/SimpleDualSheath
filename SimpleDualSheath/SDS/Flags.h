@@ -14,7 +14,7 @@ namespace SDS
             kRight = 1u << 2,
             kSwap = 1u << 3,
             kFirstPerson = 1u << 4,
-            kImmediate = 1u << 5,
+            kNoImmediate = 1u << 5,
             kUpdateNodeOnAttach = 1u << 6,
 
             kEnabled = (kPlayer | kNPC)

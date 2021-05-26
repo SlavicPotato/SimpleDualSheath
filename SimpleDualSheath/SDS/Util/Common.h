@@ -7,6 +7,7 @@ namespace SDS
         namespace Common
         {
             bool IsREFRValid(const TESObjectREFR* a_refr);
+            bool CanEquipEitherHand(TESForm* item);
         }
     }
 }

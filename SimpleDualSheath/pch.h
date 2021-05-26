@@ -10,6 +10,7 @@
 #include <skse64/GameObjects.h>
 #include <skse64/GameEvents.h>
 #include <skse64/GameThreads.h>
+#include <skse64/GameData.h>
 #include <skse64/GameRTTI.h>
 #include <skse64/NiNodes.h>
 

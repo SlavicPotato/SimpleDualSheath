@@ -195,10 +195,12 @@
     <ClInclude Include="SDS\Config.h" />
     <ClInclude Include="SDS\Data.h" />
     <ClInclude Include="SDS\Controller.h" />
+    <ClInclude Include="SDS\EquipManager.h" />
     <ClInclude Include="SDS\Events\CreateArmorNodeEvent.h" />
     <ClInclude Include="SDS\Events\CreateWeaponNodesEvent.h" />
     <ClInclude Include="SDS\Events\Dispatcher.h" />
     <ClInclude Include="SDS\EngineExtensions.h" />
+    <ClInclude Include="SDS\Events\OnSetEquipSlot.h" />
     <ClInclude Include="SDS\Flags.h" />
     <ClInclude Include="SDS\Main.h" />
     <ClInclude Include="SDS\StringHolder.h" />
@@ -221,6 +223,7 @@
     <ClCompile Include="SDS\Data.cpp" />
     <ClCompile Include="SDS\Controller.cpp" />
     <ClCompile Include="SDS\EngineExtensions.cpp" />
+    <ClCompile Include="SDS\EquipManager.cpp" />
     <ClCompile Include="SDS\Main.cpp" />
     <ClCompile Include="SDS\StringHolder.cpp" />
     <ClCompile Include="SDS\Util\Common.cpp" />
