@@ -85,12 +85,12 @@ namespace SDS
             flagParser.Parse(reader.Get(SECT_2HSWORD, KW_FLAGS, "")),
             reader.Get(SECT_2HSWORD, KW_SHEATHNODE, StringHolder::NINODE_SWORD_ON_BACK_LEFT)
         };
-        
+
         m_2hAxe = {
             flagParser.Parse(reader.Get(SECT_2HAXE, KW_FLAGS, "")),
             reader.Get(SECT_2HAXE, KW_SHEATHNODE, StringHolder::NINODE_AXE_ON_BACK_LEFT)
         };
-        
+
         m_staff = {
             flagParser.Parse(reader.Get(SECT_STAFF, KW_FLAGS, "Player|NPC|Right"), true),
             reader.Get(SECT_STAFF, KW_SHEATHNODE, StringHolder::NINODE_STAFF_LEFT)
@@ -102,6 +102,7 @@ namespace SDS
         };
 
         m_npcEquipLeft = reader.Get(SECT_NPC, "EquipLeft", false);
+        m_disableShieldHideOnSit = reader.Get(SECT_SHIELD, "DisableShieldHideOnSit", false);
 
         return (m_loaded = (reader.ParseError() == 0));
     }

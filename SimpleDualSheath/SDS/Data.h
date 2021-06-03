@@ -29,6 +29,8 @@ namespace SDS
         {
         public:
 
+            WeaponData() = default;
+
             template <typename... Args>
             void Create(std::uint32_t a_type, Args&&... a_args)
             {

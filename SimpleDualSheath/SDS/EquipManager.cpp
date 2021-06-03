@@ -49,14 +49,14 @@ namespace SDS
         return a_actor != *g_thePlayer && CheckDualWield(a_actor);
     }
 
-    EquipExtensions::EquipCandidateCollector::EquipCandidateCollector(
+    EquipCandidateCollector::EquipCandidateCollector(
         TESObjectWEAP* a_ignore)
         :
         m_ignore(a_ignore)
     {
     }
 
-    bool EquipExtensions::EquipCandidateCollector::Accept(InventoryEntryData* a_entryData)
+    bool EquipCandidateCollector::Accept(InventoryEntryData* a_entryData)
     {
         if (!a_entryData || !a_entryData->type || a_entryData->countDelta < 1)
             return true;

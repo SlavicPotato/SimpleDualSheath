@@ -359,3 +359,4 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /x64_v142/common_1_5_97_vc14/Release MT
+/x64_v142/common_1_5_97_vc14

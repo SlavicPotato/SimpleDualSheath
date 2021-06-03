@@ -33,6 +33,11 @@ namespace SDS
             m_dispatchers.m_createArmorNode.AddSink(a_controller.get());
         }
 
+        if (config.m_disableShieldHideOnSit)
+        {
+            Patch_DisableShieldHideOnSit();
+        }
+
         m_dispatchers.m_createWeaponNodes.AddSink(a_controller.get());
 
         if (config.HasEnabled2HEntries())
@@ -53,19 +58,20 @@ namespace SDS
         }
     }
 
-    bool EngineExtensions::ValidateMemory(
-        const Controller* a_controller)
+    auto EngineExtensions::ValidateMemory(
+        const Config& a_config) ->
+        MemoryValidationFlags
     {
         using namespace Patching;
 
+        MemoryValidationFlags result(MemoryValidationFlags::kNone);
+
         constexpr std::uint8_t d_createWeaponNodes[]{ 0x40, 0x56, 0x57, 0x41, 0x54, 0x41, 0x56 };
         if (!validate_mem(m_createWeaponNodes_a, d_createWeaponNodes)) {
-            return false;
+            result |= MemoryValidationFlags::kCreateWeaponNodes;
         }
 
-        auto& config = a_controller->GetConfig();
-
-        if ((config.m_shield.m_flags & Data::Flags::kEnabled) != Data::Flags::kNone)
+        if ((a_config.m_shield.m_flags & Data::Flags::kEnabled) != Data::Flags::kNone)
         {
             constexpr std::uint8_t
                 d_createArmorNodev1[]{ 0x48, 0x85, 0xC0, 0x74, 0x0D },
@@ -74,24 +80,32 @@ namespace SDS
             if (!validate_mem(m_createArmorNode_a, d_createArmorNodev1) &&
                 !validate_mem(m_createArmorNode_a, d_createArmorNodev2))
             {
-                return false;
+                result |= MemoryValidationFlags::kCreateArmorNode;
             }
         }
 
-        if (config.m_scb)
+        if (a_config.m_disableShieldHideOnSit)
+        {
+            constexpr std::uint8_t d_hideShield[]{ 0x4C, 0x8B, 0x0A, 0x48, 0x8B, 0x81, 0xF0, 0x01, 0x00, 0x00 };
+            if (!validate_mem(m_hideShield_a, d_hideShield)) {
+                result |= MemoryValidationFlags::kDisableShieldHideOnSit;
+            }
+        }
+
+        if (a_config.m_scb)
         {
             constexpr std::uint8_t d_scbAttach[]{ 0x80, 0x7D, 0x6F, 0x00, 0x75, 0x1E };
             if (!validate_mem(m_scbAttach_a, d_scbAttach)) {
-                return false;
+                result |= MemoryValidationFlags::kScabbardAttach;
             }
 
             constexpr std::uint8_t d_scbDetach[]{ 0x0F, 0x84, 0xB3, 0x00, 0x00, 0x00 };
             if (!validate_mem(m_scbDetach_a, d_scbDetach)) {
-                return false;
+                result |= MemoryValidationFlags::kScabbardDetach;
             }
         }
 
-        return true;
+        return result;
     }
 
     void EngineExtensions::Patch_CreateWeaponNodes()
@@ -295,6 +309,44 @@ namespace SDS
             ISKSE::GetBranchTrampoline().Write6Branch(m_scbDetach_a, code.get());
         }
         LogPatchEnd("SCB_Detach");
+    }
+
+    void EngineExtensions::Patch_DisableShieldHideOnSit()
+    {
+        struct Assembly : JITASM
+        {
+            Assembly(std::uintptr_t targetAddr) :
+                JITASM(ISKSE::GetLocalTrampoline())
+            {
+                Xbyak::Label exitContinue;
+                Xbyak::Label exitSkip;
+
+                Xbyak::Label skip;
+
+                test(r8b, r8b); // bool: true = hide, false = show
+                jne(skip);
+                mov(r9, ptr[rdx]); // the actor biped object storage thing (holds bone tree, items, nodes, ...)
+                mov(rax, ptr[rcx + 0x1F0]); // TESRace*
+                jmp(ptr[rip + exitContinue]);
+
+                L(skip);
+                jmp(ptr[rip + exitSkip]);
+                
+                L(exitContinue);
+                dq(targetAddr + 0xA);
+
+                L(exitSkip);
+                dq(targetAddr + 0x53);
+
+            }
+        };
+
+        LogPatchBegin("DisableShieldHideOnSit");
+        {
+            Assembly code(m_hideShield_a);
+            ISKSE::GetBranchTrampoline().Write6Branch(m_hideShield_a, code.get());
+        }
+        LogPatchEnd("DisableShieldHideOnSit");
     }
 
     bool EngineExtensions::Hook_TESObjectWEAP_SetEquipSlot()

@@ -29,11 +29,7 @@ bool ISKSE::CheckRuntimeVersion(UInt32 a_version) const
     return a_version >= MIN_RUNTIME_VERSION;
 }
 
-/*bool ISKSE::CheckInterfaceVersion(UInt32 a_interfaceID, UInt32 a_interfaceVersion, UInt32 a_compiledInterfaceVersion) const
+bool ISKSE::CheckInterfaceVersion(UInt32 a_interfaceID, UInt32 a_interfaceVersion, UInt32 a_compiledInterfaceVersion) const
 {
-    switch (a_interfaceID)
-    {
-    case SKSETaskInterface::INTERFACE_TYPE:
-    case SKSEMessagingInterface::INTERFACE_TYPE:
-    }
-}*/
+    return true;
+}

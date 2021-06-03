@@ -35,6 +35,39 @@ namespace SDS
         }
     }
 
+    static std::string MVResultToString(
+        EngineExtensions::MemoryValidationFlags a_flags)
+    {
+        using flag_t = EngineExtensions::MemoryValidationFlags;
+        using flag_size_t = typename std::underlying_type<flag_t>::type;
+
+        std::string result;
+
+        if ((a_flags & flag_t::kCreateArmorNode) == flag_t::kCreateArmorNode) {
+            result += "CreateArmorNode, ";
+        }
+        
+        if ((a_flags & flag_t::kCreateWeaponNodes) == flag_t::kCreateWeaponNodes) {
+            result += "CreateWeaponNodes, ";
+        }
+        
+        if ((a_flags & flag_t::kDisableShieldHideOnSit) == flag_t::kDisableShieldHideOnSit) {
+            result += "DisableShieldHideOnSit, ";
+        }
+        
+        if ((a_flags & flag_t::kScabbardAttach) == flag_t::kScabbardAttach) {
+            result += "ScabbardAttach, ";
+        }
+        
+        if ((a_flags & flag_t::kScabbardDetach) == flag_t::kScabbardDetach) {
+            result += "ScabbardDetach";
+        }
+
+        StrHelpers::rtrim(result, ", ");
+
+        return result;
+    }
+
     bool Initialize(const SKSEInterface* a_skse)
     {
         Config config(PLUGIN_INI_FILE);
@@ -42,12 +75,16 @@ namespace SDS
             gLog.Warning("Unable to load the configuration file, using defaults");
         }
 
-        auto controller = std::make_shared<Controller>(config);
+        auto mvResult = EngineExtensions::ValidateMemory(config);
 
-        if (!EngineExtensions::ValidateMemory(controller.get())) {
-            gLog.FatalError("Memory validation failed, aborting");
+        if (mvResult != EngineExtensions::MemoryValidationFlags::kNone) 
+        {
+            auto desc = MVResultToString(mvResult);
+            gLog.FatalError("Memory validation failed (%s), aborting", desc.c_str());
             return false;
         }
+
+        auto controller = std::make_shared<Controller>(config);
 
         auto& skse = ISKSE::GetSingleton();
 

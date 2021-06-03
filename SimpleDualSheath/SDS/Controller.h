@@ -37,7 +37,7 @@ namespace SDS
         Controller(const Config& a_conf);
 
         void InitializeData();
-        [[nodiscard]] NiNode* GetScbAttachmentNode(TESObjectREFR* a_actor, TESForm* a_form, NiAVObject* a_sheatheNode, bool a_checkEquippedLeft) const;
+        [[nodiscard]] NiNode* GetScbAttachmentNode(TESObjectREFR* a_actor, TESForm* a_form, NiAVObject* a_sheathNode, bool a_checkEquippedLeft) const;
 
         [[nodiscard]] SKMP_FORCEINLINE const auto& GetConfig() const {
             return m_conf;
@@ -53,14 +53,16 @@ namespace SDS
 
         [[nodiscard]] bool IsShieldAllowed(Actor* a_actor) const;
         void ProcessEquippedShield(Actor* a_actor, const Util::Node::NiRootNodes& a_roots, TESObjectARMO* a_armor, bool a_drawn) const;
-        void DoProcessEquippedShield( Actor* a_actor, DrawnState a_drawnState) const;
+        void DoProcessEquippedShield(Actor* a_actor, DrawnState a_drawnState) const;
         void QueueProcessEquippedShield(Actor* a_actor, DrawnState a_drawnState) const;
+
+        void SetShieldGeometryCull(Actor* a_actor, DrawnState a_drawnState) const;
 
         [[nodiscard]] static bool GetIsDrawn(Actor* a_actor, DrawnState a_state);
 
         void OnActorLoad(TESObjectREFR* a_actor);
-        void OnShieldEquip(Actor *a_actor, TESObjectARMO *a_armor);
-        void OnWeaponEquip(Actor *a_actor, TESObjectWEAP *a_weapon);
+        void OnShieldEquip(Actor* a_actor, TESObjectARMO* a_armor);
+        void OnWeaponEquip(Actor* a_actor, TESObjectWEAP* a_weapon);
 
         // Beth
         virtual EventResult	ReceiveEvent(TESObjectLoadedEvent* a_evn, EventDispatcher<TESObjectLoadedEvent>* a_dispatcher) override;
@@ -75,7 +77,7 @@ namespace SDS
         // EngineExtensions
         virtual void Receive(const Events::CreateWeaponNodesEvent& a_evn) override;
         virtual void Receive(const Events::CreateArmorNodeEvent& a_evn) override; // shield only
-        virtual void Receive(const Events::OnSetEquipSlot& a_evn) override; 
+        virtual void Receive(const Events::OnSetEquipSlot& a_evn) override;
 
         Config m_conf;
 

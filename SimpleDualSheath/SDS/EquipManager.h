@@ -2,20 +2,20 @@
 
 namespace SDS
 {
+    struct EquipCandidateCollector
+    {
+        EquipCandidateCollector(TESObjectWEAP* a_ignore);
+
+        bool Accept(InventoryEntryData* a_entryData);
+
+        std::vector<TESObjectWEAP*> m_results;
+        TESObjectWEAP* m_ignore;
+    };
+
+
     class EquipExtensions :
         public BSTEventSink <TESContainerChangedEvent>
     {
-
-        struct EquipCandidateCollector
-        {
-            EquipCandidateCollector(TESObjectWEAP* a_ignore);
-
-            bool Accept(InventoryEntryData* a_entryData);
-
-            std::vector<TESObjectWEAP*> m_results;
-            TESObjectWEAP* m_ignore;
-        };
-
 
     public:
 

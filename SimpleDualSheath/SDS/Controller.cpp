@@ -281,7 +281,12 @@ namespace SDS
                 if (NiPointer armorNode = GetNiObject(sourceNode, buf); armorNode)
                 {
                     AttachToNode(armorNode, targetNode, (m_conf.m_shield.m_flags & Flags::kUpdateNodeOnAttach) == Flags::kUpdateNodeOnAttach);
+                    //ClearCull(armorNode);
                 }
+                /*else if (NiPointer armorNode = GetNiObject(targetNode, buf); armorNode)
+                {
+                    ClearCull(armorNode);
+                }*/
             }
         }
     }
@@ -315,6 +320,93 @@ namespace SDS
         }
     }
 
+    void Controller::SetShieldGeometryCull(
+        Actor* a_actor,
+        DrawnState a_drawnState) const
+    {
+        auto pm = a_actor->processManager;
+        if (!pm) {
+            return;
+        }
+
+        auto form = pm->equippedObject[ActorProcessManager::kEquippedHand_Left];
+        if (!form) {
+            return;
+        }
+
+        if (form->formType != TESObjectARMO::kTypeID) {
+            return;
+        }
+
+        auto armor = static_cast<TESObjectARMO*>(form);
+
+        if (!armor->IsShield()) {
+            return;
+        }
+
+        NiRootNodes roots(a_actor);
+        roots.GetNPCRoots(m_strings->m_npcroot);
+
+        if (!IsShieldAllowed(a_actor)) {
+            return;
+        }
+
+        bool drawn = GetIsDrawn(a_actor, a_drawnState);
+
+        for (std::size_t i = 0; i < std::size(roots.m_nodes); i++)
+        {
+            auto& root = roots.m_nodes[i];
+
+            if (!root) {
+                continue;
+            }
+
+            if (i == 1 && (m_conf.m_shield.m_flags & Data::Flags::kFirstPerson) != Data::Flags::kFirstPerson) {
+                continue;
+            }
+
+            NiPointer sheathedNode = FindNode(root, m_strings->m_shieldSheathNode);
+            if (!sheathedNode) {
+                continue;
+            }
+
+            NiPointer drawnNode = FindNode(root, m_strings->m_shield);
+            if (!drawnNode) {
+                continue;
+            }
+
+            auto& sourceNode = drawn ? sheathedNode : drawnNode;
+            auto& targetNode = drawn ? drawnNode : sheathedNode;
+
+            using size_type = decltype(armor->armorAddons.count);
+
+            for (size_type i = 0; i < armor->armorAddons.count; i++)
+            {
+                TESObjectARMA* arma(nullptr);
+
+                if (!armor->armorAddons.GetNthItem(i, arma)) {
+                    continue;
+                }
+
+                if (!arma || !arma->isValidRace(a_actor->race)) {
+                    continue;
+                }
+
+                char buf[MAX_PATH];
+                arma->GetNodeName(buf, a_actor, armor, -1.0f);
+
+                if (NiPointer armorNode = GetNiObject(sourceNode, buf); armorNode)
+                {
+                    armorNode->m_flags |= NiAVObject::kFlag_Cull;
+                }
+                else if (NiPointer armorNode = GetNiObject(targetNode, buf); armorNode) {
+                    armorNode->m_flags |= NiAVObject::kFlag_Cull;
+                }
+            }
+        }
+    }
+
+
     void Controller::QueueProcessEquippedShield(
         Actor* a_actor,
         DrawnState a_drawnState) const
@@ -329,7 +421,7 @@ namespace SDS
     NiNode* Controller::GetScbAttachmentNode(
         TESObjectREFR* a_actor,
         TESForm* a_form,
-        NiAVObject* a_sheatheNode,
+        NiAVObject* a_sheathNode,
         bool a_checkEquippedLeft) const
     {
         auto actor = static_cast<Actor*>(a_actor);
@@ -361,9 +453,9 @@ namespace SDS
 
         NiRootNodes roots(a_actor, no1p);
 
-        auto root = a_sheatheNode->GetAsNiNode();
+        auto root = a_sheathNode->GetAsNiNode();
         if (!root) {
-            root = a_sheatheNode->m_parent;
+            root = a_sheathNode->m_parent;
         }
 
         NiNode* found(nullptr);
@@ -543,7 +635,7 @@ namespace SDS
 
     void Controller::Receive(const Events::CreateWeaponNodesEvent& a_evn)
     {
-        // we put the weapon on sheathe node here regardless of ActorState since it should get redrawn anyway
+        // we put the weapon on sheath node here regardless of ActorState since it should get redrawn anyway
 
         if (!a_evn.object) {
             return;
@@ -589,6 +681,7 @@ namespace SDS
 
         if ((m_conf.m_shield.m_flags & Flags::kNoImmediate) != Flags::kNoImmediate) {
             DoProcessEquippedShield(actor, DrawnState::Determine);
+            //SetShieldGeometryCull(actor, DrawnState::Determine);
         }
 
         // and again just in case (deferred)

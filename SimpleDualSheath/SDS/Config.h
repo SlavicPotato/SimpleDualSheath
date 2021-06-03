@@ -69,6 +69,7 @@ namespace SDS
 
         bool m_scb;
         bool m_npcEquipLeft;
+        bool m_disableShieldHideOnSit;
 
     private:
 
