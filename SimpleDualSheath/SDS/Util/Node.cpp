@@ -12,7 +12,7 @@ namespace SDS
                 NiNode* a_root,
                 const BSFixedString& a_name)
             {
-                return a_root->GetObjectByName(std::addressof(a_name.data));
+                return a_root->GetObjectByName(a_name);
             }
 
             NiNode* FindNode(

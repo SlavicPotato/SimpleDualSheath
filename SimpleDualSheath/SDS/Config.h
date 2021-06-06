@@ -70,6 +70,8 @@ namespace SDS
         bool m_scb;
         bool m_npcEquipLeft;
         bool m_disableShieldHideOnSit;
+        bool m_shieldHandWorkaround;
+        bool m_shwForceIfDrawn;
 
     private:
 

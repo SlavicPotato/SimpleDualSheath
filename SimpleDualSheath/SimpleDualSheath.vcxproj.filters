@@ -95,6 +95,9 @@
     <ClInclude Include="SDS\EquipManager.h">
       <Filter>Header Files\SDS</Filter>
     </ClInclude>
+    <ClInclude Include="SDS\NodeOverride.h">
+      <Filter>Header Files\SDS</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -137,6 +140,9 @@
       <Filter>Source Files\SDS\Util</Filter>
     </ClCompile>
     <ClCompile Include="SDS\EquipManager.cpp">
+      <Filter>Source Files\SDS</Filter>
+    </ClCompile>
+    <ClCompile Include="SDS\NodeOverride.cpp">
       <Filter>Source Files\SDS</Filter>
     </ClCompile>
   </ItemGroup>

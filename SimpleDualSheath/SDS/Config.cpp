@@ -102,7 +102,9 @@ namespace SDS
         };
 
         m_npcEquipLeft = reader.Get(SECT_NPC, "EquipLeft", false);
-        m_disableShieldHideOnSit = reader.Get(SECT_SHIELD, "DisableShieldHideOnSit", false);
+        m_disableShieldHideOnSit = reader.Get(SECT_SHIELD, "DisableHideOnSit", false);
+        m_shieldHandWorkaround = reader.Get(SECT_SHIELD, "ClenchedHandWorkaround", false);
+        m_shwForceIfDrawn = reader.Get(SECT_SHIELD, "ClenchedHandWorkaroundForceIfDrawn", false);
 
         return (m_loaded = (reader.ParseError() == 0));
     }

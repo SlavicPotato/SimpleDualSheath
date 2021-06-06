@@ -24,7 +24,7 @@ namespace SDS
 
     void Controller::InitializeData()
     {
-        m_strings = std::make_unique<StringHolder>();
+        m_strings = std::make_shared<StringHolder>();
         m_data = std::make_unique<WeaponData>();
 
         m_data->Create(TESObjectWEAP::GameData::kType_OneHandSword, StringHolder::NINODE_SWORD, StringHolder::NINODE_SWORD_LEFT, m_conf.m_sword);
@@ -38,6 +38,11 @@ namespace SDS
         if (!m_conf.m_shield.m_sheathNode.empty()) {
             m_strings->m_shieldSheathNode.Set(m_conf.m_shield.m_sheathNode.c_str());
         }
+
+#ifdef _SDS_UNUSED
+        m_nodeOverride = std::make_unique<NodeOverride>(m_strings);
+#endif 
+
     }
 
     bool Controller::GetParentNodes(
@@ -163,10 +168,6 @@ namespace SDS
         NiRootNodes roots(a_actor);
         roots.GetNPCRoots(m_strings->m_npcroot);
 
-#ifdef _SDS_UNUSED
-        ApplyNodeOverrides(roots);
-#endif
-
         auto form = pm->equippedObject[ActorProcessManager::kEquippedHand_Left];
         if (form)
         {
@@ -208,22 +209,22 @@ namespace SDS
         );
     }
 
-    bool Controller::IsShieldAllowed(Actor* a_actor) const
+    bool Controller::IsShieldEnabled(Actor* a_actor) const
     {
         if (a_actor == *g_thePlayer)
         {
-            if ((m_conf.m_shield.m_flags & Flags::kPlayer) != Flags::kPlayer) {
-                return false;
+            if ((m_conf.m_shield.m_flags & Flags::kPlayer) == Flags::kPlayer) {
+                return true;
             }
         }
         else
         {
-            if ((m_conf.m_shield.m_flags & Flags::kNPC) != Flags::kNPC) {
-                return false;
+            if ((m_conf.m_shield.m_flags & Flags::kNPC) == Flags::kNPC) {
+                return true;
             }
         }
 
-        return true;
+        return false;
     }
 
     void Controller::ProcessEquippedShield(
@@ -232,7 +233,7 @@ namespace SDS
         TESObjectARMO* a_armor,
         bool a_drawn) const
     {
-        if (!IsShieldAllowed(a_actor)) {
+        if (!IsShieldEnabled(a_actor)) {
             return;
         }
 
@@ -320,93 +321,6 @@ namespace SDS
         }
     }
 
-    void Controller::SetShieldGeometryCull(
-        Actor* a_actor,
-        DrawnState a_drawnState) const
-    {
-        auto pm = a_actor->processManager;
-        if (!pm) {
-            return;
-        }
-
-        auto form = pm->equippedObject[ActorProcessManager::kEquippedHand_Left];
-        if (!form) {
-            return;
-        }
-
-        if (form->formType != TESObjectARMO::kTypeID) {
-            return;
-        }
-
-        auto armor = static_cast<TESObjectARMO*>(form);
-
-        if (!armor->IsShield()) {
-            return;
-        }
-
-        NiRootNodes roots(a_actor);
-        roots.GetNPCRoots(m_strings->m_npcroot);
-
-        if (!IsShieldAllowed(a_actor)) {
-            return;
-        }
-
-        bool drawn = GetIsDrawn(a_actor, a_drawnState);
-
-        for (std::size_t i = 0; i < std::size(roots.m_nodes); i++)
-        {
-            auto& root = roots.m_nodes[i];
-
-            if (!root) {
-                continue;
-            }
-
-            if (i == 1 && (m_conf.m_shield.m_flags & Data::Flags::kFirstPerson) != Data::Flags::kFirstPerson) {
-                continue;
-            }
-
-            NiPointer sheathedNode = FindNode(root, m_strings->m_shieldSheathNode);
-            if (!sheathedNode) {
-                continue;
-            }
-
-            NiPointer drawnNode = FindNode(root, m_strings->m_shield);
-            if (!drawnNode) {
-                continue;
-            }
-
-            auto& sourceNode = drawn ? sheathedNode : drawnNode;
-            auto& targetNode = drawn ? drawnNode : sheathedNode;
-
-            using size_type = decltype(armor->armorAddons.count);
-
-            for (size_type i = 0; i < armor->armorAddons.count; i++)
-            {
-                TESObjectARMA* arma(nullptr);
-
-                if (!armor->armorAddons.GetNthItem(i, arma)) {
-                    continue;
-                }
-
-                if (!arma || !arma->isValidRace(a_actor->race)) {
-                    continue;
-                }
-
-                char buf[MAX_PATH];
-                arma->GetNodeName(buf, a_actor, armor, -1.0f);
-
-                if (NiPointer armorNode = GetNiObject(sourceNode, buf); armorNode)
-                {
-                    armorNode->m_flags |= NiAVObject::kFlag_Cull;
-                }
-                else if (NiPointer armorNode = GetNiObject(targetNode, buf); armorNode) {
-                    armorNode->m_flags |= NiAVObject::kFlag_Cull;
-                }
-            }
-        }
-    }
-
-
     void Controller::QueueProcessEquippedShield(
         Actor* a_actor,
         DrawnState a_drawnState) const
@@ -484,12 +398,33 @@ namespace SDS
     {
         QueueActorTask(a_actor, [this](Actor* a_actor)
             {
+
+#ifdef _SDS_UNUSED
+
+                m_nodeOverride->ApplyNodeOverrides(a_actor);
+#endif
+
                 ProcessWeaponDrawnChange(a_actor, GetIsDrawn(a_actor, DrawnState::Determine));
 
                 if (m_conf.m_npcEquipLeft && ActorQualifiesForEquip(a_actor))
                 {
                     EvaluateEquip(a_actor);
                 }
+            }
+        );
+    }
+
+    void Controller::OnNiNodeUpdate(TESObjectREFR* a_actor)
+    {
+        QueueActorTask(a_actor, [this](Actor* a_actor)
+            {
+
+#ifdef _SDS_UNUSED
+
+                m_nodeOverride->ApplyNodeOverrides(a_actor);
+#endif
+
+                ProcessWeaponDrawnChange(a_actor, GetIsDrawn(a_actor, DrawnState::Determine));
             }
         );
     }
@@ -587,7 +522,7 @@ namespace SDS
         -> EventResult
     {
         if (a_evn) {
-            QueueProcessWeaponDrawnChange(a_evn->reference, DrawnState::Determine);
+            OnNiNodeUpdate(a_evn->reference);
         }
 
         return kEvent_Continue;
@@ -681,7 +616,6 @@ namespace SDS
 
         if ((m_conf.m_shield.m_flags & Flags::kNoImmediate) != Flags::kNoImmediate) {
             DoProcessEquippedShield(actor, DrawnState::Determine);
-            //SetShieldGeometryCull(actor, DrawnState::Determine);
         }
 
         // and again just in case (deferred)
@@ -730,44 +664,6 @@ namespace SDS
 
         ISKSE::GetSingleton().GetInterface<SKSETaskInterface>()->AddTask(task);
     }
-
-#ifdef _SDS_UNUSED
-
-    void ApplyNodeOverride(
-        NiNode* a_root,
-        const BSFixedString& a_node,
-        const BSFixedString& a_parent)
-    {
-        if (NiPointer node = a_root->GetObjectByName(&a_node.data); node)
-        {
-            if (NiPointer newParentNode = FindNode(a_root, a_parent); newParentNode)
-            {
-                AttachToNode(node, newParentNode);
-            }
-        }
-    }
-
-    void Controller::ApplyNodeOverrides(
-        const NiRootNodes& a_roots) const
-    {
-        for (auto& root : a_roots.m_nodes)
-        {
-            if (!root) {
-                continue;
-            }
-
-            ApplyNodeOverride(root, m_strings->m_weaponSword, m_strings->m_weaponSwordOnBackMOV);
-            ApplyNodeOverride(root, m_strings->m_weaponSwordLeft, m_strings->m_weaponSwordLeftOnBackMOV);
-
-            ApplyNodeOverride(root, m_strings->m_weaponAxe, m_strings->m_weaponAxeOnBackMOV);
-            ApplyNodeOverride(root, m_strings->m_weaponAxeLeft, m_strings->m_weaponAxeLeftOnBackMOV);
-
-            ApplyNodeOverride(root, m_strings->m_weaponDagger, m_strings->m_weaponDaggerAnkleMOV);
-            ApplyNodeOverride(root, m_strings->m_weaponDaggerLeft, m_strings->m_weaponDaggerLeftAnkleMOV);
-        }
-    }
-
-#endif
 
 
 }

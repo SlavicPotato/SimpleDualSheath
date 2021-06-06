@@ -2,7 +2,9 @@
 
 #include "EngineExtensions.h"
 #include "SDS/Data.h"
+#include "SDS/Util/Common.h"
 
+#include <ext/IHook.h>
 #include <ext/JITASM.h>
 #include <ext/Patching.h>
 #include <ext/VFT.h>
@@ -11,6 +13,7 @@ namespace SDS
 {
     using namespace JITASM;
     using namespace Events;
+    using namespace Util;
 
     std::unique_ptr<EngineExtensions> EngineExtensions::m_Instance;
 
@@ -30,6 +33,11 @@ namespace SDS
         if ((config.m_shield.m_flags & Data::Flags::kEnabled) != Data::Flags::kNone)
         {
             Patch_CreateArmorNode();
+            if (config.m_shieldHandWorkaround) {
+                if (!Patch_ShieldHandWorkaround()) {
+                    Error("Shield hand patches failed");
+                }
+            }
             m_dispatchers.m_createArmorNode.AddSink(a_controller.get());
         }
 
@@ -325,13 +333,13 @@ namespace SDS
 
                 test(r8b, r8b); // bool: true = hide, false = show
                 jne(skip);
-                mov(r9, ptr[rdx]); // the actor biped object storage thing (holds bone tree, items, nodes, ...)
+                mov(r9, ptr[rdx]); // the actor biped object storage thing (holds bone tree, items, nodes, ...) (BipedModel::Biped)
                 mov(rax, ptr[rcx + 0x1F0]); // TESRace*
                 jmp(ptr[rip + exitContinue]);
 
                 L(skip);
                 jmp(ptr[rip + exitSkip]);
-                
+
                 L(exitContinue);
                 dq(targetAddr + 0xA);
 
@@ -353,12 +361,170 @@ namespace SDS
     {
         bool result = VTable::Detour2(m_vtbl_TESObjectWEAP, 0x86 + 0x5, TESObjectWEAP_SetEquipSlot_Hook, std::addressof(m_TESObjectWEAP_SetEquipSlot_o));
         if (result) {
-            Message("[Hook] TESObjectWEAP vtbl @0x8B"); 
+            Message("[Hook] TESObjectWEAP::SetEquipSlot");
         }
         else {
             Error("%s: FAILED", __FUNCTION__);
         }
         return result;
+    }
+
+    bool EngineExtensions::Patch_ShieldHandWorkaround()
+    {
+        if (!Hook::GetDst5<0xE8>(
+            m_unk140609D50_BShkbAnimationGraph_SetGraphVariableInt_a,
+            m_BShkbAnimationGraph_SetGraphVariableInt_o))
+        {
+            return false;
+        }
+
+        if (!Hook::GetDst5<0xE8>(
+            m_unk1406097C0_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_a,
+            m_unk1406097C0_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_o))
+        {
+            return false;
+        }
+
+        if (!Hook::GetDst5<0xE8>(
+            m_unk140634D20_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_a,
+            m_unk140634D20_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_o))
+        {
+            return false;
+        }
+
+        enum class HookTarget
+        {
+            k1,
+            k2,
+            k3
+        };
+
+        struct Assembly : JITASM
+        {
+            Assembly(HookTarget a_target) :
+                JITASM(ISKSE::GetLocalTrampoline())
+            {
+                Xbyak::Label retnLabel;
+                Xbyak::Label callLabel;
+
+                std::uintptr_t targetAddr;
+                std::uintptr_t callAddr;
+
+                switch (a_target)
+                {
+                case HookTarget::k1:
+                    targetAddr = m_unk140609D50_BShkbAnimationGraph_SetGraphVariableInt_a;
+                    callAddr = std::uintptr_t(Unk140609D50_BShkbAnimationGraph_SetGraphVariableInt_Hook);
+                    lea(r9, ptr[rbp - 0x38]);
+                    break;
+                case HookTarget::k2:
+                    targetAddr = m_unk1406097C0_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_a;
+                    callAddr = std::uintptr_t(Unk1406097C0_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_Hook);
+                    mov(r9, rsi);
+                    break;
+                case HookTarget::k3:
+                    targetAddr = m_unk140634D20_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_a;
+                    callAddr = std::uintptr_t(Unk140634D20_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_Hook);
+                    lea(r9, ptr[r15 - 0xB8]);
+                    break;
+                }
+
+                call(ptr[rip + callLabel]);
+                jmp(ptr[rip + retnLabel]);
+
+                L(retnLabel);
+                dq(targetAddr + 0x5);
+
+                L(callLabel);
+                dq(callAddr);
+
+            }
+        };
+
+        LogPatchBegin("Unk140609D50");
+        {
+            Assembly code(HookTarget::k1);
+            ISKSE::GetBranchTrampoline().Write5Branch(
+                m_unk140609D50_BShkbAnimationGraph_SetGraphVariableInt_a, code.get());
+        }
+        LogPatchEnd("Unk140609D50");
+
+        LogPatchBegin("Unk1406097C0");
+        {
+            Assembly code(HookTarget::k2);
+            ISKSE::GetBranchTrampoline().Write5Branch(
+                m_unk1406097C0_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_a, code.get());
+        }
+        LogPatchEnd("Unk1406097C0");
+
+        LogPatchBegin("Unk140634D20");
+        {
+            Assembly code(HookTarget::k3);
+            ISKSE::GetBranchTrampoline().Write5Branch(
+                m_unk140634D20_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_a, code.get());
+        }
+        LogPatchEnd("Unk140634D20");
+
+        return true;
+    }
+
+    bool EngineExtensions::Unk140609D50_BShkbAnimationGraph_SetGraphVariableInt_Hook(
+        BShkbAnimationGraph* a_graph,
+        const BSFixedString& a_name,
+        std::int32_t a_value,
+        Actor* a_actor)
+    {
+        auto controller = m_Instance->m_controller.get();
+
+        if (a_value == 10 &&
+            controller->IsShieldEnabled(a_actor) &&
+            (controller->GetConfig().m_shwForceIfDrawn ||
+                !a_actor->actorState.IsWeaponDrawn()) &&
+            Common::IsShieldEquipped(a_actor))
+        {
+            a_value = 0;
+        }
+
+        return m_Instance->m_BShkbAnimationGraph_SetGraphVariableInt_o(a_graph, a_name, a_value);
+    }
+
+    std::uint32_t EngineExtensions::Unk1406097C0_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_Hook(
+        IAnimationGraphManagerHolder* a_holder,
+        const BSFixedString& a_name,
+        std::int32_t a_value,
+        Actor* a_actor)
+    {
+        auto controller = m_Instance->m_controller.get();
+
+        if (a_value == 10 &&
+            controller->IsShieldEnabled(a_actor) &&
+            (controller->GetConfig().m_shwForceIfDrawn ||
+                !a_actor->actorState.IsWeaponDrawn()) &&
+            Common::IsShieldEquipped(a_actor))
+        {
+            a_value = 0;
+        }
+
+        return m_Instance->m_unk1406097C0_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_o(a_holder, a_name, a_value);
+    }
+
+    std::uint32_t EngineExtensions::Unk140634D20_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_Hook(
+        IAnimationGraphManagerHolder* a_holder,
+        const BSFixedString& a_name,
+        std::int32_t a_value,
+        Actor* a_actor)
+    {
+        auto controller = m_Instance->m_controller.get();
+
+        if ((a_value == 0 || a_value == 10) &&
+            controller->IsShieldEnabled(a_actor) &&
+            Common::IsShieldEquipped(a_actor))
+        {
+            a_holder->SetVariableOnGraphsInt(
+                controller->GetStringHolder()->m_iLeftHandType, a_value);
+        }
+
+        return m_Instance->m_unk140634D20_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_o(a_holder, a_name, a_value);
     }
 
     void EngineExtensions::TESObjectWEAP_SetEquipSlot_Hook(BGSEquipType* a_this, BGSEquipSlot* a_slot)

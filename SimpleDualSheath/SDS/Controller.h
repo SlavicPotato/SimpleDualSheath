@@ -6,10 +6,16 @@
 #include "Config.h"
 #include "EquipManager.h"
 
+#ifdef _SDS_UNUSED
+#include "NodeOverride.h"
+#endif
+
 #include "Events/Dispatcher.h"
 #include "Events/CreateWeaponNodesEvent.h"
 #include "Events/CreateArmorNodeEvent.h"
 #include "Events/OnSetEquipSlot.h"
+
+#include <ext/IRandom.h>
 
 namespace SDS
 {
@@ -42,6 +48,12 @@ namespace SDS
         [[nodiscard]] SKMP_FORCEINLINE const auto& GetConfig() const {
             return m_conf;
         }
+        
+        [[nodiscard]] SKMP_FORCEINLINE const auto GetStringHolder() const {
+            return m_strings.get();
+        }
+
+        [[nodiscard]] bool IsShieldEnabled(Actor* a_actor) const;
 
     private:
 
@@ -51,16 +63,14 @@ namespace SDS
         void ProcessWeaponDrawnChange(Actor* a_actor, bool a_drawn) const;
         void QueueProcessWeaponDrawnChange(TESObjectREFR* a_actor, DrawnState a_drawnState) const;
 
-        [[nodiscard]] bool IsShieldAllowed(Actor* a_actor) const;
         void ProcessEquippedShield(Actor* a_actor, const Util::Node::NiRootNodes& a_roots, TESObjectARMO* a_armor, bool a_drawn) const;
         void DoProcessEquippedShield(Actor* a_actor, DrawnState a_drawnState) const;
         void QueueProcessEquippedShield(Actor* a_actor, DrawnState a_drawnState) const;
 
-        void SetShieldGeometryCull(Actor* a_actor, DrawnState a_drawnState) const;
-
         [[nodiscard]] static bool GetIsDrawn(Actor* a_actor, DrawnState a_state);
 
         void OnActorLoad(TESObjectREFR* a_actor);
+        void OnNiNodeUpdate(TESObjectREFR* a_actor);
         void OnShieldEquip(Actor* a_actor, TESObjectARMO* a_armor);
         void OnWeaponEquip(Actor* a_actor, TESObjectWEAP* a_weapon);
 
@@ -81,11 +91,12 @@ namespace SDS
 
         Config m_conf;
 
-        std::unique_ptr<StringHolder> m_strings;
+        std::shared_ptr<StringHolder> m_strings;
         std::unique_ptr<Data::WeaponData> m_data;
 
 #ifdef _SDS_UNUSED
-        void Controller::ApplyNodeOverrides(const Util::Node::NiRootNodes& a_roots) const;
+        std::unique_ptr<NodeOverride> m_nodeOverride;
 #endif
+
     };
 }

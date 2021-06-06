@@ -360,3 +360,5 @@ MigrationBackup/
 FodyWeavers.xsd
 /x64_v142/common_1_5_97_vc14/Release MT
 /x64_v142/common_1_5_97_vc14
+/SimpleDualSheath/SDS/NodeOverride.cpp
+/SimpleDualSheath/SDS/NodeOverride.h

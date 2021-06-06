@@ -32,6 +32,32 @@ namespace SDS
                 return (equipSlot == GetRightHandSlot() || equipSlot == GetEitherHandSlot() || equipSlot == GetLeftHandSlot());
             }
 
+            bool IsShieldEquipped(Actor* a_actor)
+            {
+                if (!a_actor) {
+                    return false;
+                }
+
+                auto pm = a_actor->processManager;
+                if (!pm) {
+                    return false;
+                }
+
+                auto form = pm->equippedObject[ActorProcessManager::kEquippedHand_Left];
+                if (!form) {
+                    return false;
+                }
+
+                if (form->formType != TESObjectARMO::kTypeID) {
+                    return false;
+                }
+
+                auto armor = static_cast<TESObjectARMO*>(form);
+
+                return armor->IsShield();
+            }
+
+
         }
     }
 }

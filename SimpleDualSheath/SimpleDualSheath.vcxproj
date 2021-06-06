@@ -195,6 +195,7 @@
     <ClInclude Include="SDS\Events\OnSetEquipSlot.h" />
     <ClInclude Include="SDS\Flags.h" />
     <ClInclude Include="SDS\Main.h" />
+    <ClInclude Include="SDS\NodeOverride.h" />
     <ClInclude Include="SDS\StringHolder.h" />
     <ClInclude Include="SDS\Util\Common.h" />
     <ClInclude Include="SDS\Util\Logging.h" />
@@ -216,6 +217,7 @@
     <ClCompile Include="SDS\EngineExtensions.cpp" />
     <ClCompile Include="SDS\EquipManager.cpp" />
     <ClCompile Include="SDS\Main.cpp" />
+    <ClCompile Include="SDS\NodeOverride.cpp" />
     <ClCompile Include="SDS\StringHolder.cpp" />
     <ClCompile Include="SDS\Util\Common.cpp" />
     <ClCompile Include="SDS\Util\Logging.cpp" />

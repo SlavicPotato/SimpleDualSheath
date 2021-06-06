@@ -34,6 +34,8 @@ namespace SDS
 
         static inline constexpr auto NINODE_NPCROOT = "NPC Root [Root]";
 
+        static inline constexpr auto iLeftHandType = "iLeftHandType";
+
         StringHolder();
 
         BSFixedString m_shieldSheathNode;
@@ -43,6 +45,7 @@ namespace SDS
 
         BSFixedString m_npcroot;
 
+        BSFixedString m_iLeftHandType;
 
 #ifdef _SDS_UNUSED
 
@@ -51,14 +54,23 @@ namespace SDS
         static inline constexpr auto NINODE_SWORD_SWP_MOV = "MOV WeaponSwordSWP";
         static inline constexpr auto NINODE_SWORD_LEFT_SWP_MOV = "MOV WeaponSwordLeftSWP";
 
+        static inline constexpr auto NINODE_SWORD_DEFAULT_MOV = "MOV WeaponSwordDefault";
+        static inline constexpr auto NINODE_SWORD_LEFT_DEFAULT_MOV = "MOV WeaponSwordLeftDefault";
+
         static inline constexpr auto NINODE_AXE_BACK_MOV = "MOV WeaponAxeOnBack";
         static inline constexpr auto NINODE_AXE_BACK_LEFT_MOV = "MOV WeaponAxeLeftOnBack";
+        
+        static inline constexpr auto NINODE_AXE_DEFAULT_MOV = "MOV WeaponAxeDefault";
+        static inline constexpr auto NINODE_AXE_LEFT_DEFAULT_MOV = "MOV WeaponAxeLeftDefault";
         
         static inline constexpr auto NINODE_DAGGER_BACK_HIP_MOV = "MOV WeaponDaggerBackHip";
         static inline constexpr auto NINODE_DAGGER_BACK_HIP_LEFT_MOV = "MOV WeaponDaggerLeftBackHip";
         
         static inline constexpr auto NINODE_DAGGER_ANKLE_MOV = "MOV WeaponDaggerAnkle";
         static inline constexpr auto NINODE_DAGGER_ANKLE_LEFT_MOV = "MOV WeaponDaggerLeftAnkle";
+        
+        static inline constexpr auto NINODE_DAGGER_DEFAULT_MOV = "MOV WeaponDaggerDefault";
+        static inline constexpr auto NINODE_DAGGER_LEFT_DEFAULT_MOV = "MOV WeaponDaggerLeftDefault";
 
         BSFixedString m_weaponSword;
         BSFixedString m_weaponSwordLeft;
@@ -67,10 +79,16 @@ namespace SDS
         BSFixedString m_weaponSwordSWPMOV;
         BSFixedString m_weaponSwordLeftSWPMOV;
 
+        BSFixedString m_weaponSwordDefaultMOV;
+        BSFixedString m_weaponSwordLeftDefaultMOV;
+
         BSFixedString m_weaponAxe;
         BSFixedString m_weaponAxeLeft;
         BSFixedString m_weaponAxeOnBackMOV;
         BSFixedString m_weaponAxeLeftOnBackMOV;
+
+        BSFixedString m_weaponAxeDefaultMOV;
+        BSFixedString m_weaponAxeLeftDefaultMOV;
 
         BSFixedString m_weaponDagger;
         BSFixedString m_weaponDaggerLeft;
@@ -78,6 +96,9 @@ namespace SDS
         BSFixedString m_weaponDaggerLeftBackHipMOV;
         BSFixedString m_weaponDaggerAnkleMOV;
         BSFixedString m_weaponDaggerLeftAnkleMOV;
+        BSFixedString m_weaponDaggerDefaultMOV;
+        BSFixedString m_weaponDaggerLeftDefaultMOV;
+
 #endif
     };
 
