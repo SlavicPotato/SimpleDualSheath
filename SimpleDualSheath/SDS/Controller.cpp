@@ -243,7 +243,9 @@ namespace SDS
         }
 
         if ((m_conf.m_shieldHideFlags & Flags::kMountOnly) == Flags::kMountOnly) {
-            return (a_actor->flags2 & Actor::kFlags_kGettingOnOffMount) == Actor::kFlags_kGettingOnOffMount;
+            return 
+                (a_actor->flags2 & Actor::kFlags_kGettingOnOffMount) == Actor::kFlags_kGettingOnOffMount ||
+                a_actor->IsOnMount();
         }
 
         return true;
