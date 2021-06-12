@@ -226,6 +226,28 @@ namespace SDS
 
         return false;
     }
+    
+    bool Controller::ShouldBlockShieldHide(Actor* a_actor) const
+    {
+        if (a_actor == *g_thePlayer)
+        {
+            if ((m_conf.m_shieldHideFlags & Flags::kPlayer) != Flags::kPlayer) {
+                return false;
+            }
+        }
+        else
+        {
+            if ((m_conf.m_shieldHideFlags & Flags::kNPC) != Flags::kNPC) {
+                return false;
+            }
+        }
+
+        if ((m_conf.m_shieldHideFlags & Flags::kMountOnly) == Flags::kMountOnly) {
+            return (a_actor->flags2 & Actor::kFlags_kGettingOnOffMount) == Actor::kFlags_kGettingOnOffMount;
+        }
+
+        return true;
+    }
 
     void Controller::ProcessEquippedShield(
         Actor* a_actor,

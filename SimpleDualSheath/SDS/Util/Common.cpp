@@ -22,14 +22,19 @@ namespace SDS
             bool CanEquipEitherHand(TESForm* item)
             {
                 auto equipType = RTTI<BGSEquipType>()(item);
-                if (!equipType)
+                if (!equipType) {
                     return false;
+                }
 
                 auto equipSlot = equipType->GetEquipSlot();
-                if (!equipSlot)
+                if (!equipSlot) {
                     return false;
+                }
 
-                return (equipSlot == GetRightHandSlot() || equipSlot == GetEitherHandSlot() || equipSlot == GetLeftHandSlot());
+                return (
+                    equipSlot == GetRightHandSlot() || 
+                    equipSlot == GetEitherHandSlot() || 
+                    equipSlot == GetLeftHandSlot());
             }
 
             bool IsShieldEquipped(Actor* a_actor)

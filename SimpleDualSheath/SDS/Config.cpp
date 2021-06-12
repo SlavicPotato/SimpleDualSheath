@@ -15,6 +15,7 @@ namespace SDS
         {"FirstPerson", {Flags::kFirstPerson, false}},
         {"NoImmediate", {Flags::kNoImmediate, false}},
         {"UpdateNode", {Flags::kUpdateNodeOnAttach, false}},
+        {"MountOnly", {Flags::kMountOnly, false}},
         {"Right", {Flags::kRight, true}},
         {"Swap", {Flags::kSwap, true}}
     }
@@ -26,7 +27,7 @@ namespace SDS
         bool a_internal)
         -> Flags
     {
-        stl::vector<std::string> v;
+        std::vector<std::string> v;
         StrHelpers::SplitString(a_in, '|', v, true);
 
         Flags out(Flags::kNone);
@@ -102,9 +103,9 @@ namespace SDS
         };
 
         m_npcEquipLeft = reader.Get(SECT_NPC, "EquipLeft", false);
-        m_disableShieldHideOnSit = reader.Get(SECT_SHIELD, "DisableHideOnSit", false);
         m_shieldHandWorkaround = reader.Get(SECT_SHIELD, "ClenchedHandWorkaround", false);
         m_shwForceIfDrawn = reader.Get(SECT_SHIELD, "ClenchedHandWorkaroundForceIfDrawn", false);
+        m_shieldHideFlags = flagParser.Parse(reader.Get(SECT_SHIELD, "DisableHideOnSit", ""));
 
         return (m_loaded = (reader.ParseError() == 0));
     }

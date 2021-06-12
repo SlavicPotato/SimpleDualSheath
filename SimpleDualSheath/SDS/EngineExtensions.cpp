@@ -41,9 +41,9 @@ namespace SDS
             m_dispatchers.m_createArmorNode.AddSink(a_controller.get());
         }
 
-        if (config.m_disableShieldHideOnSit)
+        if ((config.m_shieldHideFlags & Data::Flags::kEnabled) != Data::Flags::kNone)
         {
-            Patch_DisableShieldHideOnSit();
+            Patch_DisableShieldHideOnSit(config);
         }
 
         m_dispatchers.m_createWeaponNodes.AddSink(a_controller.get());
@@ -92,7 +92,7 @@ namespace SDS
             }
         }
 
-        if (a_config.m_disableShieldHideOnSit)
+        if ((a_config.m_shieldHideFlags & Data::Flags::kEnabled) != Data::Flags::kNone)
         {
             constexpr std::uint8_t d_hideShield[]{ 0x4C, 0x8B, 0x0A, 0x48, 0x8B, 0x81, 0xF0, 0x01, 0x00, 0x00 };
             if (!validate_mem(m_hideShield_a, d_hideShield)) {
@@ -319,20 +319,61 @@ namespace SDS
         LogPatchEnd("SCB_Detach");
     }
 
-    void EngineExtensions::Patch_DisableShieldHideOnSit()
+    void EngineExtensions::Patch_DisableShieldHideOnSit(
+        const Config& a_config)
     {
         struct Assembly : JITASM
         {
-            Assembly(std::uintptr_t targetAddr) :
+            Assembly(
+                std::uintptr_t a_targetAddr) 
+                :
                 JITASM(ISKSE::GetLocalTrampoline())
             {
                 Xbyak::Label exitContinue;
                 Xbyak::Label exitSkip;
+                Xbyak::Label callLabel;
+                /*Xbyak::Label playerLabel;
+                Xbyak::Label shFlagsLabel;*/
 
                 Xbyak::Label skip;
+                Xbyak::Label cont;
 
                 test(r8b, r8b); // bool: true = hide, false = show
+                je(cont);
+
+                push(rcx);
+                push(rdx);
+                push(r8);
+                sub(rsp, 0x20);
+                
+
+                call(ptr[rip + callLabel]);
+                
+                add(rsp, 0x20);
+                pop(r8);
+                pop(rdx);
+                pop(rcx);
+
+                test(al, al);
                 jne(skip);
+
+                /*Xbyak::Label isNPC;
+                Xbyak::Label jcond;
+                
+                mov(rax, ptr[rip + shFlagsLabel]);
+                mov(r9d, ptr[rax]);
+                mov(rax, ptr[rip + playerLabel]);
+                cmp(rcx, ptr[rax]); // rcx = Actor*
+                jne(isNPC);
+                test(r9d, Enum::Underlying(Data::Flags::kPlayer));
+                jmp(jcond);
+                L(isNPC);
+                test(r9d, Enum::Underlying(Data::Flags::kNPC));
+                L(jcond);
+                je(cont);
+                jmp(skip);*/
+
+                L(cont);
                 mov(r9, ptr[rdx]); // the actor biped object storage thing (holds bone tree, items, nodes, ...) (BipedModel::Biped)
                 mov(rax, ptr[rcx + 0x1F0]); // TESRace*
                 jmp(ptr[rip + exitContinue]);
@@ -341,14 +382,23 @@ namespace SDS
                 jmp(ptr[rip + exitSkip]);
 
                 L(exitContinue);
-                dq(targetAddr + 0xA);
+                dq(a_targetAddr + 0xA);
 
                 L(exitSkip);
-                dq(targetAddr + 0x53);
+                dq(a_targetAddr + 0x53);
+
+                L(callLabel);
+                dq(std::uintptr_t(ShouldBlockShieldHide));
+
+                /*L(playerLabel);
+                dq(std::uintptr_t(g_thePlayer));
+
+                L(shFlagsLabel);
+                dq(a_shFlagsAddr);*/
 
             }
         };
-
+        
         LogPatchBegin("DisableShieldHideOnSit");
         {
             Assembly code(m_hideShield_a);
@@ -589,5 +639,11 @@ namespace SDS
         }
 
         return m_Instance->m_controller->GetScbAttachmentNode(a_actor, a_form, a_sheatheNode, a_checkEquippedLeft);
+    }
+
+    bool EngineExtensions::ShouldBlockShieldHide(
+        Actor* a_actor)
+    {
+        return m_Instance->m_controller->ShouldBlockShieldHide(a_actor);
     }
 }

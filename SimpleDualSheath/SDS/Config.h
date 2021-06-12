@@ -6,7 +6,7 @@ namespace SDS
 {
     class FlagParser
     {
-        using string_to_flag_map_t = stl::iunordered_map<std::string, std::pair<Data::Flags, bool>>;
+        using string_to_flag_map_t = stl::iunordered_map<std::string, std::pair<Data::Flags, bool>, std::allocator<std::pair<const std::string, std::pair<Data::Flags, bool>>>>;
 
     public:
 
@@ -69,9 +69,10 @@ namespace SDS
 
         bool m_scb;
         bool m_npcEquipLeft;
-        bool m_disableShieldHideOnSit;
         bool m_shieldHandWorkaround;
         bool m_shwForceIfDrawn;
+
+        Data::Flags m_shieldHideFlags;
 
     private:
 

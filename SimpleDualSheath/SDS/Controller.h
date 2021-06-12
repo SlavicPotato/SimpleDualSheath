@@ -15,8 +15,6 @@
 #include "Events/CreateArmorNodeEvent.h"
 #include "Events/OnSetEquipSlot.h"
 
-#include <ext/IRandom.h>
-
 namespace SDS
 {
     class Controller :
@@ -42,8 +40,14 @@ namespace SDS
     public:
         Controller(const Config& a_conf);
 
+        Controller(const Controller&) = delete;
+        Controller(Controller&&) = delete;
+        Controller& operator=(const Controller&) = delete;
+        Controller& operator=(Controller&&) = delete;
+
         void InitializeData();
         [[nodiscard]] NiNode* GetScbAttachmentNode(TESObjectREFR* a_actor, TESForm* a_form, NiAVObject* a_sheathNode, bool a_checkEquippedLeft) const;
+        
 
         [[nodiscard]] SKMP_FORCEINLINE const auto& GetConfig() const {
             return m_conf;
@@ -54,6 +58,7 @@ namespace SDS
         }
 
         [[nodiscard]] bool IsShieldEnabled(Actor* a_actor) const;
+        [[nodiscard]] bool ShouldBlockShieldHide(Actor* a_actor) const;
 
     private:
 

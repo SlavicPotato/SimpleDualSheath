@@ -15,6 +15,11 @@ namespace SDS
     {
     public:
 
+        EngineExtensions(const EngineExtensions&) = delete;
+        EngineExtensions(EngineExtensions&&) = delete;
+        EngineExtensions& operator=(const EngineExtensions&) = delete;
+        EngineExtensions& operator=(EngineExtensions&&) = delete;
+
         enum class MemoryValidationFlags : std::uint8_t
         {
             kNone = 0,
@@ -46,7 +51,7 @@ namespace SDS
         void Patch_CreateArmorNode();
         void Patch_SCB_Attach();
         void Patch_SCB_Detach();
-        void Patch_DisableShieldHideOnSit();
+        void Patch_DisableShieldHideOnSit(const Config& a_config);
         bool Hook_TESObjectWEAP_SetEquipSlot();
         bool Patch_ShieldHandWorkaround();
 
@@ -61,6 +66,8 @@ namespace SDS
 
         typedef bool(*BShkbAnimationGraph_SetGraphVariableInt_t)(BShkbAnimationGraph* a_graph, const BSFixedString& a_name, std::int32_t a_value);
         typedef std::uint32_t(*IAnimationGraphManagerHolder_SetVariableOnGraphsInt_t)(IAnimationGraphManagerHolder* a_holder, const BSFixedString& a_name, std::int32_t a_value);
+
+        static bool ShouldBlockShieldHide(Actor *a_actor);
 
         decltype(&CreateWeaponNodes_Hook) m_createWeaponNodes_o;
         decltype(&TESObjectWEAP_SetEquipSlot_Hook) m_TESObjectWEAP_SetEquipSlot_o;
