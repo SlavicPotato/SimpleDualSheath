@@ -41,17 +41,23 @@ namespace SDS
         {
             Data::Flags m_flags;
             std::string m_sheathNode;
+
+            [[nodiscard]] SKMP_FORCEINLINE bool IsEnabled() const {
+                return (m_flags & Data::Flags::kEnabled) != Data::Flags::kNone;
+            }
+
         };
 
         Config() = default;
         Config(const std::string& a_path);
 
         bool Load(const std::string& a_path);
-        SKMP_FORCEINLINE bool IsLoaded() const {
+
+        [[nodiscard]] SKMP_FORCEINLINE bool IsLoaded() const {
             return m_loaded;
         }
-
-        SKMP_FORCEINLINE bool HasEnabled2HEntries() const
+        
+        [[nodiscard]] SKMP_FORCEINLINE bool HasEnabled2HEntries() const
         {
             return 
                 (m_2hSword.m_flags & Data::Flags::kEnabled) != Data::Flags::kNone ||

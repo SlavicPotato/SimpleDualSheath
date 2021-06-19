@@ -12,7 +12,7 @@ namespace SDS
 
     bool EquipExtensions::CheckDualWield(Actor* a_actor)
     {
-        auto race = a_actor->race;
+        auto race = GetActorRace(a_actor);
 
         if (!race) {
             return false;

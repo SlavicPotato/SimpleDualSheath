@@ -62,7 +62,22 @@ namespace SDS
                 return armor->IsShield();
             }
 
+            TESRace* GetActorRace(Actor* a_actor)
+            {
+                auto race = a_actor->race;
 
+                if (!race)
+                {
+                    if (auto actorBase = a_actor->baseForm; actorBase)
+                    {
+                        if (auto npc = RTTI<TESNPC>()(actorBase); npc) {
+                            race = npc->race.race;
+                        }
+                    }
+                }
+
+                return race;
+            }
         }
     }
 }

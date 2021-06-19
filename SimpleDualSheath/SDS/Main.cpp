@@ -23,13 +23,9 @@ namespace SDS
 
             auto& config = s_controller->GetConfig();
 
-            if ((config.m_shield.m_flags & Data::Flags::kEnabled) != Data::Flags::kNone || config.m_npcEquipLeft)
-            {
-                edl->equipDispatcher.AddEventSink(s_controller.get());
-            }
-
             if (config.m_npcEquipLeft)
             {
+                edl->equipDispatcher.AddEventSink(s_controller.get());
                 edl->containerChangedDispatcher.AddEventSink(s_controller.get());
             }
         }
@@ -102,11 +98,11 @@ namespace SDS
             return false;
         }
 
-        auto CameraEvent = static_cast<EventDispatcher<SKSECameraEvent>*>(mif->GetEventDispatcher(SKSEMessagingInterface::kDispatcher_CameraEvent));
+        /*auto CameraEvent = static_cast<EventDispatcher<SKSECameraEvent>*>(mif->GetEventDispatcher(SKSEMessagingInterface::kDispatcher_CameraEvent));
         if (!CameraEvent) {
             gLog.FatalError("Could not get CameraEvent dispatcher");
             return false;
-        }
+        }*/
 
         if (!skse.CreateTrampolines(a_skse)) {
             return false;
@@ -116,9 +112,11 @@ namespace SDS
 
         EngineExtensions::Initialize(controller);
 
+#ifdef _SDS_UNUSED
         NiNodeUpdate->AddEventSink(controller.get());
+#endif
         ActionEvent->AddEventSink(controller.get());
-        CameraEvent->AddEventSink(controller.get());
+        //CameraEvent->AddEventSink(controller.get());
 
         s_controller = std::move(controller);
 

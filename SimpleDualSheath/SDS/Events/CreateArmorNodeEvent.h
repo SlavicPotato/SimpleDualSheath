@@ -10,6 +10,7 @@ namespace SDS
             NiAVObject* object;
             Biped* info;
             BipedParam* params;
+            NiNode* objectRoot;
         };
     }
 }

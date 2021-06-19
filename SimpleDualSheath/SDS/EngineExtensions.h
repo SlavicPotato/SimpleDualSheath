@@ -48,16 +48,18 @@ namespace SDS
         EngineExtensions(const std::shared_ptr<Controller>& a_controller);
 
         void Patch_CreateWeaponNodes();
-        void Patch_CreateArmorNode();
+        //void Patch_CreateArmorNode();
         void Patch_SCB_Attach();
         void Patch_SCB_Detach();
+        void Patch_Object_Attach();
         void Patch_DisableShieldHideOnSit(const Config& a_config);
         bool Hook_TESObjectWEAP_SetEquipSlot();
         bool Patch_ShieldHandWorkaround();
 
         static void CreateWeaponNodes_Hook(TESObjectREFR* a_actor, TESForm* a_object, bool a_left);
-        static NiAVObject* CreateArmorNode_Hook(NiAVObject* a_obj, Biped* a_info, BipedParam* a_params);
-        static NiNode* GetScbAttachmentNode_Hook(TESObjectREFR* a_actor, TESForm* a_form, NiAVObject* a_sheatheNode, bool a_checkEquippedLeft);
+        //static NiAVObject* CreateArmorNode_Hook(NiAVObject* a_obj, Biped* a_info, BipedParam* a_params, NiNode * a_objRoot);
+        static NiNode* GetScbAttachmentNode_Hook(TESObjectREFR* a_actor, TESForm* a_form, NiNode* a_attachmentNode);
+        static void AttachShieldNode_Hook(Actor* a_actor, TESForm* a_form, NiNode* a_attachmentNode, NiAVObject * a_object);
         static void TESObjectWEAP_SetEquipSlot_Hook(BGSEquipType *a_this, BGSEquipSlot* a_slot);
 
         static bool Unk140609D50_BShkbAnimationGraph_SetGraphVariableInt_Hook(BShkbAnimationGraph* a_graph, const BSFixedString& a_name, std::int32_t a_value, Actor* a_actor);
@@ -87,6 +89,7 @@ namespace SDS
         inline static auto m_createWeaponNodes_a = IAL::Address<std::uintptr_t>(19342);
         inline static auto m_createArmorNode_a = IAL::Address<std::uintptr_t>(15501, 0xB58);
         inline static auto m_scbAttach_a = IAL::Address<std::uintptr_t>(15569, 0x3A3);
+        inline static auto m_armorAttach_a = IAL::Address<std::uintptr_t>(15569, 0x2E2);
         inline static auto m_scbDetach_a = IAL::Address<std::uintptr_t>(15496, 0x1A3);
         inline static auto m_hideShield_a = IAL::Address<std::uintptr_t>(36580, 0x6); // does other stuff but we don't care here
         inline static auto m_vtbl_TESObjectWEAP = IAL::Address<std::uintptr_t>(234396);

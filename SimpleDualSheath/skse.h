@@ -7,8 +7,8 @@ class ISKSE :
     SKSEInterfaceFlags::kMessaging |
     SKSEInterfaceFlags::kTrampoline |
     SKSEInterfaceFlags::kTask,
-    88ui64,
-    414ui64>
+    82,
+    478>
 {
 public:
 

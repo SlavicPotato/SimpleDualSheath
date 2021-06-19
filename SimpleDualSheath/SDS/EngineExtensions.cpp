@@ -30,15 +30,14 @@ namespace SDS
             Patch_SCB_Detach();
         }
 
-        if ((config.m_shield.m_flags & Data::Flags::kEnabled) != Data::Flags::kNone)
+        if (config.m_shield.IsEnabled())
         {
-            Patch_CreateArmorNode();
+            Patch_Object_Attach();
             if (config.m_shieldHandWorkaround) {
                 if (!Patch_ShieldHandWorkaround()) {
                     Error("Shield hand patches failed");
                 }
             }
-            m_dispatchers.m_createArmorNode.AddSink(a_controller.get());
         }
 
         if ((config.m_shieldHideFlags & Data::Flags::kEnabled) != Data::Flags::kNone)
@@ -79,7 +78,7 @@ namespace SDS
             result |= MemoryValidationFlags::kCreateWeaponNodes;
         }
 
-        if ((a_config.m_shield.m_flags & Data::Flags::kEnabled) != Data::Flags::kNone)
+        if (a_config.m_shield.IsEnabled())
         {
             constexpr std::uint8_t
                 d_createArmorNodev1[]{ 0x48, 0x85, 0xC0, 0x74, 0x0D },
@@ -133,74 +132,13 @@ namespace SDS
             }
         };
 
-        LogPatchBegin("CreateWeaponNodes");
+        LogPatchBegin(__FUNCTION__);
         {
             Assembly code(m_createWeaponNodes_a);
             m_createWeaponNodes_o = code.get<decltype(m_createWeaponNodes_o)>();
             ISKSE::GetBranchTrampoline().Write6Branch(m_createWeaponNodes_a, std::uintptr_t(CreateWeaponNodes_Hook));
         }
-        LogPatchEnd("CreateWeaponNodes");
-    }
-
-    void EngineExtensions::Patch_CreateArmorNode()
-    {
-        struct Assembly : JITASM {
-            Assembly(std::uintptr_t a_addr, bool a_chain) :
-                JITASM(ISKSE::GetLocalTrampoline())
-            {
-                Xbyak::Label callLabel;
-                Xbyak::Label nullLabel;
-                Xbyak::Label retnNullLabel;
-                Xbyak::Label retnOKLabel;
-
-                mov(rcx, rax);
-                mov(rdx, r13);
-                mov(r8, ptr[rsp + 0x78]);
-                call(ptr[rip + callLabel]);
-
-                if (a_chain)
-                {
-                    jmp(ptr[rip + retnOKLabel]);
-                }
-                else
-                {
-                    test(rax, rax);
-                    je(nullLabel);
-                    jmp(ptr[rip + retnOKLabel]);
-                    L(nullLabel);
-                    jmp(ptr[rip + retnNullLabel]);
-                }
-
-                L(retnOKLabel);
-                if (a_chain)
-                {
-                    dq(a_addr);
-                }
-                else
-                {
-                    dq(a_addr + 0x5);
-
-                    L(retnNullLabel);
-                    dq(a_addr + 0x12);
-                }
-
-                L(callLabel);
-                dq(std::uintptr_t(CreateArmorNode_Hook));
-            }
-        };
-
-        LogPatchBegin("CreateArmorNode");
-        {
-            std::uintptr_t jmpAddr;
-            bool chain = ::Hook::GetDst5<0xE9>(m_createArmorNode_a, jmpAddr); // if cbp already hooked here
-            if (!chain) {
-                jmpAddr = m_createArmorNode_a;
-            }
-
-            Assembly code(jmpAddr, chain);
-            ISKSE::GetBranchTrampoline().Write5Branch(m_createArmorNode_a, code.get());
-        }
-        LogPatchEnd("CreateArmorNode");
+        LogPatchEnd(__FUNCTION__);
     }
 
     void EngineExtensions::Patch_SCB_Attach()
@@ -226,7 +164,6 @@ namespace SDS
                 mov(rdx, ptr[rcx + rdx + 0x10]); // form
                 mov(rcx, ptr[rbp - 0x31]); // reference
                 mov(r8, rsi); // attachment node
-                mov(r9b, 0x1);
 
                 push(rax);
                 sub(rsp, 0x20);
@@ -260,14 +197,14 @@ namespace SDS
             }
         };
 
-        LogPatchBegin("SCB_Attach");
+        LogPatchBegin(__FUNCTION__);
         {
             Assembly code(m_scbAttach_a);
             ISKSE::GetBranchTrampoline().Write6Branch(m_scbAttach_a, code.get());
         }
-        LogPatchEnd("SCB_Attach");
+        LogPatchEnd(__FUNCTION__);
     }
-
+    
     void EngineExtensions::Patch_SCB_Detach()
     {
         struct Assembly : JITASM
@@ -288,7 +225,6 @@ namespace SDS
                 mov(rcx, ptr[rbp - 0x20]); // reference
                 mov(rdx, ptr[rdi]); // form
                 mov(r8, r12); // attachment node
-                xor_(r9d, r9d);
                 call(ptr[rip + callLabel]);
                 test(rax, rax);
                 jne(ok);
@@ -311,12 +247,81 @@ namespace SDS
             }
         };
 
-        LogPatchBegin("SCB_Detach");
+        LogPatchBegin(__FUNCTION__);
         {
             Assembly code(m_scbDetach_a);
             ISKSE::GetBranchTrampoline().Write6Branch(m_scbDetach_a, code.get());
         }
-        LogPatchEnd("SCB_Detach");
+        LogPatchEnd(__FUNCTION__);
+    }
+
+    void EngineExtensions::Patch_Object_Attach()
+    {
+        struct Assembly : JITASM
+        {
+            Assembly(std::uintptr_t targetAddr) :
+                JITASM(ISKSE::GetLocalTrampoline())
+            {
+                Xbyak::Label callLabel;
+                Xbyak::Label retnLabel;
+                Xbyak::Label retnSkipLabel;
+
+                Xbyak::Label exitSkip;
+
+                cmp(r14d, 0xFFFFFFFF); // biped object == none
+                je(exitSkip);
+
+                mov(rcx, ptr[rbp - 0x31]); // reference
+                test(rcx, rcx);
+                je(exitSkip);
+
+                cmp(byte[rcx + 0x1A], 0x3E); // is Character ?
+                jne(exitSkip);
+                mov(rax, ptr[rcx + 0x40]); // load baseform
+                test(rax, rax);
+                je(exitSkip);
+                cmp(byte[rax + 0x1A], 0x2B); // is TESNPC ?
+                jne(exitSkip);
+                mov(r8, ptr[rax + 0x158]); // load TESRace
+                test(r8, r8);
+                je(exitSkip);
+                cmp(r14d, ptr[r8 + 0x138]); // is shield object?
+                jne(exitSkip);
+
+                mov(r8, ptr[rbp + 0x77]);
+                mov(r8, ptr[r8]);
+                imul(rdx, r14, 0x78);
+                mov(rdx, ptr[r8 + rdx + 0x10]); // form
+
+                mov(r8, rsi); // attachment node
+                mov(r9, rdi); // object
+
+                call(ptr[rip + callLabel]);
+
+                jmp(ptr[rip + retnLabel]);
+
+                L(exitSkip);
+                mov(rax, ptr[rsi]);
+                mov(r8b, 1);
+                jmp(ptr[rip + retnSkipLabel]);
+
+                L(retnLabel);
+                dq(targetAddr + 0x12);
+
+                L(retnSkipLabel);
+                dq(targetAddr + 0x6);
+
+                L(callLabel);
+                dq(std::uintptr_t(AttachShieldNode_Hook));
+            }
+        };
+
+        LogPatchBegin(__FUNCTION__);
+        {
+            Assembly code(m_armorAttach_a);
+            ISKSE::GetBranchTrampoline().Write6Branch(m_armorAttach_a, code.get());
+        }
+        LogPatchEnd(__FUNCTION__);
     }
 
     void EngineExtensions::Patch_DisableShieldHideOnSit(
@@ -332,8 +337,6 @@ namespace SDS
                 Xbyak::Label exitContinue;
                 Xbyak::Label exitSkip;
                 Xbyak::Label callLabel;
-                /*Xbyak::Label playerLabel;
-                Xbyak::Label shFlagsLabel;*/
 
                 Xbyak::Label skip;
                 Xbyak::Label cont;
@@ -346,7 +349,6 @@ namespace SDS
                 push(r8);
                 sub(rsp, 0x20);
                 
-
                 call(ptr[rip + callLabel]);
                 
                 add(rsp, 0x20);
@@ -356,22 +358,6 @@ namespace SDS
 
                 test(al, al);
                 jne(skip);
-
-                /*Xbyak::Label isNPC;
-                Xbyak::Label jcond;
-                
-                mov(rax, ptr[rip + shFlagsLabel]);
-                mov(r9d, ptr[rax]);
-                mov(rax, ptr[rip + playerLabel]);
-                cmp(rcx, ptr[rax]); // rcx = Actor*
-                jne(isNPC);
-                test(r9d, Enum::Underlying(Data::Flags::kPlayer));
-                jmp(jcond);
-                L(isNPC);
-                test(r9d, Enum::Underlying(Data::Flags::kNPC));
-                L(jcond);
-                je(cont);
-                jmp(skip);*/
 
                 L(cont);
                 mov(r9, ptr[rdx]); // the actor biped object storage thing (holds bone tree, items, nodes, ...) (BipedModel::Biped)
@@ -390,21 +376,15 @@ namespace SDS
                 L(callLabel);
                 dq(std::uintptr_t(ShouldBlockShieldHide));
 
-                /*L(playerLabel);
-                dq(std::uintptr_t(g_thePlayer));
-
-                L(shFlagsLabel);
-                dq(a_shFlagsAddr);*/
-
             }
         };
         
-        LogPatchBegin("DisableShieldHideOnSit");
+        LogPatchBegin(__FUNCTION__);
         {
             Assembly code(m_hideShield_a);
             ISKSE::GetBranchTrampoline().Write6Branch(m_hideShield_a, code.get());
         }
-        LogPatchEnd("DisableShieldHideOnSit");
+        LogPatchEnd(__FUNCTION__);
     }
 
     bool EngineExtensions::Hook_TESObjectWEAP_SetEquipSlot()
@@ -597,34 +577,10 @@ namespace SDS
         m_Instance->m_dispatchers.m_createWeaponNodes.SendEvent(evn);
     }
 
-    NiAVObject* EngineExtensions::CreateArmorNode_Hook(
-        NiAVObject* a_obj,
-        Biped* a_info,
-        BipedParam* a_params)
-    {
-        if (a_info)
-        {
-            CreateArmorNodeEvent evn
-            {
-                nullptr,
-                a_obj,
-                a_info,
-                a_params
-            };
-
-            a_info->handle.LookupREFR(evn.reference);
-
-            m_Instance->m_dispatchers.m_createArmorNode.SendEvent(evn);
-        }
-
-        return a_obj;
-    }
-
     NiNode* EngineExtensions::GetScbAttachmentNode_Hook(
         TESObjectREFR* a_actor,
         TESForm* a_form,
-        NiAVObject* a_sheatheNode,
-        bool a_checkEquippedLeft)
+        NiNode* a_attachmentNode)
     {
         if (!a_actor || !a_form) {
             return nullptr;
@@ -638,7 +594,28 @@ namespace SDS
             return nullptr;
         }
 
-        return m_Instance->m_controller->GetScbAttachmentNode(a_actor, a_form, a_sheatheNode, a_checkEquippedLeft);
+        auto actor = static_cast<Actor*>(a_actor);
+
+        return m_Instance->m_controller->GetScbAttachmentNode(
+            actor, a_form, a_attachmentNode);
+    }
+
+    void EngineExtensions::AttachShieldNode_Hook(
+        Actor* a_actor,
+        TESForm* a_form, 
+        NiNode* a_attachmentNode,
+        NiAVObject* a_object)
+    {
+        if (a_form) 
+        {
+            if (auto node = m_Instance->m_controller->GetShieldAttachmentNode(
+                a_actor, a_form, a_attachmentNode); node) 
+            {
+                a_attachmentNode = node;
+            }
+        }
+
+        a_attachmentNode->AttachChild(a_object, true);
     }
 
     bool EngineExtensions::ShouldBlockShieldHide(

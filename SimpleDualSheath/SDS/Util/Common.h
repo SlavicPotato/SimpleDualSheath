@@ -9,6 +9,7 @@ namespace SDS
             bool IsREFRValid(const TESObjectREFR* a_refr);
             bool CanEquipEitherHand(TESForm* item);
             bool IsShieldEquipped(Actor* a_actor);
+            TESRace* GetActorRace(Actor* a_actor);
 
         }
     }

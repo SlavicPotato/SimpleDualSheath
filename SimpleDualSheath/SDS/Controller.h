@@ -15,6 +15,8 @@
 #include "Events/CreateArmorNodeEvent.h"
 #include "Events/OnSetEquipSlot.h"
 
+#include <ext/Threads.h>
+
 namespace SDS
 {
     class Controller :
@@ -22,11 +24,13 @@ namespace SDS
         public BSTEventSink <TESObjectLoadedEvent>,
         public BSTEventSink <TESInitScriptEvent>,
         public BSTEventSink <TESEquipEvent>,
+#ifdef _SDS_UNUSED
         public BSTEventSink <SKSENiNodeUpdateEvent>,
+#endif
         public BSTEventSink <SKSEActionEvent>,
-        public BSTEventSink <SKSECameraEvent>,
+        //public BSTEventSink <SKSECameraEvent>,
         public Events::EventSink<Events::CreateWeaponNodesEvent>,
-        public Events::EventSink<Events::CreateArmorNodeEvent>,
+        //public Events::EventSink<Events::CreateArmorNodeEvent>,
         public Events::EventSink<Events::OnSetEquipSlot>
     {
 
@@ -46,7 +50,8 @@ namespace SDS
         Controller& operator=(Controller&&) = delete;
 
         void InitializeData();
-        [[nodiscard]] NiNode* GetScbAttachmentNode(TESObjectREFR* a_actor, TESForm* a_form, NiAVObject* a_sheathNode, bool a_checkEquippedLeft) const;
+        [[nodiscard]] NiNode* GetScbAttachmentNode(Actor* a_actor, TESForm* a_form, NiNode* a_attachmentNode) const;
+        [[nodiscard]] NiNode* GetShieldAttachmentNode(Actor* a_actor, TESForm* a_form, NiNode* a_attachmentNode) const;
         
 
         [[nodiscard]] SKMP_FORCEINLINE const auto& GetConfig() const {
@@ -68,15 +73,18 @@ namespace SDS
         void ProcessWeaponDrawnChange(Actor* a_actor, bool a_drawn) const;
         void QueueProcessWeaponDrawnChange(TESObjectREFR* a_actor, DrawnState a_drawnState) const;
 
-        void ProcessEquippedShield(Actor* a_actor, const Util::Node::NiRootNodes& a_roots, TESObjectARMO* a_armor, bool a_drawn) const;
+        void ProcessEquippedShield(Actor* a_actor, const Util::Node::NiRootNodes& a_roots, bool a_drawn) const;
         void DoProcessEquippedShield(Actor* a_actor, DrawnState a_drawnState) const;
-        void QueueProcessEquippedShield(Actor* a_actor, DrawnState a_drawnState) const;
+
+        [[nodiscard]] NiNode* FindObjectNPCRoot(TESObjectREFR* a_actor, NiAVObject* a_object, bool a_no1p) const;
 
         [[nodiscard]] static bool GetIsDrawn(Actor* a_actor, DrawnState a_state);
+        [[nodiscard]] static std::uint32_t GetShieldBipedObject(Actor* a_actor);
 
         void OnActorLoad(TESObjectREFR* a_actor);
+#ifdef _SDS_UNUSED
         void OnNiNodeUpdate(TESObjectREFR* a_actor);
-        void OnShieldEquip(Actor* a_actor, TESObjectARMO* a_armor);
+#endif
         void OnWeaponEquip(Actor* a_actor, TESObjectWEAP* a_weapon);
 
         // Beth
@@ -85,19 +93,23 @@ namespace SDS
         virtual EventResult	ReceiveEvent(TESEquipEvent* evn, EventDispatcher<TESEquipEvent>* dispatcher) override; // shield only
 
         // SKSE
+#ifdef _SDS_UNUSED
         virtual EventResult	ReceiveEvent(SKSENiNodeUpdateEvent* a_evn, EventDispatcher<SKSENiNodeUpdateEvent>* a_dispatcher) override;
+#endif
         virtual EventResult	ReceiveEvent(SKSEActionEvent* a_evn, EventDispatcher<SKSEActionEvent>* a_dispatcher) override;
-        virtual EventResult	ReceiveEvent(SKSECameraEvent* a_evn, EventDispatcher<SKSECameraEvent>* a_dispatcher) override;
+        //virtual EventResult	ReceiveEvent(SKSECameraEvent* a_evn, EventDispatcher<SKSECameraEvent>* a_dispatcher) override;
 
         // EngineExtensions
         virtual void Receive(const Events::CreateWeaponNodesEvent& a_evn) override;
-        virtual void Receive(const Events::CreateArmorNodeEvent& a_evn) override; // shield only
+        //virtual void Receive(const Events::CreateArmorNodeEvent& a_evn) override; // shield only
         virtual void Receive(const Events::OnSetEquipSlot& a_evn) override;
 
         Config m_conf;
 
         std::shared_ptr<StringHolder> m_strings;
         std::unique_ptr<Data::WeaponData> m_data;
+
+        //mutable WCriticalSection m_lock;
 
 #ifdef _SDS_UNUSED
         std::unique_ptr<NodeOverride> m_nodeOverride;
