@@ -64,6 +64,8 @@ namespace SDS
         [[nodiscard]] bool ShouldBlockShieldHide(Actor* a_actor) const;
         [[nodiscard]] static std::uint32_t GetShieldBipedObject(Actor* a_actor);
 
+        [[nodiscard]] void EvaluateDrawnStateOnNearbyActors();
+
     private:
 
         [[nodiscard]] bool GetParentNodes(const Data::Weapon* a_entry, NiNode* a_root, bool a_left, NiPointer<NiNode>& a_sheathedNode, NiPointer<NiNode>& a_drawnNode) const;

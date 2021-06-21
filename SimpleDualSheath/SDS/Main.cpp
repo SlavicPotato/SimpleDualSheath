@@ -10,9 +10,12 @@ namespace SDS
 {
     static std::shared_ptr<Controller> s_controller;
 
+    static bool s_loaded = false;
+
     static void MessageHandler(SKSEMessagingInterface::Message* a_message)
     {
-        if (a_message->type == SKSEMessagingInterface::kMessage_DataLoaded)
+        switch (a_message->type) {
+        case SKSEMessagingInterface::kMessage_DataLoaded:
         {
             s_controller->InitializeData();
 
@@ -29,6 +32,15 @@ namespace SDS
                 edl->containerChangedDispatcher.AddEventSink(s_controller.get());
             }
         }
+        break;
+        case SKSEMessagingInterface::kMessage_PostLoadGame:
+            // skip first, evaluate on subsequent loads
+            if (s_loaded) { 
+                s_controller->EvaluateDrawnStateOnNearbyActors();
+            }
+            s_loaded = true;
+            break;
+        }
     }
 
     static std::string MVResultToString(
@@ -41,7 +53,7 @@ namespace SDS
         if ((a_flags & flag_t::kWeaponLeftAttach) == flag_t::kWeaponLeftAttach) {
             result += "WeaponLeftAttach, ";
         }
-        
+
         if ((a_flags & flag_t::kStaffAttach) == flag_t::kStaffAttach) {
             result += "StaffAttach, ";
         }
@@ -49,19 +61,19 @@ namespace SDS
         if ((a_flags & flag_t::kShieldAttach) == flag_t::kShieldAttach) {
             result += "ShieldAttach, ";
         }
-        
+
         if ((a_flags & flag_t::kDisableShieldHideOnSit) == flag_t::kDisableShieldHideOnSit) {
             result += "DisableShieldHideOnSit, ";
         }
-        
+
         if ((a_flags & flag_t::kScabbardAttach) == flag_t::kScabbardAttach) {
             result += "ScabbardAttach, ";
         }
-        
+
         if ((a_flags & flag_t::kScabbardDetach) == flag_t::kScabbardDetach) {
             result += "ScabbardDetach";
         }
-        
+
         if ((a_flags & flag_t::kScabbardGet) == flag_t::kScabbardGet) {
             result += "ScabbardGet";
         }
@@ -80,7 +92,7 @@ namespace SDS
 
         auto mvResult = EngineExtensions::ValidateMemory(config);
 
-        if (mvResult != EngineExtensions::MemoryValidationFlags::kNone) 
+        if (mvResult != EngineExtensions::MemoryValidationFlags::kNone)
         {
             auto desc = MVResultToString(mvResult);
             gLog.FatalError("Memory validation failed (%s), aborting", desc.c_str());

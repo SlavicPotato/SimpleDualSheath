@@ -595,17 +595,10 @@ namespace SDS
         return kEvent_Continue;
     }
 
-    void Controller::Receive(const Events::OnSetEquipSlot& a_evn)
+    void Controller::EvaluateDrawnStateOnNearbyActors()
     {
-        auto player = *g_thePlayer;
-        if (!player || !player->loadedState) {
-            return;
-        }
-
         auto task = new TaskFunctor([this]
             {
-                //IScopedLock lock(m_lock);
-
                 auto player = *g_thePlayer;
                 if (player) {
                     ProcessWeaponDrawnChange(player, player->actorState.IsWeaponDrawn());
@@ -635,6 +628,16 @@ namespace SDS
         );
 
         ISKSE::GetSingleton().GetInterface<SKSETaskInterface>()->AddTask(task);
+    }
+
+    void Controller::Receive(const Events::OnSetEquipSlot& a_evn)
+    {
+        auto player = *g_thePlayer;
+        if (!player || !player->loadedState) {
+            return;
+        }
+
+        EvaluateDrawnStateOnNearbyActors();
     }
 
 
