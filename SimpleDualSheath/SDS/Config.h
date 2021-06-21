@@ -45,6 +45,10 @@ namespace SDS
             [[nodiscard]] SKMP_FORCEINLINE bool IsEnabled() const {
                 return (m_flags & Data::Flags::kEnabled) != Data::Flags::kNone;
             }
+            
+            [[nodiscard]] SKMP_FORCEINLINE bool FirstPerson() const {
+                return (m_flags & Data::Flags::kFirstPerson) == Data::Flags::kFirstPerson;
+            }
 
         };
 
@@ -74,6 +78,7 @@ namespace SDS
         ConfigEntry m_shield;
 
         bool m_scb;
+        bool m_scbCustom;
         bool m_npcEquipLeft;
         bool m_shieldHandWorkaround;
         bool m_shwForceIfDrawn;

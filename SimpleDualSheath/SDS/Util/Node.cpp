@@ -27,29 +27,17 @@ namespace SDS
                 return object->GetAsNiNode();
             }
 
-            void AttachToNode(NiPointer<NiAVObject> &a_object, NiPointer<NiNode>& a_node, bool a_update)
+            void AttachToNode(NiPointer<NiAVObject>& a_object, NiPointer<NiNode>& a_node)
             {
-                if (NiPointer parent = a_object->m_parent; parent != a_node)
+                if (a_object->m_parent != a_node)
                 {
-                    if (parent) {
-                        parent->RemoveChild(a_object);
-                    }
-
                     a_node->AttachChild(a_object, true);
-
-                    if (a_update)
-                    {
-                        NiAVObject::ControllerUpdateContext ctx{ 0.0f, 0 };
-                        a_object->UpdateNode(std::addressof(ctx));
-                    }
                 }
             }
-            
+
             void ClearCull(NiAVObject* a_object)
             {
-                if ((a_object->m_flags & NiAVObject::kFlag_Cull) == NiAVObject::kFlag_Cull) {
-                    a_object->m_flags &= ~NiAVObject::kFlag_Cull;
-                }
+                a_object->m_flags &= ~NiAVObject::kFlag_Cull;
             }
 
             NiRootNodes::NiRootNodes(
@@ -73,7 +61,7 @@ namespace SDS
             {
                 for (std::size_t i = 0; i < std::size(m_nodes); i++)
                 {
-                    auto &root = m_nodes[i];
+                    auto& root = m_nodes[i];
 
                     if (!root) {
                         continue;

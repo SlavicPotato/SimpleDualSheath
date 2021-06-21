@@ -9,7 +9,8 @@ namespace SDS
         m_weapon(NINODE_WEAPON),
         m_npcroot(NINODE_NPCROOT),
         m_shieldSheathNode(NINODE_SHIELD_BACK),
-        m_iLeftHandType(iLeftHandType)
+        m_iLeftHandType(iLeftHandType),
+        m_scbLeft(NINODE_SCB_LEFT)
 #ifdef _SDS_UNUSED
         ,
         m_weaponSword(NINODE_SWORD),

@@ -28,9 +28,6 @@ namespace SDS
         public BSTEventSink <SKSENiNodeUpdateEvent>,
 #endif
         public BSTEventSink <SKSEActionEvent>,
-        //public BSTEventSink <SKSECameraEvent>,
-        public Events::EventSink<Events::CreateWeaponNodesEvent>,
-        //public Events::EventSink<Events::CreateArmorNodeEvent>,
         public Events::EventSink<Events::OnSetEquipSlot>
     {
 
@@ -51,7 +48,8 @@ namespace SDS
 
         void InitializeData();
         [[nodiscard]] NiNode* GetScbAttachmentNode(Actor* a_actor, TESForm* a_form, NiNode* a_attachmentNode) const;
-        [[nodiscard]] NiNode* GetShieldAttachmentNode(Actor* a_actor, TESForm* a_form, NiNode* a_attachmentNode) const;
+        [[nodiscard]] const BSFixedString* GetWeaponAttachmentNodeName(Actor* a_actor, TESForm* a_form, bool a_firstPerson, bool a_left) const;
+        [[nodiscard]] const BSFixedString* GetShieldAttachmentNodeName(Actor* a_actor, TESForm* a_form, bool a_firstPerson) const;
         
 
         [[nodiscard]] SKMP_FORCEINLINE const auto& GetConfig() const {
@@ -64,6 +62,7 @@ namespace SDS
 
         [[nodiscard]] bool IsShieldEnabled(Actor* a_actor) const;
         [[nodiscard]] bool ShouldBlockShieldHide(Actor* a_actor) const;
+        [[nodiscard]] static std::uint32_t GetShieldBipedObject(Actor* a_actor);
 
     private:
 
@@ -74,12 +73,10 @@ namespace SDS
         void QueueProcessWeaponDrawnChange(TESObjectREFR* a_actor, DrawnState a_drawnState) const;
 
         void ProcessEquippedShield(Actor* a_actor, const Util::Node::NiRootNodes& a_roots, bool a_drawn) const;
-        void DoProcessEquippedShield(Actor* a_actor, DrawnState a_drawnState) const;
 
         [[nodiscard]] NiNode* FindObjectNPCRoot(TESObjectREFR* a_actor, NiAVObject* a_object, bool a_no1p) const;
 
         [[nodiscard]] static bool GetIsDrawn(Actor* a_actor, DrawnState a_state);
-        [[nodiscard]] static std::uint32_t GetShieldBipedObject(Actor* a_actor);
 
         void OnActorLoad(TESObjectREFR* a_actor);
 #ifdef _SDS_UNUSED
@@ -100,8 +97,6 @@ namespace SDS
         //virtual EventResult	ReceiveEvent(SKSECameraEvent* a_evn, EventDispatcher<SKSECameraEvent>* a_dispatcher) override;
 
         // EngineExtensions
-        virtual void Receive(const Events::CreateWeaponNodesEvent& a_evn) override;
-        //virtual void Receive(const Events::CreateArmorNodeEvent& a_evn) override; // shield only
         virtual void Receive(const Events::OnSetEquipSlot& a_evn) override;
 
         Config m_conf;

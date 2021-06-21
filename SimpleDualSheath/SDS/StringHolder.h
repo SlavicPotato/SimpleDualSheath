@@ -36,6 +36,8 @@ namespace SDS
 
         static inline constexpr auto iLeftHandType = "iLeftHandType";
 
+        static inline constexpr auto NINODE_SCB_LEFT = "ScbLeft";
+
         StringHolder();
 
         BSFixedString m_shieldSheathNode;
@@ -46,6 +48,8 @@ namespace SDS
         BSFixedString m_npcroot;
 
         BSFixedString m_iLeftHandType;
+
+        BSFixedString m_scbLeft;
 
 #ifdef _SDS_UNUSED
 

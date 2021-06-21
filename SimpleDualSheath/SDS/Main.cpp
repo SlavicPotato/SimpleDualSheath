@@ -35,16 +35,19 @@ namespace SDS
         EngineExtensions::MemoryValidationFlags a_flags)
     {
         using flag_t = EngineExtensions::MemoryValidationFlags;
-        using flag_size_t = typename std::underlying_type<flag_t>::type;
 
         std::string result;
 
-        if ((a_flags & flag_t::kCreateArmorNode) == flag_t::kCreateArmorNode) {
-            result += "CreateArmorNode, ";
+        if ((a_flags & flag_t::kWeaponLeftAttach) == flag_t::kWeaponLeftAttach) {
+            result += "WeaponLeftAttach, ";
         }
         
-        if ((a_flags & flag_t::kCreateWeaponNodes) == flag_t::kCreateWeaponNodes) {
-            result += "CreateWeaponNodes, ";
+        if ((a_flags & flag_t::kStaffAttach) == flag_t::kStaffAttach) {
+            result += "StaffAttach, ";
+        }
+
+        if ((a_flags & flag_t::kShieldAttach) == flag_t::kShieldAttach) {
+            result += "ShieldAttach, ";
         }
         
         if ((a_flags & flag_t::kDisableShieldHideOnSit) == flag_t::kDisableShieldHideOnSit) {
@@ -57,6 +60,10 @@ namespace SDS
         
         if ((a_flags & flag_t::kScabbardDetach) == flag_t::kScabbardDetach) {
             result += "ScabbardDetach";
+        }
+        
+        if ((a_flags & flag_t::kScabbardGet) == flag_t::kScabbardGet) {
+            result += "ScabbardGet";
         }
 
         StrHelpers::rtrim(result, ", ");
@@ -98,12 +105,6 @@ namespace SDS
             return false;
         }
 
-        /*auto CameraEvent = static_cast<EventDispatcher<SKSECameraEvent>*>(mif->GetEventDispatcher(SKSEMessagingInterface::kDispatcher_CameraEvent));
-        if (!CameraEvent) {
-            gLog.FatalError("Could not get CameraEvent dispatcher");
-            return false;
-        }*/
-
         if (!skse.CreateTrampolines(a_skse)) {
             return false;
         }
@@ -116,7 +117,6 @@ namespace SDS
         NiNodeUpdate->AddEventSink(controller.get());
 #endif
         ActionEvent->AddEventSink(controller.get());
-        //CameraEvent->AddEventSink(controller.get());
 
         s_controller = std::move(controller);
 

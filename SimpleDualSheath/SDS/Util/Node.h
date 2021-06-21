@@ -9,7 +9,7 @@ namespace SDS
             NiAVObject* GetNiObject(NiNode* a_root, const BSFixedString& a_name);
 
             [[nodiscard]] NiNode* FindNode(NiNode* a_root, const BSFixedString& a_name);
-            void AttachToNode(NiPointer<NiAVObject>& a_object, NiPointer<NiNode> &a_node, bool a_update = false);
+            void AttachToNode(NiPointer<NiAVObject>& a_object, NiPointer<NiNode> &a_node);
             void ClearCull(NiAVObject* a_object);
 
             struct NiRootNodes

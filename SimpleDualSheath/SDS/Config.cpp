@@ -13,8 +13,6 @@ namespace SDS
         {"NPC", {Flags::kNPC, false}},
         {"Player", {Flags::kPlayer, false}},
         {"FirstPerson", {Flags::kFirstPerson, false}},
-        {"NoImmediate", {Flags::kNoImmediate, false}},
-        {"UpdateNode", {Flags::kUpdateNodeOnAttach, false}},
         {"MountOnly", {Flags::kMountOnly, false}},
         {"Right", {Flags::kRight, true}},
         {"Swap", {Flags::kSwap, true}}
@@ -61,6 +59,7 @@ namespace SDS
         FlagParser flagParser;
 
         m_scb = reader.Get(SECT_GENERAL, "EnableLeftScabbards", true);
+        m_scbCustom = reader.Get(SECT_GENERAL, "CustomLeftScabbards", false);
 
         m_sword = {
             flagParser.Parse(reader.Get(SECT_SWORD, KW_FLAGS, "Player|NPC")),
