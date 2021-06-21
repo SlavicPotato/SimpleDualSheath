@@ -29,8 +29,7 @@ namespace SDS
 
             void AttachToNode(NiPointer<NiAVObject>& a_object, NiPointer<NiNode>& a_node)
             {
-                if (a_object->m_parent != a_node)
-                {
+                if (a_object->m_parent != a_node) {
                     a_node->AttachChild(a_object, true);
                 }
             }

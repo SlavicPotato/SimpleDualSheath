@@ -21,6 +21,7 @@ namespace SDS
     EngineExtensions::EngineExtensions(
         const std::shared_ptr<Controller>& a_controller)
     {
+
         auto& config = a_controller->GetConfig();
 
         Patch_WeaponObjects_Attach();
@@ -120,69 +121,67 @@ namespace SDS
 
     void EngineExtensions::Patch_SCB_Attach()
     {
+
+        struct Assembly : JITASM
         {
-            struct Assembly : JITASM
+            Assembly(std::uintptr_t targetAddr) :
+                JITASM(ISKSE::GetLocalTrampoline())
             {
-                Assembly(std::uintptr_t targetAddr) :
-                    JITASM(ISKSE::GetLocalTrampoline())
-                {
-                    Xbyak::Label callLabel;
-                    Xbyak::Label exitContinue;
-                    Xbyak::Label exitSkip;
+                Xbyak::Label callLabel;
+                Xbyak::Label exitContinue;
+                Xbyak::Label exitSkip;
 
-                    Xbyak::Label cont;
-                    Xbyak::Label skip;
+                Xbyak::Label cont;
+                Xbyak::Label skip;
 
-                    cmp(byte[rbp + 0x6F], 0);
-                    je(cont);
+                cmp(byte[rbp + 0x6F], 0);
+                je(cont);
 
-                    mov(rcx, ptr[rbp + 0x77]);
-                    mov(rcx, ptr[rcx]);
-                    imul(rdx, r14, 0x78);
-                    mov(rdx, ptr[rcx + rdx + 0x10]); // form
-                    mov(rcx, ptr[rbp - 0x31]); // reference
-                    mov(r8, rsi); // attachment node
+                mov(rcx, ptr[rbp + 0x77]);
+                mov(rcx, ptr[rcx]);
+                imul(rdx, r14, 0x78);
+                mov(rdx, ptr[rcx + rdx + 0x10]); // form
+                mov(rcx, ptr[rbp - 0x31]); // reference
+                mov(r8, rsi); // attachment node
 
-                    push(rax);
-                    sub(rsp, 0x20);
+                push(rax);
+                sub(rsp, 0x28);
 
-                    //mov(r9, rbx); // scb node
+                //mov(r9, rbx); // scb node
 
-                    call(ptr[rip + callLabel]);
-                    mov(rdx, rax);
+                call(ptr[rip + callLabel]);
+                mov(rdx, rax);
 
-                    add(rsp, 0x20);
-                    pop(rax);
+                add(rsp, 0x28);
+                pop(rax);
 
-                    test(rdx, rdx);
-                    je(skip);
-                    mov(rsi, rdx); // rsi: not used after scb is attached
+                test(rdx, rdx);
+                je(skip);
+                mov(rsi, rdx); // rsi: not used after scb is attached
 
-                    L(cont);
-                    jmp(ptr[rip + exitContinue]);
+                L(cont);
+                jmp(ptr[rip + exitContinue]);
 
-                    L(skip);
-                    jmp(ptr[rip + exitSkip]);
+                L(skip);
+                jmp(ptr[rip + exitSkip]);
 
-                    L(exitContinue);
-                    dq(targetAddr + 0x6);
+                L(exitContinue);
+                dq(targetAddr + 0x6);
 
-                    L(exitSkip);
-                    dq(targetAddr + 0x24);
+                L(exitSkip);
+                dq(targetAddr + 0x24);
 
-                    L(callLabel);
-                    dq(std::uintptr_t(GetScbAttachmentNode_Hook));
-                }
-            };
-
-            LogPatchBegin(__FUNCTION__);
-            {
-                Assembly code(m_scbAttach_a);
-                ISKSE::GetBranchTrampoline().Write6Branch(m_scbAttach_a, code.get());
+                L(callLabel);
+                dq(std::uintptr_t(GetScbAttachmentNode_Hook));
             }
-            LogPatchEnd(__FUNCTION__);
-        }
+        };
 
+        LogPatchBegin(__FUNCTION__);
+        {
+            Assembly code(m_scbAttach_a);
+            ISKSE::GetBranchTrampoline().Write6Branch(m_scbAttach_a, code.get());
+        }
+        LogPatchEnd(__FUNCTION__);
     }
 
     void EngineExtensions::Patch_SCB_Detach()
@@ -299,11 +298,12 @@ namespace SDS
                 mov(ptr[rsp + 0x30], rax); // skip cull bool
 
                 call(ptr[rip + callLabel]);
+                mov(dl, byte[rsp + 0x38]);
 
                 add(rsp, 0x40);
 
-                cmp(byte[rsp - 0x8], 0x1);
-                je(skipCull);
+                test(dl, dl);
+                jne(skipCull);
 
                 jmp(ptr[rip + retnLabel]);
 
@@ -409,11 +409,11 @@ namespace SDS
                 push(rcx);
                 push(rdx);
                 push(r8);
-                sub(rsp, 0x20);
+                sub(rsp, 0x28);
 
                 call(ptr[rip + callLabel]);
 
-                add(rsp, 0x20);
+                add(rsp, 0x28);
                 pop(r8);
                 pop(rdx);
                 pop(rcx);
