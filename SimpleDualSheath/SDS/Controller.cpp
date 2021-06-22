@@ -235,18 +235,12 @@ namespace SDS
     {
         if (a_actor == *g_thePlayer)
         {
-            if ((m_conf.m_shield.m_flags & Flags::kPlayer) == Flags::kPlayer) {
-                return true;
-            }
+            return (m_conf.m_shield.m_flags & Flags::kPlayer) == Flags::kPlayer;
         }
         else
         {
-            if ((m_conf.m_shield.m_flags & Flags::kNPC) == Flags::kNPC) {
-                return true;
-            }
+            return (m_conf.m_shield.m_flags & Flags::kNPC) == Flags::kNPC;
         }
-
-        return false;
     }
 
     bool Controller::ShouldBlockShieldHide(Actor* a_actor) const
@@ -390,7 +384,7 @@ namespace SDS
             return nullptr;
         }
 
-        bool no1p = (entry->m_flags & Data::Flags::kFirstPerson) != Data::Flags::kFirstPerson;
+        bool no1p = !entry->FirstPerson();
 
         NiPointer root = FindObjectNPCRoot(a_actor, a_attachmentNode, no1p);
         if (!root) {
@@ -401,9 +395,9 @@ namespace SDS
     }
 
     const BSFixedString* Controller::GetWeaponAttachmentNodeName(
-        Actor* a_actor, 
+        Actor* a_actor,
         TESForm* a_form,
-        bool a_firstPerson, 
+        bool a_firstPerson,
         bool a_left) const
     {
         if (!a_form->IsWeapon()) {
@@ -416,16 +410,16 @@ namespace SDS
         if (!entry) {
             return nullptr;
         }
-        
-        if (a_firstPerson && (entry->m_flags & Data::Flags::kFirstPerson) != Data::Flags::kFirstPerson) {
+
+        if (a_firstPerson && !entry->FirstPerson()) {
             return nullptr;
         }
 
         return std::addressof(entry->GetNodeName(a_left));
     }
-        
+
     const BSFixedString* Controller::GetShieldAttachmentNodeName(
-        Actor* a_actor, 
+        Actor* a_actor,
         TESForm* a_form,
         bool a_firstPerson) const
     {
@@ -446,17 +440,7 @@ namespace SDS
             return nullptr;
         }
 
-        if (a_firstPerson && (m_conf.m_shield.m_flags & Data::Flags::kFirstPerson) != Data::Flags::kFirstPerson) {
-            return nullptr;
-        }
-
-        NiPointer root = a_actor->GetNiRootNode(a_firstPerson);
-        if (!root) {
-            return nullptr;
-        }
-
-        NiPointer npcRoot = FindNode(root, m_strings->m_npcroot);
-        if (!npcRoot) {
+        if (a_firstPerson && !m_conf.m_shield.FirstPerson()) {
             return nullptr;
         }
 
@@ -570,10 +554,10 @@ namespace SDS
     {
         if (a_evn) {
             OnNiNodeUpdate(a_evn->reference);
-        }
+    }
 
         return kEvent_Continue;
-    }
+}
 #endif
 
     auto Controller::ReceiveEvent(SKSEActionEvent* a_evn, EventDispatcher<SKSEActionEvent>*)

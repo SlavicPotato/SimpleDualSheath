@@ -64,7 +64,7 @@ namespace SDS
         [[nodiscard]] bool ShouldBlockShieldHide(Actor* a_actor) const;
         [[nodiscard]] static std::uint32_t GetShieldBipedObject(Actor* a_actor);
 
-        [[nodiscard]] void EvaluateDrawnStateOnNearbyActors();
+        void EvaluateDrawnStateOnNearbyActors();
 
     private:
 

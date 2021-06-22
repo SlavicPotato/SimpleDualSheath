@@ -20,6 +20,11 @@ namespace SDS
             [[nodiscard]] const BSFixedString& GetNodeName(bool a_left) const;
             [[nodiscard]] NiNode* GetNode(NiNode* a_root, bool a_left) const;
 
+
+            [[nodiscard]] SKMP_FORCEINLINE bool FirstPerson() const {
+                return (m_flags & Flags::kFirstPerson) == Flags::kFirstPerson;
+            }
+
             BSFixedString m_nodeName;
             BSFixedString m_nodeNameLeft;
             Flags m_flags;
