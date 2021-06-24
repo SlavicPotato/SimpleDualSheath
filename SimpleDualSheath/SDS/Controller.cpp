@@ -20,8 +20,10 @@ namespace SDS
     Controller::Controller(
         const Config& a_conf)
         :
-        m_conf(a_conf)
+        m_conf(a_conf),
+        m_shieldOnBackSwitch(1)
     {
+
     }
 
     void Controller::InitializeData()
@@ -243,6 +245,10 @@ namespace SDS
         }
     }
 
+    bool Controller::GetShieldOnBackSwitch(Actor* a_actor) const {
+        return a_actor != *g_thePlayer || m_shieldOnBackSwitch.load(std::memory_order_acquire) != 0;
+    }
+
     bool Controller::ShouldBlockShieldHide(Actor* a_actor) const
     {
         if (a_actor == *g_thePlayer)
@@ -323,7 +329,9 @@ namespace SDS
                 continue;
             }
 
-            auto& targetNodeName = a_drawn ? m_strings->m_shield : m_strings->m_shieldSheathNode;
+            auto& targetNodeName = a_drawn || !GetShieldOnBackSwitch(a_actor) ?
+                m_strings->m_shield :
+                m_strings->m_shieldSheathNode;
 
             NiPointer targetNode = FindNode(root, targetNodeName);
             if (!targetNode) {
@@ -433,6 +441,10 @@ namespace SDS
         }
 
         if (!IsShieldEnabled(a_actor)) {
+            return nullptr;
+        }
+
+        if (!GetShieldOnBackSwitch(a_actor)) {
             return nullptr;
         }
 
@@ -554,10 +566,10 @@ namespace SDS
     {
         if (a_evn) {
             OnNiNodeUpdate(a_evn->reference);
-    }
+        }
 
         return kEvent_Continue;
-}
+    }
 #endif
 
     auto Controller::ReceiveEvent(SKSEActionEvent* a_evn, EventDispatcher<SKSEActionEvent>*)
@@ -622,6 +634,31 @@ namespace SDS
         }
 
         EvaluateDrawnStateOnNearbyActors();
+    }
+
+    void Controller::OnKeyPressed()
+    {
+        m_shieldOnBackSwitch.fetch_xor(1, std::memory_order_acquire);
+
+        QueueActorTask(*g_thePlayer, [this](Actor* a_actor)
+            {
+                NiRootNodes roots(a_actor);
+                roots.GetNPCRoots(m_strings->m_npcroot);
+
+                bool drawn = a_actor->actorState.IsWeaponDrawn();
+
+                ProcessEquippedShield(a_actor, roots, drawn);
+
+                if (!drawn &&
+                    m_conf.m_shieldHandWorkaround &&
+                    IsShieldEquipped(a_actor))
+                {
+                    auto value = GetShieldOnBackSwitch(a_actor) ? 0 : 10;
+
+                    a_actor->animGraphHolder.SetVariableOnGraphsInt(
+                        m_strings->m_iLeftHandType, value);
+                }
+            });
     }
 
 

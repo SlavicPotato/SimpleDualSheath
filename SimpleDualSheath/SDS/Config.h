@@ -19,6 +19,31 @@ namespace SDS
         string_to_flag_map_t m_map;
     };
 
+    class ConfigKeyCombo
+    {
+    public:
+
+        ConfigKeyCombo() = default;
+        void Parse(const std::string& a_input);
+
+        [[nodiscard]] SKMP_FORCEINLINE bool Has() const {
+            return m_key != 0;
+        }
+        
+        [[nodiscard]] SKMP_FORCEINLINE auto GetKey() const {
+            return m_key;
+        }
+        
+        [[nodiscard]] SKMP_FORCEINLINE auto GetComboKey() const {
+            return m_comboKey;
+        }
+
+    private:
+
+        UInt32 m_key{ 0 };
+        UInt32 m_comboKey{ 0 };
+    };
+
     struct Config
     {
         inline static constexpr auto SECT_GENERAL = "General";
@@ -44,6 +69,10 @@ namespace SDS
 
             [[nodiscard]] SKMP_FORCEINLINE bool IsEnabled() const {
                 return (m_flags & Data::Flags::kEnabled) != Data::Flags::kNone;
+            }
+            
+            [[nodiscard]] SKMP_FORCEINLINE bool IsPlayerEnabled() const {
+                return (m_flags & Data::Flags::kPlayer) == Data::Flags::kPlayer;
             }
             
             [[nodiscard]] SKMP_FORCEINLINE bool FirstPerson() const {
@@ -83,9 +112,12 @@ namespace SDS
         bool m_shieldHandWorkaround;
         bool m_shwForceIfDrawn;
 
+        ConfigKeyCombo m_shieldToggleKeys;
+
         Data::Flags m_shieldHideFlags;
 
     private:
+
 
         bool m_loaded{ false };
     };

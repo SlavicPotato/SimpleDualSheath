@@ -10,6 +10,7 @@ namespace SDS
         m_npcroot(NINODE_NPCROOT),
         m_shieldSheathNode(NINODE_SHIELD_BACK),
         m_iLeftHandType(iLeftHandType),
+        m_iLeftHandEquipped(iLeftHandEquipped),
         m_scbLeft(NINODE_SCB_LEFT)
 #ifdef _SDS_UNUSED
         ,

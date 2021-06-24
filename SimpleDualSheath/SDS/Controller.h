@@ -5,6 +5,7 @@
 #include "Util/Node.h"
 #include "Config.h"
 #include "EquipManager.h"
+#include "InputHandler.h"
 
 #ifdef _SDS_UNUSED
 #include "NodeOverride.h"
@@ -21,6 +22,7 @@ namespace SDS
 {
     class Controller :
         public EquipExtensions,
+        public ComboKeyPressHandler,
         public BSTEventSink <TESObjectLoadedEvent>,
         public BSTEventSink <TESInitScriptEvent>,
         public BSTEventSink <TESEquipEvent>,
@@ -59,8 +61,9 @@ namespace SDS
         [[nodiscard]] SKMP_FORCEINLINE const auto GetStringHolder() const {
             return m_strings.get();
         }
-
+        
         [[nodiscard]] bool IsShieldEnabled(Actor* a_actor) const;
+        [[nodiscard]] bool GetShieldOnBackSwitch(Actor* a_actor) const;
         [[nodiscard]] bool ShouldBlockShieldHide(Actor* a_actor) const;
         [[nodiscard]] static std::uint32_t GetShieldBipedObject(Actor* a_actor);
 
@@ -101,10 +104,14 @@ namespace SDS
         // EngineExtensions
         virtual void Receive(const Events::OnSetEquipSlot& a_evn) override;
 
+        virtual void OnKeyPressed() override;
+
         Config m_conf;
 
         std::shared_ptr<StringHolder> m_strings;
         std::unique_ptr<Data::WeaponData> m_data;
+
+        std::atomic<std::uint8_t> m_shieldOnBackSwitch;
 
         //mutable WCriticalSection m_lock;
 

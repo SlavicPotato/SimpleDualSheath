@@ -200,6 +200,7 @@
     <ClInclude Include="SDS\EngineExtensions.h" />
     <ClInclude Include="SDS\Events\OnSetEquipSlot.h" />
     <ClInclude Include="SDS\Flags.h" />
+    <ClInclude Include="SDS\InputHandler.h" />
     <ClInclude Include="SDS\Main.h" />
     <ClInclude Include="SDS\NodeOverride.h" />
     <ClInclude Include="SDS\StringHolder.h" />
@@ -222,6 +223,7 @@
     <ClCompile Include="SDS\Controller.cpp" />
     <ClCompile Include="SDS\EngineExtensions.cpp" />
     <ClCompile Include="SDS\EquipManager.cpp" />
+    <ClCompile Include="SDS\InputHandler.cpp" />
     <ClCompile Include="SDS\Main.cpp" />
     <ClCompile Include="SDS\NodeOverride.cpp" />
     <ClCompile Include="SDS\StringHolder.cpp" />

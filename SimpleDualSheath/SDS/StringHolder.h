@@ -35,6 +35,7 @@ namespace SDS
         static inline constexpr auto NINODE_NPCROOT = "NPC Root [Root]";
 
         static inline constexpr auto iLeftHandType = "iLeftHandType";
+        static inline constexpr auto iLeftHandEquipped = "iLeftHandEquipped";
 
         static inline constexpr auto NINODE_SCB_LEFT = "ScbLeft";
 
@@ -48,6 +49,7 @@ namespace SDS
         BSFixedString m_npcroot;
 
         BSFixedString m_iLeftHandType;
+        BSFixedString m_iLeftHandEquipped;
 
         BSFixedString m_scbLeft;
 

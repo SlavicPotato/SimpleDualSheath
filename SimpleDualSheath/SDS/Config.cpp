@@ -47,6 +47,23 @@ namespace SDS
 
     }
 
+    void ConfigKeyCombo::Parse(
+        const std::string& a_input)
+    {
+        std::vector<UInt32> e;
+        StrHelpers::SplitString(a_input, '+', e, true, true);
+
+        auto n = e.size();
+
+        if (n > 1) {
+            m_comboKey = e[0];
+            m_key = e[1];
+        }
+        else if (n == 1) {
+            m_key = e[0];
+        }
+    }
+
     Config::Config(const std::string& a_path)
     {
         Load(a_path);
@@ -59,7 +76,7 @@ namespace SDS
         FlagParser flagParser;
 
         m_scb = reader.Get(SECT_GENERAL, "EnableLeftScabbards", true);
-        m_scbCustom = reader.Get(SECT_GENERAL, "CustomLeftScabbards", false);
+        m_scbCustom = reader.Get(SECT_GENERAL, "CustomLeftScabbards", true);
 
         m_sword = {
             flagParser.Parse(reader.Get(SECT_SWORD, KW_FLAGS, "Player|NPC")),
@@ -101,10 +118,12 @@ namespace SDS
             reader.Get(SECT_SHIELD, KW_SHEATHNODE, StringHolder::NINODE_SHIELD_BACK)
         };
 
-        m_npcEquipLeft = reader.Get(SECT_NPC, "EquipLeft", false);
         m_shieldHandWorkaround = reader.Get(SECT_SHIELD, "ClenchedHandWorkaround", false);
         m_shwForceIfDrawn = reader.Get(SECT_SHIELD, "ClenchedHandWorkaroundForceIfDrawn", false);
         m_shieldHideFlags = flagParser.Parse(reader.Get(SECT_SHIELD, "DisableHideOnSit", ""));
+        m_shieldToggleKeys.Parse(reader.Get(SECT_SHIELD, "ToggleKeys", ""));
+
+        m_npcEquipLeft = reader.Get(SECT_NPC, "EquipLeft", false);
 
         return (m_loaded = (reader.ParseError() == 0));
     }

@@ -14,7 +14,30 @@ namespace SDS
 
     static void MessageHandler(SKSEMessagingInterface::Message* a_message)
     {
-        switch (a_message->type) {
+        switch (a_message->type)
+        {
+        case SKSEMessagingInterface::kMessage_InputLoaded:
+        {
+            auto& config = s_controller->GetConfig();
+
+            if (config.m_shieldToggleKeys.Has() &&
+                config.m_shield.IsPlayerEnabled())
+            {
+                auto evd = InputEventDispatcher::GetSingleton();
+                if (evd)
+                {
+                    s_controller->SetKeys(
+                        config.m_shieldToggleKeys.GetComboKey(),
+                        config.m_shieldToggleKeys.GetKey());
+
+                    evd->AddEventSink(s_controller.get());
+                }
+                else {
+                    gLog.Error("Couldn't get input event dispatcher");
+                }
+            }
+        }
+        break;
         case SKSEMessagingInterface::kMessage_DataLoaded:
         {
             s_controller->InitializeData();
@@ -35,7 +58,7 @@ namespace SDS
         break;
         case SKSEMessagingInterface::kMessage_PostLoadGame:
             // skip first, evaluate on subsequent loads
-            if (s_loaded) { 
+            if (s_loaded) {
                 s_controller->EvaluateDrawnStateOnNearbyActors();
             }
             s_loaded = true;

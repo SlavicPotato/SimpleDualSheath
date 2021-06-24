@@ -570,6 +570,7 @@ namespace SDS
 
         if (a_value == 10 &&
             controller->IsShieldEnabled(a_actor) &&
+            controller->GetShieldOnBackSwitch(a_actor) &&
             (controller->GetConfig().m_shwForceIfDrawn ||
                 !a_actor->actorState.IsWeaponDrawn()) &&
             Common::IsShieldEquipped(a_actor))
@@ -590,6 +591,7 @@ namespace SDS
 
         if (a_value == 10 &&
             controller->IsShieldEnabled(a_actor) &&
+            controller->GetShieldOnBackSwitch(a_actor) &&
             (controller->GetConfig().m_shwForceIfDrawn ||
                 !a_actor->actorState.IsWeaponDrawn()) &&
             Common::IsShieldEquipped(a_actor))
@@ -610,6 +612,7 @@ namespace SDS
 
         if ((a_value == 0 || a_value == 10) &&
             controller->IsShieldEnabled(a_actor) &&
+            controller->GetShieldOnBackSwitch(a_actor) &&
             Common::IsShieldEquipped(a_actor))
         {
             a_holder->SetVariableOnGraphsInt(
