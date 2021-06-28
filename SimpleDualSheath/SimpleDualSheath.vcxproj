@@ -207,7 +207,6 @@
     <ClInclude Include="SDS\Util\Common.h" />
     <ClInclude Include="SDS\Util\Logging.h" />
     <ClInclude Include="SDS\Util\Node.h" />
-    <ClInclude Include="SDS\Util\Task.h" />
     <ClInclude Include="skse.h" />
     <ClInclude Include="version.h" />
   </ItemGroup>
@@ -230,7 +229,6 @@
     <ClCompile Include="SDS\Util\Common.cpp" />
     <ClCompile Include="SDS\Util\Logging.cpp" />
     <ClCompile Include="SDS\Util\Node.cpp" />
-    <ClCompile Include="SDS\Util\Task.cpp" />
     <ClCompile Include="skse.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -3,17 +3,13 @@
 #include "Controller.h"
 
 #include "Util/Common.h"
-#include "Util/Task.h"
 #include "Util/Node.h"
 
 #include <ext/GameCommon.h>
 
-#include <ext/VFT.h>
-
 namespace SDS
 {
     using namespace Util::Common;
-    using namespace Util::Task;
     using namespace Util::Node;
     using namespace Data;
 
@@ -207,7 +203,7 @@ namespace SDS
             {
                 if (m_conf.m_shield.IsEnabled())
                 {
-                    ProcessEquippedShield(a_actor, roots, a_drawn);
+                    ProcessEquippedShield(a_actor, roots, a_drawn, GetShieldOnBackSwitch(a_actor));
                 }
             }
         }
@@ -226,7 +222,7 @@ namespace SDS
         TESObjectREFR* a_actor,
         DrawnState a_drawnState) const
     {
-        QueueActorTask(a_actor, [this, a_drawnState](Actor* a_actor)
+        ITaskPool::QueueActorTask(a_actor, [this, a_drawnState](Actor* a_actor)
             {
                 ProcessWeaponDrawnChange(a_actor, GetIsDrawn(a_actor, a_drawnState));
             }
@@ -276,7 +272,8 @@ namespace SDS
     void Controller::ProcessEquippedShield(
         Actor* a_actor,
         const NiRootNodes& a_roots,
-        bool a_drawn) const
+        bool a_drawn,
+        bool a_switch) const
     {
         if (!IsShieldEnabled(a_actor)) {
             return;
@@ -329,7 +326,7 @@ namespace SDS
                 continue;
             }
 
-            auto& targetNodeName = a_drawn || !GetShieldOnBackSwitch(a_actor) ?
+            auto& targetNodeName = a_drawn || !a_switch ?
                 m_strings->m_shield :
                 m_strings->m_shieldSheathNode;
 
@@ -461,8 +458,9 @@ namespace SDS
 
     void Controller::OnActorLoad(TESObjectREFR* a_actor)
     {
-        QueueActorTask(a_actor, [this](Actor* a_actor)
+        ITaskPool::QueueActorTask(a_actor, [this](Actor* a_actor)
             {
+
 
 #ifdef _SDS_UNUSED
 
@@ -481,7 +479,7 @@ namespace SDS
 
     void Controller::OnNiNodeUpdate(TESObjectREFR* a_actor)
     {
-        QueueActorTask(a_actor, [this](Actor* a_actor)
+        ITaskPool::QueueActorTask(a_actor, [this](Actor* a_actor)
             {
                 m_nodeOverride->ApplyNodeOverrides(a_actor);
             }
@@ -593,7 +591,7 @@ namespace SDS
 
     void Controller::EvaluateDrawnStateOnNearbyActors()
     {
-        auto task = new TaskFunctor([this]
+        ITaskPool::AddTask([this]
             {
                 auto player = *g_thePlayer;
                 if (player) {
@@ -622,8 +620,6 @@ namespace SDS
                 }
             }
         );
-
-        ISKSE::GetSingleton().GetInterface<SKSETaskInterface>()->AddTask(task);
     }
 
     void Controller::Receive(const Events::OnSetEquipSlot& a_evn)
@@ -640,20 +636,21 @@ namespace SDS
     {
         m_shieldOnBackSwitch.fetch_xor(1, std::memory_order_acquire);
 
-        QueueActorTask(*g_thePlayer, [this](Actor* a_actor)
+        ITaskPool::QueueActorTask(*g_thePlayer, [this](Actor* a_actor)
             {
                 NiRootNodes roots(a_actor);
                 roots.GetNPCRoots(m_strings->m_npcroot);
 
                 bool drawn = a_actor->actorState.IsWeaponDrawn();
+                bool sw = GetShieldOnBackSwitch(a_actor);
 
-                ProcessEquippedShield(a_actor, roots, drawn);
+                ProcessEquippedShield(a_actor, roots, drawn, sw);
 
                 if (!drawn &&
                     m_conf.m_shieldHandWorkaround &&
                     IsShieldEquipped(a_actor))
                 {
-                    auto value = GetShieldOnBackSwitch(a_actor) ? 0 : 10;
+                    auto value = sw ? 0 : 10;
 
                     a_actor->animGraphHolder.SetVariableOnGraphsInt(
                         m_strings->m_iLeftHandType, value);

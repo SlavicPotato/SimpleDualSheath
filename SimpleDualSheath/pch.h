@@ -5,6 +5,7 @@
 #include <ext/INIReader.h>
 #include <ext/StrHelpers.h>
 #include <ext/ITasks.h>
+#include <ext/ITaskPool.h>
 #include <skse64/PluginAPI.h>
 #include <skse64/GameExtraData.h>
 #include <skse64/GameObjects.h>

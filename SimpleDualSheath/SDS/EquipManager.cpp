@@ -3,12 +3,10 @@
 #include "EquipManager.h"
 
 #include "Util/Common.h"
-#include "Util/Task.h"
 
 namespace SDS
 {
     using namespace Util::Common;
-    using namespace Util::Task;
 
     bool EquipExtensions::CheckDualWield(Actor* a_actor)
     {
@@ -54,36 +52,48 @@ namespace SDS
         :
         m_ignore(a_ignore)
     {
+        m_results.reserve(10);
+    }
+
+    bool EquipCandidateCollector::Accept(TESContainer::ConfigEntry* entry)
+    {
+        if (entry && entry->form) {
+            Process(entry->form);
+        }
+
+        return true;
     }
 
     bool EquipCandidateCollector::Accept(InventoryEntryData* a_entryData)
     {
-        if (!a_entryData || !a_entryData->type || a_entryData->countDelta < 1)
-            return true;
-
-        auto item = a_entryData->type;
-
-        if (item == m_ignore) {
-            return true;
+        if (a_entryData && a_entryData->type && a_entryData->countDelta > 0) {
+            Process(a_entryData->type);
         }
-
-        if (!item->Has3D()) {
-            return true;
-        }
-
-        if (!item->IsWeapon()) {
-            return true;
-        }
-
-        auto weapon = static_cast<TESObjectWEAP*>(a_entryData->type);
-
-        if (!CanEquipEitherHand(weapon)) {
-            return true;
-        }
-
-        m_results.emplace_back(weapon);
 
         return true;
+    }
+
+    void EquipCandidateCollector::Process(TESForm* a_item)
+    {
+        if (a_item == m_ignore) {
+            return;
+        }
+
+        if (!a_item->Has3D()) {
+            return;
+        }
+
+        if (!a_item->IsWeapon()) {
+            return;
+        }
+
+        auto weapon = static_cast<TESObjectWEAP*>(a_item);
+
+        if (!CanEquipEitherHand(weapon)) {
+            return;
+        }
+
+        m_results.emplace(weapon);
     }
 
     enum class EquipItemResult
@@ -160,7 +170,7 @@ namespace SDS
 
     void EquipExtensions::QueueEvaluateEquip(TESObjectREFR* a_actor)
     {
-        QueueActorTask(a_actor, [this](Actor* a_actor)
+        ITaskPool::QueueActorTask(a_actor, [this](Actor* a_actor)
             {
                 EvaluateEquip(a_actor);
             });
@@ -222,6 +232,15 @@ namespace SDS
         }
 
         EquipCandidateCollector collector(weaponRight);
+
+        if (auto baseForm = a_actor->baseForm; baseForm)
+        {
+            if (auto container = RTTI<TESContainer>()(baseForm); container)
+            {
+                container->Visit(collector);
+            }
+        }
+
         containerData->objList->Visit(collector);
 
         if (collector.m_results.empty()) {

@@ -53,6 +53,9 @@ namespace SDS
         std::vector<UInt32> e;
         StrHelpers::SplitString(a_input, '+', e, true, true);
 
+        m_comboKey = 0;
+        m_key = 0;
+
         auto n = e.size();
 
         if (n > 1) {

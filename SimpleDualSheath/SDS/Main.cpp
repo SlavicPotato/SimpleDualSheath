@@ -144,6 +144,11 @@ namespace SDS
             return false;
         }
 
+        if (!ITaskPool::Install(ISKSE::GetBranchTrampoline())) {
+            gLog.FatalError("Failed to install task hook");
+            return false;
+        }
+
         mif->RegisterListener(skse.GetPluginHandle(), "SKSE", MessageHandler);
 
         EngineExtensions::Initialize(controller);

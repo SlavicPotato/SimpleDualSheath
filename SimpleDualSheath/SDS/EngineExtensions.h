@@ -11,7 +11,8 @@ namespace SDS
 {
     class BShkbAnimationGraph;
 
-    class EngineExtensions : ILog
+    class EngineExtensions : 
+        ILog
     {
     public:
 

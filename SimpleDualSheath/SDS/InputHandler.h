@@ -11,7 +11,7 @@ namespace SDS
         virtual void OnKeyDown(UInt32 a_keyCode) = 0;
         virtual void OnKeyUp(UInt32 a_keyCode) = 0;
 
-        virtual EventResult	ReceiveEvent(InputEvent** evns, InputEventDispatcher* dispatcher) override;
+        virtual EventResult ReceiveEvent(InputEvent** evns, InputEventDispatcher* dispatcher) override;
 
     };
 
@@ -19,7 +19,7 @@ namespace SDS
         public InputHandler
     {
     public:
-        
+
         void SetComboKey(UInt32 a_key);
         void SetKey(UInt32 a_key);
         void SetKeys(UInt32 a_comboKey, UInt32 a_key);

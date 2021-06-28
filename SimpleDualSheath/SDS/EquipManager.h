@@ -4,12 +4,19 @@ namespace SDS
 {
     struct EquipCandidateCollector
     {
+    public:
         EquipCandidateCollector(TESObjectWEAP* a_ignore);
 
+        bool Accept(TESContainer::ConfigEntry* entry);
         bool Accept(InventoryEntryData* a_entryData);
 
-        std::vector<TESObjectWEAP*> m_results;
+        std::unordered_set<TESObjectWEAP*> m_results;
+        
+
+    private:
         TESObjectWEAP* m_ignore;
+
+        void Process(TESForm *a_item);
     };
 
 

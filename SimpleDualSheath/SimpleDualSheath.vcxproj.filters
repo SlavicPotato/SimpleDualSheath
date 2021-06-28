@@ -53,9 +53,6 @@
     <ClInclude Include="SDS\Util\Node.h">
       <Filter>Header Files\SDS\Util</Filter>
     </ClInclude>
-    <ClInclude Include="SDS\Util\Task.h">
-      <Filter>Header Files\SDS\Util</Filter>
-    </ClInclude>
     <ClInclude Include="SDS\Data.h">
       <Filter>Header Files\SDS</Filter>
     </ClInclude>
@@ -119,9 +116,6 @@
       <Filter>Source Files\SDS\Util</Filter>
     </ClCompile>
     <ClCompile Include="SDS\Util\Node.cpp">
-      <Filter>Source Files\SDS\Util</Filter>
-    </ClCompile>
-    <ClCompile Include="SDS\Util\Task.cpp">
       <Filter>Source Files\SDS\Util</Filter>
     </ClCompile>
     <ClCompile Include="SDS\Data.cpp">

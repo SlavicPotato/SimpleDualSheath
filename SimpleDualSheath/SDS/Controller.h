@@ -58,7 +58,7 @@ namespace SDS
             return m_conf;
         }
         
-        [[nodiscard]] SKMP_FORCEINLINE const auto GetStringHolder() const {
+        [[nodiscard]] SKMP_FORCEINLINE const StringHolder* GetStringHolder() const {
             return m_strings.get();
         }
         
@@ -77,7 +77,7 @@ namespace SDS
         void ProcessWeaponDrawnChange(Actor* a_actor, bool a_drawn) const;
         void QueueProcessWeaponDrawnChange(TESObjectREFR* a_actor, DrawnState a_drawnState) const;
 
-        void ProcessEquippedShield(Actor* a_actor, const Util::Node::NiRootNodes& a_roots, bool a_drawn) const;
+        void ProcessEquippedShield(Actor* a_actor, const Util::Node::NiRootNodes& a_roots, bool a_drawn, bool a_switch) const;
 
         [[nodiscard]] NiNode* FindObjectNPCRoot(TESObjectREFR* a_actor, NiAVObject* a_object, bool a_no1p) const;
 
