@@ -31,9 +31,9 @@ namespace SDS
         static bool CheckDualWield(Actor* a_actor);
         static bool ActorQualifiesForEquip(Actor* a_actor);
 
-        void QueueEvaluateEquip(TESObjectREFR* a_actor);
+        void QueueEvaluateEquip(TESObjectREFR* a_actor) const;
 
-        void EvaluateEquip(Actor* a_actor);
+        void EvaluateEquip(Actor* a_actor) const;
 
         virtual EventResult	ReceiveEvent(TESContainerChangedEvent* a_evn, EventDispatcher<TESContainerChangedEvent>* a_dispatcher) override;
     };

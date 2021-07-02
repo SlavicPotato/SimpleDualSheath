@@ -222,7 +222,8 @@ namespace SDS
         TESObjectREFR* a_actor,
         DrawnState a_drawnState) const
     {
-        ITaskPool::QueueActorTask(a_actor, [this, a_drawnState](Actor* a_actor)
+        ITaskPool::QueueActorTask(a_actor, 
+            [this, a_drawnState](Actor* a_actor, Game::ObjectRefHandle a_handle)
             {
                 ProcessWeaponDrawnChange(a_actor, GetIsDrawn(a_actor, a_drawnState));
             }
@@ -309,9 +310,9 @@ namespace SDS
                 continue;
             }
 
-            auto& data = bipedData->unk10[bipedObject];
+            auto& data = bipedData->objects[bipedObject];
 
-            auto form = data.armor;
+            auto form = data.item;
 
             if (!form || !form->IsArmor()) {
                 continue;
@@ -391,7 +392,7 @@ namespace SDS
 
         bool no1p = !entry->FirstPerson();
 
-        NiPointer root = FindObjectNPCRoot(a_actor, a_attachmentNode, no1p);
+        auto root = FindObjectNPCRoot(a_actor, a_attachmentNode, no1p);
         if (!root) {
             return nullptr;
         }
@@ -456,9 +457,10 @@ namespace SDS
         return std::addressof(m_strings->m_shieldSheathNode);
     }
 
-    void Controller::OnActorLoad(TESObjectREFR* a_actor)
+    void Controller::OnActorLoad(TESObjectREFR* a_actor) const
     {
-        ITaskPool::QueueActorTask(a_actor, [this](Actor* a_actor)
+        ITaskPool::QueueActorTask(a_actor, 
+            [this](Actor* a_actor, Game::ObjectRefHandle a_handle)
             {
 
 
@@ -479,7 +481,8 @@ namespace SDS
 
     void Controller::OnNiNodeUpdate(TESObjectREFR* a_actor)
     {
-        ITaskPool::QueueActorTask(a_actor, [this](Actor* a_actor)
+        ITaskPool::QueueActorTask(a_actor, 
+            [this](Actor* a_actor, Game::ObjectRefHandle a_handle)
             {
                 m_nodeOverride->ApplyNodeOverrides(a_actor);
             }
@@ -595,7 +598,9 @@ namespace SDS
             {
                 auto player = *g_thePlayer;
                 if (player) {
-                    ProcessWeaponDrawnChange(player, player->actorState.IsWeaponDrawn());
+                    if (IsREFRValid(player)) {
+                        ProcessWeaponDrawnChange(player, player->actorState.IsWeaponDrawn());
+                    }
                 }
 
                 auto pl = Game::ProcessLists::GetSingleton();
@@ -612,6 +617,10 @@ namespace SDS
                     }
 
                     if (ref->formType != Actor::kTypeID) {
+                        continue;
+                    }
+
+                    if (!IsREFRValid(ref)) {
                         continue;
                     }
 
@@ -636,8 +645,13 @@ namespace SDS
     {
         m_shieldOnBackSwitch.fetch_xor(1, std::memory_order_acquire);
 
-        ITaskPool::QueueActorTask(*g_thePlayer, [this](Actor* a_actor)
+        ITaskPool::QueueActorTask(*g_thePlayer, 
+            [this](Actor* a_actor, Game::ObjectRefHandle a_handle)
             {
+                if (!IsREFRValid(a_actor)) {
+                    return;
+                }
+
                 NiRootNodes roots(a_actor);
                 roots.GetNPCRoots(m_strings->m_npcroot);
 

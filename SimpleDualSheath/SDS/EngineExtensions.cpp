@@ -712,8 +712,26 @@ namespace SDS
         {
             if (a_ref->formType == Character::kTypeID)
             {
-                if (auto form = a_biped->unk10[a_bipedSlot].armor; form)
+                if (auto form = a_biped->objects[a_bipedSlot].item; form)
                 {
+                    /*if (a_ref->IsActor()) {
+                        auto actor = static_cast<Actor*>(a_ref);
+                        auto pm = actor->processManager;
+                        if (pm)
+                        {
+                            if (form->IsWeapon()) {
+
+                                _DMESSAGE("%X: %u | %d | %X", form->formID, a_bipedSlot, a_firstPerson, pm->equippedObject[1] ? pm->equippedObject[1]->formID : 0);
+                                if (pm->equippedObject[1] != form) {
+                                    return nullptr;
+                                }
+
+                            }
+                        }
+                    }
+
+                    */
+
                     auto actor = static_cast<Actor*>(a_ref);
                     if (Controller::GetShieldBipedObject(actor) == a_bipedSlot)
                     {
@@ -792,7 +810,7 @@ namespace SDS
             return nullptr;
         }
 
-        auto form = a_biped->unk10[a_bipedSlot].armor;
+        auto form = a_biped->objects[a_bipedSlot].item;
         if (!form) {
             return nullptr;
         }

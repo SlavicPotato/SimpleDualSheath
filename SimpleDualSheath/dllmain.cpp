@@ -64,7 +64,7 @@ extern "C"
         }
 
         IAL::Release();
-        gLog.Close();
+        //gLog.Close();
 
         return ret;
     }

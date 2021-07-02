@@ -44,7 +44,7 @@ namespace SDS
 
     bool EquipExtensions::ActorQualifiesForEquip(Actor* a_actor)
     {
-        return a_actor != *g_thePlayer && CheckDualWield(a_actor);
+        return a_actor != *g_thePlayer && CheckDualWield(a_actor) && !a_actor->IsDead();
     }
 
     EquipCandidateCollector::EquipCandidateCollector(
@@ -168,15 +168,16 @@ namespace SDS
         return EquipItemResult::kEquipped;
     }
 
-    void EquipExtensions::QueueEvaluateEquip(TESObjectREFR* a_actor)
+    void EquipExtensions::QueueEvaluateEquip(TESObjectREFR* a_actor) const
     {
-        ITaskPool::QueueActorTask(a_actor, [this](Actor* a_actor)
+        ITaskPool::QueueActorTask(a_actor, 
+            [this](Actor* a_actor, Game::ObjectRefHandle a_handle)
             {
                 EvaluateEquip(a_actor);
             });
     }
 
-    void EquipExtensions::EvaluateEquip(Actor* a_actor)
+    void EquipExtensions::EvaluateEquip(Actor* a_actor) const
     {
         auto equipManager = EquipManager::GetSingleton();
         if (!equipManager) {

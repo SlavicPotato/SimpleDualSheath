@@ -20,7 +20,7 @@ namespace SDS
         {
             using event_type = stl::strip_type<T>;
             using sink_type = EventSink<event_type>;
-            using storage_type = stl::vector<sink_type*>;
+            using storage_type = std::vector<sink_type*>;
 
         public:
 

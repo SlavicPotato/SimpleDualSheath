@@ -83,7 +83,7 @@ namespace SDS
 
         [[nodiscard]] static bool GetIsDrawn(Actor* a_actor, DrawnState a_state);
 
-        void OnActorLoad(TESObjectREFR* a_actor);
+        void OnActorLoad(TESObjectREFR* a_actor) const;
 #ifdef _SDS_UNUSED
         void OnNiNodeUpdate(TESObjectREFR* a_actor);
 #endif

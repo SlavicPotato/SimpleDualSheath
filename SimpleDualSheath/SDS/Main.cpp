@@ -61,6 +61,7 @@ namespace SDS
             if (s_loaded) {
                 s_controller->EvaluateDrawnStateOnNearbyActors();
             }
+        case SKSEMessagingInterface::kMessage_NewGame:
             s_loaded = true;
             break;
         }
@@ -128,11 +129,13 @@ namespace SDS
 
         auto mif = skse.GetInterface<SKSEMessagingInterface>();
 
+#ifdef _SDS_UNUSED
         auto NiNodeUpdate = static_cast<EventDispatcher<SKSENiNodeUpdateEvent>*>(mif->GetEventDispatcher(SKSEMessagingInterface::kDispatcher_NiNodeUpdateEvent));
         if (!NiNodeUpdate) {
             gLog.FatalError("Could not get NiNodeUpdateEvent dispatcher");
             return false;
         }
+#endif
 
         auto ActionEvent = static_cast<EventDispatcher<SKSEActionEvent>*>(mif->GetEventDispatcher(SKSEMessagingInterface::kDispatcher_ActionEvent));
         if (!ActionEvent) {
