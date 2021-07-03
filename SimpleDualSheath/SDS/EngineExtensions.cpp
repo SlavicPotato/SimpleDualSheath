@@ -62,7 +62,7 @@ namespace SDS
         const std::shared_ptr<Controller>& a_controller)
     {
         if (m_Instance.get() == nullptr) {
-            m_Instance = std::unique_ptr<EngineExtensions>{ new EngineExtensions(a_controller) };
+            m_Instance = std::make_unique<EngineExtensions>(a_controller);
         }
     }
 
@@ -138,10 +138,8 @@ namespace SDS
                 je(cont);
 
                 mov(rcx, ptr[rbp + 0x77]);
-                mov(rcx, ptr[rcx]);
-                imul(rdx, r14, 0x78);
-                mov(rdx, ptr[rcx + rdx + 0x10]); // form
-                mov(rcx, ptr[rbp - 0x31]); // reference
+                mov(rcx, ptr[rcx]); // Biped
+                mov(edx, r14d); // slot
                 mov(r8, rsi); // attachment node
 
                 push(rax);
@@ -201,7 +199,7 @@ namespace SDS
 
                 jne(isWeaponSlot);
 
-                mov(rcx, ptr[rbp - 0x20]); // reference
+                mov(rcx, ptr[rbp - 0x20]); // reference - still held, should be safe to use
                 mov(rdx, ptr[rdi]); // form
                 mov(r8, r12); // attachment node
                 call(ptr[rip + callLabel]);
@@ -222,7 +220,7 @@ namespace SDS
                 dq(targetAddr + 0x6);
 
                 L(callLabel);
-                dq(std::uintptr_t(GetScbAttachmentNode_Hook));
+                dq(std::uintptr_t(GetScbAttachmentNode_Cleanup_Hook));
             }
         };
 
@@ -284,21 +282,20 @@ namespace SDS
 
                 Xbyak::Label skipCull;
 
-                mov(r8, ptr[rbp - 0x31]); // reference
+                mov(r8, ptr[rbp + 0x77]);
+                mov(r8, ptr[r8]); // Biped
 
-                mov(r9, ptr[rbp + 0x77]);
-                mov(r9, ptr[r9]); // Biped
+                mov(r9d, r14d); // slot
 
                 sub(rsp, 0x40);
 
-                mov(dword[rsp + 0x20], r14d); // slot
                 mov(al, byte[rbp - 0x51]);
-                mov(byte[rsp + 0x28], al); // is 1p
-                lea(rax, ptr[rsp + 0x38]);
-                mov(ptr[rsp + 0x30], rax); // skip cull bool
+                mov(byte[rsp + 0x20], al); // is 1p
+                lea(rax, ptr[rsp + 0x30]);
+                mov(ptr[rsp + 0x28], rax); // skip cull bool
 
                 call(ptr[rip + callLabel]);
-                mov(dl, byte[rsp + 0x38]);
+                mov(dl, byte[rsp + 0x30]);
 
                 add(rsp, 0x40);
 
@@ -353,16 +350,15 @@ namespace SDS
                 Xbyak::Label callLabel;
                 Xbyak::Label retnLabel;
 
-                mov(r8, ptr[rbp - 0x31]); // reference
+                mov(r8, ptr[rbp + 0x77]);
+                mov(r8, ptr[r8]); // Biped
 
-                mov(r9, ptr[rbp + 0x77]);
-                mov(r9, ptr[r9]); // Biped
+                mov(r9d, r14d); // slot
 
                 sub(rsp, 0x30);
 
-                mov(dword[rsp + 0x20], r14d); // slot
                 mov(al, byte[rbp - 0x51]);
-                mov(byte[rsp + 0x28], al); // is 1p
+                mov(byte[rsp + 0x20], al); // is 1p
 
                 call(ptr[rip + callLabel]);
 
@@ -632,15 +628,56 @@ namespace SDS
     }
 
     NiNode* EngineExtensions::GetScbAttachmentNode_Hook(
-        TESObjectREFR* a_actor,
-        TESForm* a_form,
+        Biped* a_biped, 
+        std::uint32_t a_bipedSlot,
         NiNode* a_attachmentNode)
     {
-        if (!a_actor || !a_form) {
+        // these checks should never fail
+        if (!a_biped || a_bipedSlot == 0xFFFFFFFF) {
             return nullptr;
         }
 
-        if (a_actor->formType != Actor::kTypeID) {
+        auto form = a_biped->objects[a_bipedSlot].item;
+
+        NiPointer<TESObjectREFR> ref;
+        LookupREFRObjectByHandle(a_biped->handle, ref);
+
+        if (!ref) {
+            return nullptr;
+        }
+
+        if (!form) {
+            return nullptr;
+        }
+
+        if (ref->formType != Actor::kTypeID) {
+            return nullptr;
+        }
+
+        if (form->formType != TESObjectWEAP::kTypeID) {
+            return nullptr;
+        }
+
+        auto actor = static_cast<Actor*>(ref.get());
+
+        return m_Instance->m_controller->GetScbAttachmentNode(
+            actor, form, a_attachmentNode);
+    }
+    
+    NiNode* EngineExtensions::GetScbAttachmentNode_Cleanup_Hook(
+        TESObjectREFR* a_ref,
+        TESForm* a_form,
+        NiNode* a_attachmentNode)
+    {
+        if (!a_ref) {
+            return nullptr;
+        }
+
+        if (!a_form) {
+            return nullptr;
+        }
+
+        if (a_ref->formType != Actor::kTypeID) {
             return nullptr;
         }
 
@@ -648,7 +685,7 @@ namespace SDS
             return nullptr;
         }
 
-        auto actor = static_cast<Actor*>(a_actor);
+        auto actor = static_cast<Actor*>(a_ref);
 
         return m_Instance->m_controller->GetScbAttachmentNode(
             actor, a_form, a_attachmentNode);
@@ -657,13 +694,12 @@ namespace SDS
     NiAVObject* EngineExtensions::GetWeaponShieldSlotNode_Hook(
         NiNode* a_root,
         const BSFixedString& a_nodeName,
-        TESObjectREFR* a_ref,
         Biped* a_biped,
         std::uint32_t a_bipedSlot,
         bool a_firstPerson,
         bool& a_skipCull)
     {
-        auto str = m_Instance->GetWeaponNodeName(a_ref, a_biped, a_bipedSlot, a_firstPerson, true);
+        auto str = m_Instance->GetWeaponNodeName(a_biped, a_bipedSlot, a_firstPerson, true);
 
         if (!str)
         {
@@ -680,13 +716,12 @@ namespace SDS
     NiAVObject* EngineExtensions::GetWeaponStaffSlotNode_Hook(
         NiNode* a_root,
         const BSFixedString& a_nodeName,
-        TESObjectREFR* a_ref,
         Biped* a_biped,
         std::uint32_t a_bipedSlot,
         bool a_firstPerson,
         bool& a_skipCull)
     {
-        auto str = m_Instance->GetWeaponNodeName(a_ref, a_biped, a_bipedSlot, a_firstPerson, false);
+        auto str = m_Instance->GetWeaponNodeName(a_biped, a_bipedSlot, a_firstPerson, false);
 
         if (!str)
         {
@@ -703,36 +738,20 @@ namespace SDS
     NiAVObject* EngineExtensions::GetShieldArmorSlotNode_Hook(
         NiNode* a_root,
         const BSFixedString& a_nodeName,
-        TESObjectREFR* a_ref,
         Biped* a_biped,
         std::uint32_t a_bipedSlot,
         bool a_firstPerson)
     {
-        if (a_ref && a_biped && a_bipedSlot != 0xFFFFFFFF)
+        if (a_biped && a_bipedSlot != 0xFFFFFFFF)
         {
-            if (a_ref->formType == Character::kTypeID)
+            NiPointer<TESObjectREFR> ref;
+            LookupREFRObjectByHandle(a_biped->handle, ref);
+
+            if (ref && ref->formType == Character::kTypeID)
             {
                 if (auto form = a_biped->objects[a_bipedSlot].item; form)
                 {
-                    /*if (a_ref->IsActor()) {
-                        auto actor = static_cast<Actor*>(a_ref);
-                        auto pm = actor->processManager;
-                        if (pm)
-                        {
-                            if (form->IsWeapon()) {
-
-                                _DMESSAGE("%X: %u | %d | %X", form->formID, a_bipedSlot, a_firstPerson, pm->equippedObject[1] ? pm->equippedObject[1]->formID : 0);
-                                if (pm->equippedObject[1] != form) {
-                                    return nullptr;
-                                }
-
-                            }
-                        }
-                    }
-
-                    */
-
-                    auto actor = static_cast<Actor*>(a_ref);
+                    auto actor = static_cast<Actor*>(ref.get());
                     if (Controller::GetShieldBipedObject(actor) == a_bipedSlot)
                     {
                         if (auto str = m_Instance->m_controller->GetShieldAttachmentNodeName(actor, form, a_firstPerson); str)
@@ -796,17 +815,23 @@ namespace SDS
     }
 
     const BSFixedString* EngineExtensions::GetWeaponNodeName(
-        TESObjectREFR* a_ref,
         Biped* a_biped,
         std::uint32_t a_bipedSlot,
         bool a_firstPerson,
         bool a_left)
     {
-        if (!a_ref || !a_biped || a_bipedSlot == 0xFFFFFFFF) {
+        if (!a_biped) {
             return nullptr;
         }
 
-        if (a_ref->formType != Character::kTypeID) {
+        NiPointer<TESObjectREFR> ref;
+        LookupREFRObjectByHandle(a_biped->handle, ref);
+
+        if (!ref || a_bipedSlot == 0xFFFFFFFF) {
+            return nullptr;
+        }
+
+        if (ref->formType != Character::kTypeID) {
             return nullptr;
         }
 
@@ -815,7 +840,7 @@ namespace SDS
             return nullptr;
         }
 
-        auto actor = static_cast<Actor*>(a_ref);
+        auto actor = static_cast<Actor*>(ref.get());
 
         return m_controller->GetWeaponAttachmentNodeName(actor, form, a_firstPerson, a_left);
     }

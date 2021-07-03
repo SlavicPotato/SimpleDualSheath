@@ -15,6 +15,7 @@ namespace SDS
         ILog
     {
     public:
+        EngineExtensions(const std::shared_ptr<Controller>& a_controller);
 
         EngineExtensions(const EngineExtensions&) = delete;
         EngineExtensions(EngineExtensions&&) = delete;
@@ -48,7 +49,6 @@ namespace SDS
         FN_NAMEPROC("EngineExtensions");
 
     private:
-        EngineExtensions(const std::shared_ptr<Controller>& a_controller);
 
         void Patch_SCB_Attach();
         void Patch_SCB_Detach();
@@ -59,10 +59,11 @@ namespace SDS
         bool Hook_TESObjectWEAP_SetEquipSlot();
         bool Patch_ShieldHandWorkaround();
 
-        static NiNode* GetScbAttachmentNode_Hook(TESObjectREFR* a_actor, TESForm* a_form, NiNode* a_attachmentNode);
-        static NiAVObject* GetWeaponShieldSlotNode_Hook(NiNode* a_root, const BSFixedString& a_nodeName, TESObjectREFR* a_ref, Biped* a_biped, std::uint32_t a_bipedSlot, bool a_firstPerson, bool &a_skipCull);
-        static NiAVObject* GetWeaponStaffSlotNode_Hook(NiNode* a_root, const BSFixedString& a_nodeName, TESObjectREFR* a_ref, Biped* a_biped, std::uint32_t a_bipedSlot, bool a_firstPerson, bool& a_skipCull);
-        static NiAVObject* GetShieldArmorSlotNode_Hook(NiNode* a_root, const BSFixedString& a_nodeName, TESObjectREFR* a_ref, Biped* a_biped, std::uint32_t a_bipedSlot, bool a_firstPerson);
+        static NiNode* GetScbAttachmentNode_Hook(Biped* a_biped, std::uint32_t a_bipedSlot, NiNode* a_attachmentNode);
+        static NiNode* GetScbAttachmentNode_Cleanup_Hook(TESObjectREFR *a_ref, TESForm* a_form, NiNode* a_attachmentNode);
+        static NiAVObject* GetWeaponShieldSlotNode_Hook(NiNode* a_root, const BSFixedString& a_nodeName, Biped* a_biped, std::uint32_t a_bipedSlot, bool a_firstPerson, bool &a_skipCull);
+        static NiAVObject* GetWeaponStaffSlotNode_Hook(NiNode* a_root, const BSFixedString& a_nodeName, Biped* a_biped, std::uint32_t a_bipedSlot, bool a_firstPerson, bool& a_skipCull);
+        static NiAVObject* GetShieldArmorSlotNode_Hook(NiNode* a_root, const BSFixedString& a_nodeName, Biped* a_biped, std::uint32_t a_bipedSlot, bool a_firstPerson);
         static NiAVObject* GetScabbardNode_Hook(NiNode* a_object, const BSFixedString& a_nodeName, bool a_left, bool a_firstPerson);
         static void TESObjectWEAP_SetEquipSlot_Hook(BGSEquipType *a_this, BGSEquipSlot* a_slot);
 
@@ -74,7 +75,7 @@ namespace SDS
         typedef std::uint32_t(*IAnimationGraphManagerHolder_SetVariableOnGraphsInt_t)(IAnimationGraphManagerHolder* a_holder, const BSFixedString& a_name, std::int32_t a_value);
 
         static bool ShouldBlockShieldHide(Actor *a_actor);
-        SKMP_NOINLINE const BSFixedString* GetWeaponNodeName(TESObjectREFR* a_ref, Biped* a_biped, std::uint32_t a_bipedSlot, bool a_firstPerson, bool a_left);
+        SKMP_NOINLINE const BSFixedString* GetWeaponNodeName(Biped* a_biped, std::uint32_t a_bipedSlot, bool a_firstPerson, bool a_left);
 
         decltype(&TESObjectWEAP_SetEquipSlot_Hook) m_TESObjectWEAP_SetEquipSlot_o;
         BShkbAnimationGraph_SetGraphVariableInt_t m_BShkbAnimationGraph_SetGraphVariableInt_o;

@@ -22,12 +22,6 @@ namespace SDS
         {
         }
 
-        Weapon::Weapon(
-            const Config::ConfigEntry& a_config)
-            :
-            m_flags(a_config.m_flags)
-        {
-        }
 
         const BSFixedString& Weapon::GetNodeName(bool a_left) const
         {

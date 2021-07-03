@@ -15,11 +15,8 @@ namespace SDS
                 const char* a_nodeNameLeft,
                 const SDS::Config::ConfigEntry &a_config);
 
-            Weapon(const SDS::Config::ConfigEntry& a_config);
-
             [[nodiscard]] const BSFixedString& GetNodeName(bool a_left) const;
             [[nodiscard]] NiNode* GetNode(NiNode* a_root, bool a_left) const;
-
 
             [[nodiscard]] SKMP_FORCEINLINE bool FirstPerson() const {
                 return (m_flags & Flags::kFirstPerson) == Flags::kFirstPerson;
