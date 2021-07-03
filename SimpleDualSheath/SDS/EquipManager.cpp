@@ -220,7 +220,7 @@ namespace SDS
 
         auto containerData = containerChanges->data;
 
-        if (!containerData || !containerData->objList) {
+        if (!containerData) {
             return;
         }
 
@@ -242,7 +242,9 @@ namespace SDS
             }
         }
 
-        containerData->objList->Visit(collector);
+        if (containerData->objList) {
+            containerData->objList->Visit(collector);
+        }
 
         if (collector.m_results.empty()) {
             return;

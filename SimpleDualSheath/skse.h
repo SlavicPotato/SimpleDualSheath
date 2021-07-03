@@ -6,7 +6,7 @@ class ISKSE :
     public ISKSEBase<
     SKSEInterfaceFlags::kMessaging |
     SKSEInterfaceFlags::kTrampoline,
-    136,
+    144,
     626>
 {
 public:
