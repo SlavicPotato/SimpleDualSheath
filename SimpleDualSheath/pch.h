@@ -23,5 +23,6 @@
 #include "skse.h"
 
 //#define _SDS_UNUSED 1
+//#define _SDS_DEBUG 1
 
 #endif //PCH_H

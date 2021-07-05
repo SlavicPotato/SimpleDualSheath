@@ -114,6 +114,12 @@ namespace SDS
             gLog.Warning("Unable to load the configuration file, using defaults");
         }
 
+        if (!ITaskPool::ValidateMemory()) 
+        {
+            gLog.FatalError("ITaskPool: memory validation failed");
+            return false;
+        }
+
         auto mvResult = EngineExtensions::ValidateMemory(config);
 
         if (mvResult != EngineExtensions::MemoryValidationFlags::kNone)
@@ -147,10 +153,9 @@ namespace SDS
             return false;
         }
 
-        if (!ITaskPool::Install(ISKSE::GetBranchTrampoline())) {
-            gLog.FatalError("Failed to install task hook");
-            return false;
-        }
+        ITaskPool::Install(
+            ISKSE::GetBranchTrampoline(),
+            ISKSE::GetLocalTrampoline());
 
         mif->RegisterListener(skse.GetPluginHandle(), "SKSE", MessageHandler);
 

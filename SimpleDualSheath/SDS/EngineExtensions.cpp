@@ -446,7 +446,12 @@ namespace SDS
 
     bool EngineExtensions::Hook_TESObjectWEAP_SetEquipSlot()
     {
-        bool result = VTable::Detour2(m_vtbl_TESObjectWEAP, 0x86 + 0x5, TESObjectWEAP_SetEquipSlot_Hook, std::addressof(m_TESObjectWEAP_SetEquipSlot_o));
+        bool result = VTable::Detour2(
+            m_vtbl_TESObjectWEAP, 
+            0x86 + 0x5,
+            TESObjectWEAP_SetEquipSlot_Hook,
+            std::addressof(m_TESObjectWEAP_SetEquipSlot_o));
+
         if (result) {
             Message("[Hook] TESObjectWEAP::SetEquipSlot");
         }
@@ -830,10 +835,6 @@ namespace SDS
 
         NiPointer<TESObjectREFR> ref;
         if (!handle.LookupREFR(ref)) {
-            return nullptr;
-        }
-
-        if (a_bipedSlot == 0xFFFFFFFF) {
             return nullptr;
         }
 
