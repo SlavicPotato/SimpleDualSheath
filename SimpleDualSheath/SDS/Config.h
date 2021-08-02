@@ -40,8 +40,8 @@ namespace SDS
 
     private:
 
-        UInt32 m_key{ 0 };
-        UInt32 m_comboKey{ 0 };
+        std::uint32_t m_key{ 0 };
+        std::uint32_t m_comboKey{ 0 };
     };
 
     struct Config

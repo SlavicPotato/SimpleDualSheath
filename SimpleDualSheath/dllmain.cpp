@@ -23,12 +23,12 @@ static bool Initialize(const SKSEInterface* a_skse)
 
     auto ret = SDS::Initialize(a_skse);
 
-    if (ret) 
+    if (ret)
     {
         auto usageBranch = skse.GetTrampolineUsage(TrampolineID::kBranch);
         auto usageLocal = skse.GetTrampolineUsage(TrampolineID::kLocal);
 
-        gLog.Message("Loaded, trampolines: branch:[%zu/%zu] codegen:[%zu/%zu]", 
+        gLog.Message("Loaded, trampolines: branch:[%zu/%zu] codegen:[%zu/%zu]",
             usageBranch.used, usageBranch.total, usageLocal.used, usageLocal.total);
     }
 

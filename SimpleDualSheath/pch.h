@@ -14,6 +14,7 @@
 #include <skse64/GameData.h>
 #include <skse64/GameRTTI.h>
 #include <skse64/NiNodes.h>
+#include <skse64/FormTraits.h>
 
 #include <memory>
 #include <functional>

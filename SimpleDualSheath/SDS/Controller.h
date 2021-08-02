@@ -49,9 +49,9 @@ namespace SDS
         Controller& operator=(Controller&&) = delete;
 
         void InitializeData();
-        [[nodiscard]] NiNode* GetScbAttachmentNode(Actor* a_actor, TESForm* a_form, NiNode* a_attachmentNode) const;
-        [[nodiscard]] const BSFixedString* GetWeaponAttachmentNodeName(Actor* a_actor, TESForm* a_form, bool a_firstPerson, bool a_left) const;
-        [[nodiscard]] const BSFixedString* GetShieldAttachmentNodeName(Actor* a_actor, TESForm* a_form, bool a_firstPerson) const;
+        [[nodiscard]] NiNode* GetScbAttachmentNode(Actor* a_actor, TESObjectWEAP* a_form, NiNode* a_attachmentNode) const;
+        [[nodiscard]] const BSFixedString* GetWeaponAttachmentNodeName(Actor* a_actor, TESObjectWEAP* a_form, bool a_firstPerson, bool a_left) const;
+        [[nodiscard]] const BSFixedString* GetShieldAttachmentNodeName(Actor* a_actor, TESObjectARMO* a_form, bool a_firstPerson) const;
         
 
         [[nodiscard]] SKMP_FORCEINLINE const auto& GetConfig() const {
@@ -73,11 +73,11 @@ namespace SDS
 
         [[nodiscard]] bool GetParentNodes(const Data::Weapon* a_entry, NiNode* a_root, bool a_left, NiPointer<NiNode>& a_sheathedNode, NiPointer<NiNode>& a_drawnNode) const;
 
-        void ProcessEquippedWeapon(Actor* a_actor, const Util::Node::NiRootNodes& a_roots, TESObjectWEAP* a_weapon, bool a_drawn, bool a_left) const;
+        void ProcessEquippedWeapon(Actor* a_actor, const ::Util::Node::NiRootNodes& a_roots, TESObjectWEAP* a_weapon, bool a_drawn, bool a_left) const;
         void ProcessWeaponDrawnChange(Actor* a_actor, bool a_drawn) const;
         void QueueProcessWeaponDrawnChange(TESObjectREFR* a_actor, DrawnState a_drawnState) const;
 
-        void ProcessEquippedShield(Actor* a_actor, const Util::Node::NiRootNodes& a_roots, bool a_drawn, bool a_switch) const;
+        void ProcessEquippedShield(Actor* a_actor, const ::Util::Node::NiRootNodes& a_roots, bool a_drawn, bool a_switch) const;
 
         [[nodiscard]] NiNode* FindObjectNPCRoot(TESObjectREFR* a_actor, NiAVObject* a_object, bool a_no1p) const;
 

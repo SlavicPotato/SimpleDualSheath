@@ -29,9 +29,9 @@ private:
     virtual void OnLogOpen() override;
     virtual const char* GetLogPath() const override;
     virtual const char* GetPluginName() const override;
-    virtual UInt32 GetPluginVersion() const override;
-    virtual bool CheckRuntimeVersion(UInt32 a_version) const override;
-    virtual bool CheckInterfaceVersion(UInt32 a_interfaceID, UInt32 a_interfaceVersion, UInt32 a_compiledInterfaceVersion) const override;
+    virtual std::uint32_t GetPluginVersion() const override;
+    virtual bool CheckRuntimeVersion(std::uint32_t a_version) const override;
+    virtual bool CheckInterfaceVersion(std::uint32_t a_interfaceID, std::uint32_t a_interfaceVersion, std::uint32_t a_compiledInterfaceVersion) const override;
 
     static ISKSE m_Instance;
 };

@@ -8,8 +8,8 @@ namespace SDS
     {
 
     private:
-        virtual void OnKeyDown(UInt32 a_keyCode) = 0;
-        virtual void OnKeyUp(UInt32 a_keyCode) = 0;
+        virtual void OnKeyDown(std::uint32_t a_keyCode) = 0;
+        virtual void OnKeyUp(std::uint32_t a_keyCode) = 0;
 
         virtual EventResult ReceiveEvent(InputEvent** evns, InputEventDispatcher* dispatcher) override;
 
@@ -20,22 +20,22 @@ namespace SDS
     {
     public:
 
-        void SetComboKey(UInt32 a_key);
-        void SetKey(UInt32 a_key);
-        void SetKeys(UInt32 a_comboKey, UInt32 a_key);
+        void SetComboKey(std::uint32_t a_key);
+        void SetKey(std::uint32_t a_key);
+        void SetKeys(std::uint32_t a_comboKey, std::uint32_t a_key);
 
     protected:
 
         virtual void OnKeyPressed() = 0;
     private:
 
-        void OnKeyDown(UInt32 a_keyCode) override;
-        void OnKeyUp(UInt32 a_keyCode) override;
+        void OnKeyDown(std::uint32_t a_keyCode) override;
+        void OnKeyUp(std::uint32_t a_keyCode) override;
 
         bool m_comboKeyDown{ false };
 
-        UInt32 m_comboKey{ 0 };
-        UInt32 m_key{ 0 };
+        std::uint32_t m_comboKey{ 0 };
+        std::uint32_t m_key{ 0 };
 
 
     };

@@ -50,7 +50,7 @@ namespace SDS
     void ConfigKeyCombo::Parse(
         const std::string& a_input)
     {
-        std::vector<UInt32> e;
+        std::vector<std::uint32_t> e;
         StrHelpers::SplitString(a_input, '+', e, true, true);
 
         m_comboKey = 0;

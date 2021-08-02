@@ -16,7 +16,7 @@ const char* ISKSE::GetPluginName() const
     return PLUGIN_NAME;
 };
 
-UInt32 ISKSE::GetPluginVersion() const 
+std::uint32_t ISKSE::GetPluginVersion() const 
 {
     return MAKE_PLUGIN_VERSION(
         PLUGIN_VERSION_MAJOR,
@@ -24,12 +24,12 @@ UInt32 ISKSE::GetPluginVersion() const
         PLUGIN_VERSION_REVISION);
 };
 
-bool ISKSE::CheckRuntimeVersion(UInt32 a_version) const
+bool ISKSE::CheckRuntimeVersion(std::uint32_t a_version) const
 {
     return a_version >= MIN_RUNTIME_VERSION;
 }
 
-bool ISKSE::CheckInterfaceVersion(UInt32 a_interfaceID, UInt32 a_interfaceVersion, UInt32 a_compiledInterfaceVersion) const
+bool ISKSE::CheckInterfaceVersion(std::uint32_t a_interfaceID, std::uint32_t a_interfaceVersion, std::uint32_t a_compiledInterfaceVersion) const
 {
     return true;
 }

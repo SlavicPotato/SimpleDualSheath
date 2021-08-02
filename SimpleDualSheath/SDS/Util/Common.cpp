@@ -19,14 +19,9 @@ namespace SDS
                 return true;
             }
 
-            bool CanEquipEitherHand(TESForm* item)
+            bool CanEquipEitherHand(TESObjectWEAP* a_weapon)
             {
-                auto equipType = RTTI<BGSEquipType>()(item);
-                if (!equipType) {
-                    return false;
-                }
-
-                auto equipSlot = equipType->GetEquipSlot();
+                auto equipSlot = a_weapon->equipType.GetEquipSlot();
                 if (!equipSlot) {
                     return false;
                 }
@@ -53,31 +48,14 @@ namespace SDS
                     return false;
                 }
 
-                if (form->formType != TESObjectARMO::kTypeID) {
+                auto armor = form->As<TESObjectARMO>();
+                if (!armor) {
                     return false;
                 }
-
-                auto armor = static_cast<TESObjectARMO*>(form);
 
                 return armor->IsShield();
             }
 
-            TESRace* GetActorRace(Actor* a_actor)
-            {
-                auto race = a_actor->race;
-
-                if (!race)
-                {
-                    if (auto actorBase = a_actor->baseForm; actorBase)
-                    {
-                        if (auto npc = RTTI<TESNPC>()(actorBase); npc) {
-                            race = npc->race.race;
-                        }
-                    }
-                }
-
-                return race;
-            }
         }
     }
 }

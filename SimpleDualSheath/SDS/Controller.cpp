@@ -5,12 +5,14 @@
 #include "Util/Common.h"
 #include "Util/Node.h"
 
+#include <ext/Node.h>
 #include <ext/GameCommon.h>
 
 namespace SDS
 {
     using namespace Util::Common;
     using namespace Util::Node;
+    using namespace ::Util::Node;
     using namespace Data;
 
     Controller::Controller(
@@ -88,9 +90,8 @@ namespace SDS
     {
         if (auto baseForm = a_actor->baseForm; baseForm)
         {
-            if (baseForm->formType == TESNPC::kTypeID)
+            if (auto npc = baseForm->As<TESNPC>(); npc)
             {
-                auto npc = static_cast<TESNPC*>(baseForm);
                 if (auto race = npc->race.race; race)
                 {
                     return race->data.shieldObject;
@@ -157,7 +158,7 @@ namespace SDS
                     weaponNode.get());*/
 
                 AttachToNode(weaponNode, targetNode);
-                ClearCull(weaponNode);
+                SetVisible(weaponNode);
             }
             else if (NiPointer weaponNode = GetNiObject(targetNode, weaponNodeName); weaponNode)
             {
@@ -173,7 +174,7 @@ namespace SDS
                     i,
                     weaponNode.get());*/
 
-                ClearCull(weaponNode);
+                SetVisible(weaponNode);
             }
         }
     }
@@ -184,16 +185,8 @@ namespace SDS
     {
         //IScopedLock lock(m_lock);
 
-#ifdef _SDS_DEBUG
-        gLog.Debug("%s: %X: processing weapon drawn change (%hhu)", __FUNCTION__, a_actor->formID.get(), a_drawn);
-#endif
-
         auto pm = a_actor->processManager;
-        if (!pm)
-        {
-#ifdef _SDS_DEBUG
-            gLog.Debug("%s: %X: actor has no process manager", __FUNCTION__, a_actor->formID.get());
-#endif
+        if (!pm) {
             return;
         }
 
@@ -203,10 +196,6 @@ namespace SDS
         auto form = pm->equippedObject[ActorProcessManager::kEquippedHand_Left];
         if (form)
         {
-#ifdef _SDS_DEBUG
-            gLog.Debug("%s: %X: left form found : %X | %hhu | %hhu", __FUNCTION__, a_actor->formID.get(), form->formID.get(), form->IsArmor(), GetShieldOnBackSwitch(a_actor));
-#endif
-
             if (form->IsWeapon())
             {
                 ProcessEquippedWeapon(a_actor, roots, static_cast<TESObjectWEAP*>(form), a_drawn, true);
@@ -223,9 +212,9 @@ namespace SDS
         form = pm->equippedObject[ActorProcessManager::kEquippedHand_Right];
         if (form)
         {
-            if (form->IsWeapon())
+            if (auto weapon = form->As<TESObjectWEAP>(); weapon)
             {
-                ProcessEquippedWeapon(a_actor, roots, static_cast<TESObjectWEAP*>(form), a_drawn, false);
+                ProcessEquippedWeapon(a_actor, roots, weapon, a_drawn, false);
             }
         }
     }
@@ -234,12 +223,8 @@ namespace SDS
         TESObjectREFR* a_actor,
         DrawnState a_drawnState) const
     {
-#ifdef _SDS_DEBUG
-        gLog.Debug("%s: %X: queueing process weapon drawn change", __FUNCTION__, a_actor ? a_actor->formID.get() : 0);
-#endif
-
         ITaskPool::QueueActorTask(a_actor,
-            [this, a_drawnState](Actor* a_actor, Game::ObjectRefHandle a_handle)
+            [this, a_drawnState](Actor* a_actor, Game::ActorHandle)
             {
                 ProcessWeaponDrawnChange(a_actor, GetIsDrawn(a_actor, a_drawnState));
             }
@@ -292,20 +277,12 @@ namespace SDS
         bool a_drawn,
         bool a_switch) const
     {
-        if (!IsShieldEnabled(a_actor))
-        {
-#ifdef _SDS_DEBUG
-            gLog.Debug("%s: %X: shield not enabled on this actor", __FUNCTION__, a_actor->formID.get());
-#endif
+        if (!IsShieldEnabled(a_actor)) {
             return;
         }
 
         auto bipedObject = GetShieldBipedObject(a_actor);
-
         if (bipedObject >= 42u) {
-#ifdef _SDS_DEBUG
-            gLog.Debug("%s: %X: bad biped slot: %X", __FUNCTION__, a_actor->formID.get(), bipedObject);
-#endif
             return;
         }
 
@@ -317,82 +294,53 @@ namespace SDS
                 continue;
             }
 
-            bool firstPerson = i == 1;
+            bool firstPerson = (i == 1);
 
             if (firstPerson && !m_conf.m_shield.FirstPerson()) {
                 continue;
             }
 
             auto bipedModel = a_actor->GetBiped(firstPerson);
-            if (!bipedModel)
-            {
-#ifdef _SDS_DEBUG
-                gLog.Debug("%s: %X: no biped model", __FUNCTION__, a_actor->formID.get());
-#endif
+            if (!bipedModel) {
                 continue;
             }
 
             auto bipedData = bipedModel->bipedData;
-            if (!bipedData)
-            {
-#ifdef _SDS_DEBUG
-                gLog.Debug("%s: %X: no biped data", __FUNCTION__, a_actor->formID.get());
-#endif
+            if (!bipedData) {
                 continue;
             }
 
             auto& data = bipedData->objects[bipedObject];
 
             auto form = data.item;
-
             if (!form) {
-#ifdef _SDS_DEBUG
-                gLog.Debug("%s: %X: no form in shield biped slot", __FUNCTION__, a_actor->formID.get());
-#endif
                 continue;
             }
 
-            if (!form->IsArmor())
-            {
-#ifdef _SDS_DEBUG
-                gLog.Debug("%s: %X: form not an armor : %X", __FUNCTION__, a_actor->formID.get(), form->formID.get());
-#endif
+            auto armor = form->As<TESObjectARMO>();
+            if (!armor) {
+                continue;
             }
 
-            if (!static_cast<TESObjectARMO*>(form)->IsShield())
-            {
-#ifdef _SDS_DEBUG
-                gLog.Debug("%s: %X: form not a shield : %X", __FUNCTION__, a_actor->formID.get(), form->formID.get());
-#endif
+            if (!armor->IsShield()) {
                 continue;
             }
 
             NiPointer armorNode = data.object;
             if (!armorNode) {
-#ifdef _SDS_DEBUG
-                gLog.Debug("%s: %X: form has no NiAVObject : %X", __FUNCTION__, a_actor->formID.get(), form->formID.get());
-#endif
                 continue;
             }
 
-            auto& targetNodeName = a_drawn || !a_switch ?
+            auto& targetNodeName = (a_drawn || !a_switch) ?
                 m_strings->m_shield :
                 m_strings->m_shieldSheathNode;
 
             NiPointer targetNode = FindNode(root, targetNodeName);
-            if (!targetNode)
-            {
-#ifdef _SDS_DEBUG
-                gLog.Debug("%s: %X: couldn't get target node : %X [%s]", __FUNCTION__, a_actor->formID.get(), form->formID.get(), targetNodeName.c_str());
-#endif
+            if (!targetNode) {
                 continue;
             }
 
             AttachToNode(armorNode, targetNode);
-
-#ifdef _SDS_DEBUG
-            gLog.Debug("%s: %X: shield attached : %X [%s]", __FUNCTION__, a_actor->formID.get(), form->formID.get(), targetNodeName.c_str());
-#endif
         }
     }
 
@@ -432,12 +380,10 @@ namespace SDS
 
     NiNode* Controller::GetScbAttachmentNode(
         Actor* a_actor,
-        TESForm* a_form,
+        TESObjectWEAP* a_weapon,
         NiNode* a_attachmentNode) const
     {
-        auto weap = static_cast<TESObjectWEAP*>(a_form);
-
-        auto entry = m_data->Get(a_actor, weap, true);
+        auto entry = m_data->Get(a_actor, a_weapon, true);
         if (!entry) {
             return nullptr;
         }
@@ -458,17 +404,11 @@ namespace SDS
 
     const BSFixedString* Controller::GetWeaponAttachmentNodeName(
         Actor* a_actor,
-        TESForm* a_form,
+        TESObjectWEAP* a_weapon,
         bool a_firstPerson,
         bool a_left) const
     {
-        if (!a_form->IsWeapon()) {
-            return nullptr;
-        }
-
-        auto weapon = static_cast<TESObjectWEAP*>(a_form);
-
-        auto entry = m_data->Get(a_actor, weapon, a_left);
+        auto entry = m_data->Get(a_actor, a_weapon, a_left);
         if (!entry) {
             return nullptr;
         }
@@ -482,15 +422,10 @@ namespace SDS
 
     const BSFixedString* Controller::GetShieldAttachmentNodeName(
         Actor* a_actor,
-        TESForm* a_form,
+        TESObjectARMO* a_armor,
         bool a_firstPerson) const
     {
-        if (!a_form->IsArmor()) {
-            return nullptr;
-        }
-
-        auto armor = static_cast<TESObjectARMO*>(a_form);
-        if (!armor->IsShield()) {
+        if (!a_armor->IsShield()) {
             return nullptr;
         }
 
@@ -516,7 +451,7 @@ namespace SDS
     void Controller::OnActorLoad(TESObjectREFR* a_actor) const
     {
         ITaskPool::QueueActorTask(a_actor,
-            [this](Actor* a_actor, Game::ObjectRefHandle a_handle)
+            [this](Actor* a_actor, Game::ActorHandle)
             {
 #ifdef _SDS_UNUSED
 
@@ -537,7 +472,7 @@ namespace SDS
     void Controller::OnNiNodeUpdate(TESObjectREFR* a_actor)
     {
         ITaskPool::QueueActorTask(a_actor,
-            [this](Actor* a_actor, Game::ObjectRefHandle a_handle)
+            [this](Actor* a_actor, Game::ActorHandle)
             {
                 m_nodeOverride->ApplyNodeOverrides(a_actor);
             }
@@ -550,10 +485,9 @@ namespace SDS
     {
         if (a_evn && a_evn->loaded)
         {
-            auto form = a_evn->formId.Lookup();
-            if (form && form->formType == Actor::kTypeID)
+            if (auto actor = a_evn->formId.As<Actor>(); actor)
             {
-                OnActorLoad(static_cast<TESObjectREFR*>(form));
+                OnActorLoad(actor);
             }
         }
 
@@ -600,15 +534,11 @@ namespace SDS
     {
         if (a_evn && a_evn->equipped && a_evn->actor)
         {
-            if (a_evn->actor->formType == Actor::kTypeID)
+            if (auto actor = a_evn->actor->As<Actor>(); actor)
             {
-                if (auto form = a_evn->baseObject.Lookup(); form)
+                if (auto weapon = a_evn->baseObject.As<TESObjectWEAP>(); weapon)
                 {
-                    if (form->IsWeapon())
-                    {
-                        auto actor = static_cast<Actor*>(a_evn->actor.get());
-                        OnWeaponEquip(actor, static_cast<TESObjectWEAP*>(form));
-                    }
+                    OnWeaponEquip(actor, weapon);
                 }
             }
         }
@@ -665,21 +595,16 @@ namespace SDS
 
                 for (auto handle : pl->highActorHandles)
                 {
-                    NiPointer<TESObjectREFR> ref;
+                    NiPointer<Actor> actor;
 
-                    if (!handle.LookupREFR(ref)) {
+                    if (!handle.Lookup(actor)) {
                         continue;
                     }
 
-                    if (ref->formType != Actor::kTypeID) {
+                    if (!IsREFRValid(actor)) {
                         continue;
                     }
 
-                    if (!IsREFRValid(ref)) {
-                        continue;
-                    }
-
-                    auto actor = static_cast<Actor*>(ref.get());
                     ProcessWeaponDrawnChange(actor, actor->actorState.IsWeaponDrawn());
                 }
             }
@@ -698,10 +623,10 @@ namespace SDS
 
     void Controller::OnKeyPressed()
     {
-        m_shieldOnBackSwitch.fetch_xor(1, std::memory_order_acquire);
+        m_shieldOnBackSwitch.fetch_xor(1, std::memory_order_acq_rel);
 
         ITaskPool::QueueActorTask(*g_thePlayer,
-            [this](Actor* a_actor, Game::ObjectRefHandle a_handle)
+            [this](Actor* a_actor, Game::ActorHandle)
             {
                 NiRootNodes roots(a_actor);
                 roots.GetNPCRoots(m_strings->m_npcroot);
@@ -715,7 +640,7 @@ namespace SDS
                     m_conf.m_shieldHandWorkaround &&
                     IsShieldEquipped(a_actor))
                 {
-                    auto value = sw ? 0 : 10;
+                    std::int32_t value = sw ? 0 : 10;
 
                     a_actor->animGraphHolder.SetVariableOnGraphsInt(
                         m_strings->m_iLeftHandType, value);

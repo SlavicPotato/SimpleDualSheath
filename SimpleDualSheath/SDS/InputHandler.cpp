@@ -17,7 +17,7 @@ namespace SDS
             if (inputEvent->eventType != InputEvent::kEventType_Button)
                 continue;
 
-            auto buttonEvent = RTTI<ButtonEvent>::Cast(inputEvent);
+            auto buttonEvent = RTTI<ButtonEvent>()(inputEvent);
             if (!buttonEvent)
                 continue;
 
@@ -25,7 +25,7 @@ namespace SDS
                 continue;
             }
 
-            UInt32 keyCode = buttonEvent->keyMask;
+            std::uint32_t keyCode = buttonEvent->keyMask;
 
             if (keyCode >= InputMap::kMaxMacros)
                 continue;
@@ -47,25 +47,25 @@ namespace SDS
         return kEvent_Continue;
     }
 
-    void ComboKeyPressHandler::SetComboKey(UInt32 a_key) 
+    void ComboKeyPressHandler::SetComboKey(std::uint32_t a_key) 
     {
         m_comboKey = a_key;
         m_comboKeyDown = false;
     }
 
-    void ComboKeyPressHandler::SetKey(UInt32 a_key) 
+    void ComboKeyPressHandler::SetKey(std::uint32_t a_key) 
     {
         m_key = a_key;
     }
 
-    void ComboKeyPressHandler::SetKeys(UInt32 a_comboKey, UInt32 a_key) 
+    void ComboKeyPressHandler::SetKeys(std::uint32_t a_comboKey, std::uint32_t a_key) 
     {
         m_comboKey = a_comboKey;
         m_key = a_key;
         m_comboKeyDown = false;
     }
 
-    void ComboKeyPressHandler::OnKeyDown(UInt32 a_keyCode)
+    void ComboKeyPressHandler::OnKeyDown(std::uint32_t a_keyCode)
     {
         if (m_comboKey && a_keyCode == m_comboKey)
         {
@@ -78,7 +78,7 @@ namespace SDS
         }
     }
     
-    void ComboKeyPressHandler::OnKeyUp(UInt32 a_keyCode)
+    void ComboKeyPressHandler::OnKeyUp(std::uint32_t a_keyCode)
     {
         if (m_comboKey && a_keyCode == m_comboKey)
         {

@@ -447,7 +447,7 @@ namespace SDS
     bool EngineExtensions::Hook_TESObjectWEAP_SetEquipSlot()
     {
         bool result = VTable::Detour2(
-            m_vtbl_TESObjectWEAP, 
+            m_vtbl_TESObjectWEAP,
             0x86 + 0x5,
             TESObjectWEAP_SetEquipSlot_Hook,
             std::addressof(m_TESObjectWEAP_SetEquipSlot_o));
@@ -641,31 +641,28 @@ namespace SDS
             return nullptr;
         }
 
-        auto form = a_biped->objects[a_bipedSlot].item;
-
-        auto handle = a_biped->handle;
-
         NiPointer<TESObjectREFR> ref;
-        if (!handle.LookupREFR(ref)) {
+        if (!a_biped->handle.Lookup(ref)) {
             return nullptr;
         }
 
+        auto actor = ref->As<Actor>();
+        if (!actor) {
+            return nullptr;
+        }
+
+        auto form = a_biped->objects[a_bipedSlot].item;
         if (!form) {
             return nullptr;
         }
 
-        if (ref->formType != Actor::kTypeID) {
+        auto weapon = form->As<TESObjectWEAP>();
+        if (!weapon) {
             return nullptr;
         }
-
-        if (form->formType != TESObjectWEAP::kTypeID) {
-            return nullptr;
-        }
-
-        auto actor = static_cast<Actor*>(ref.get());
 
         return m_Instance->m_controller->GetScbAttachmentNode(
-            actor, form, a_attachmentNode);
+            actor, weapon, a_attachmentNode);
     }
 
     NiNode* EngineExtensions::GetScbAttachmentNode_Cleanup_Hook(
@@ -681,18 +678,18 @@ namespace SDS
             return nullptr;
         }
 
-        if (a_ref->formType != Actor::kTypeID) {
+        auto actor = a_ref->As<Actor>();
+        if (!actor) {
             return nullptr;
         }
 
-        if (a_form->formType != TESObjectWEAP::kTypeID) {
+        auto weapon = a_form->As<TESObjectWEAP>();
+        if (!weapon) {
             return nullptr;
         }
-
-        auto actor = static_cast<Actor*>(a_ref);
 
         return m_Instance->m_controller->GetScbAttachmentNode(
-            actor, a_form, a_attachmentNode);
+            actor, weapon, a_attachmentNode);
     }
 
     NiAVObject* EngineExtensions::GetWeaponShieldSlotNode_Hook(
@@ -748,21 +745,21 @@ namespace SDS
     {
         if (a_biped && a_bipedSlot != 0xFFFFFFFF)
         {
-            auto handle = a_biped->handle;
-
             NiPointer<TESObjectREFR> ref;
-            if (handle.LookupREFR(ref))
+            if (a_biped->handle.Lookup(ref))
             {
-                if (ref->formType == Character::kTypeID)
+                if (auto actor = ref->As<Actor>(); actor)
                 {
                     if (auto form = a_biped->objects[a_bipedSlot].item; form)
                     {
-                        auto actor = static_cast<Actor*>(ref.get());
-                        if (Controller::GetShieldBipedObject(actor) == a_bipedSlot)
+                        if (auto armor = form->As<TESObjectARMO>(); armor)
                         {
-                            if (auto str = m_Instance->m_controller->GetShieldAttachmentNodeName(actor, form, a_firstPerson); str)
+                            if (Controller::GetShieldBipedObject(actor) == a_bipedSlot)
                             {
-                                return m_fGetNodeByName(a_root, *str, true);
+                                if (auto str = m_Instance->m_controller->GetShieldAttachmentNodeName(actor, armor, a_firstPerson); str)
+                                {
+                                    return m_fGetNodeByName(a_root, *str, true);
+                                }
                             }
                         }
                     }
@@ -810,7 +807,7 @@ namespace SDS
             m_fUnk1401CDB30(a_node);
         }
 
-        Node::ClearCull(scbLeftNode);
+        Node::SetVisible(scbLeftNode);
 
         return scbLeftNode;
     }
@@ -831,14 +828,13 @@ namespace SDS
             return nullptr;
         }
 
-        auto handle = a_biped->handle;
-
         NiPointer<TESObjectREFR> ref;
-        if (!handle.LookupREFR(ref)) {
+        if (!a_biped->handle.Lookup(ref)) {
             return nullptr;
         }
 
-        if (ref->formType != Character::kTypeID) {
+        auto actor = ref->As<Actor>();
+        if (!actor) {
             return nullptr;
         }
 
@@ -847,9 +843,12 @@ namespace SDS
             return nullptr;
         }
 
-        auto actor = static_cast<Actor*>(ref.get());
+        auto weapon = form->As<TESObjectWEAP>();
+        if (!weapon) {
+            return nullptr;
+        }
 
-        return m_controller->GetWeaponAttachmentNodeName(actor, form, a_firstPerson, a_left);
+        return m_controller->GetWeaponAttachmentNodeName(actor, weapon, a_firstPerson, a_left);
     }
 
 }

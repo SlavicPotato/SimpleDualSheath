@@ -4,13 +4,15 @@
 
 #include "Util/Common.h"
 
+#include <ext/GameCommon.h>
+
 namespace SDS
 {
     using namespace Util::Common;
 
     bool EquipExtensions::CheckDualWield(Actor* a_actor)
     {
-        auto race = GetActorRace(a_actor);
+        auto race = Game::GetActorRace(a_actor);
 
         if (!race) {
             return false;
@@ -20,22 +22,20 @@ namespace SDS
             return false;
         }
 
-        auto extraCombatStyle = static_cast<ExtraCombatStyle*>(a_actor->extraData.GetByType(kExtraData_CombatStyle));
-        if (extraCombatStyle)
+        if (auto extraCombatStyle = a_actor->extraData.Get<ExtraCombatStyle>(); extraCombatStyle)
         {
-            auto cs = extraCombatStyle->combatStyle;
-            if (cs) {
+            if (auto cs = extraCombatStyle->combatStyle; cs) {
                 return (cs->flags & TESCombatStyle::kFlag_AllowDualWielding) == TESCombatStyle::kFlag_AllowDualWielding;
             }
         }
 
-        auto baseForm = a_actor->baseForm;
-
-        if (baseForm && baseForm->formType == TESNPC::kTypeID)
+        if (auto baseForm = a_actor->baseForm; baseForm)
         {
-            auto cs = static_cast<TESNPC*>(baseForm)->combatStyle;
-            if (cs) {
-                return (cs->flags & TESCombatStyle::kFlag_AllowDualWielding) == TESCombatStyle::kFlag_AllowDualWielding;
+            if (auto npc = baseForm->As<TESNPC>(); npc)
+            {
+                if (auto cs = npc->combatStyle; cs) {
+                    return (cs->flags & TESCombatStyle::kFlag_AllowDualWielding) == TESCombatStyle::kFlag_AllowDualWielding;
+                }
             }
         }
 
@@ -83,11 +83,10 @@ namespace SDS
             return;
         }
 
-        if (!a_item->IsWeapon()) {
+        auto weapon = a_item->As<TESObjectWEAP>();
+        if (!weapon) {
             return;
         }
-
-        auto weapon = static_cast<TESObjectWEAP*>(a_item);
 
         if (!CanEquipEitherHand(weapon)) {
             return;
@@ -105,9 +104,13 @@ namespace SDS
     };
 
     // modified EquipItemEx (SKSE)
-    static EquipItemResult EquipItem(EquipManager* a_equipManager, ExtraContainerChanges::Data* a_containerData, Actor* thisActor, TESObjectWEAP* item)
+    static EquipItemResult EquipItem(
+        EquipManager* a_equipManager,
+        ExtraContainerChanges::Data* a_containerData, 
+        Actor* a_actor, 
+        TESObjectWEAP* a_item)
     {
-        auto entryData = a_containerData->CreateEquipEntryData(item);
+        auto entryData = a_containerData->CreateEquipEntryData(a_item);
         if (!entryData)
             return EquipItemResult::kFailed;
 
@@ -163,7 +166,7 @@ namespace SDS
             return EquipItemResult::kNotEnoughItems;
         }
 
-        a_equipManager->EquipItem(thisActor, item, enchantList, 1, targetEquipSlot, false, false, false, nullptr);
+        a_equipManager->EquipItem(a_actor, a_item, enchantList, 1, targetEquipSlot, false, false, false, nullptr);
 
         return EquipItemResult::kEquipped;
     }
@@ -171,7 +174,7 @@ namespace SDS
     void EquipExtensions::QueueEvaluateEquip(TESObjectREFR* a_actor) const
     {
         ITaskPool::QueueActorTask(a_actor, 
-            [this](Actor* a_actor, Game::ObjectRefHandle a_handle)
+            [this](Actor* a_actor, Game::ActorHandle)
             {
                 EvaluateEquip(a_actor);
             });
@@ -199,11 +202,11 @@ namespace SDS
             return;
         }
 
-        if (!right->IsWeapon()) {
+        auto weaponRight = right->As<TESObjectWEAP>();
+        if (!weaponRight) {
             return;
         }
 
-        auto weaponRight = static_cast<TESObjectWEAP*>(right);
         if (!CanEquipEitherHand(weaponRight)) {
             return;
         }
@@ -213,13 +216,12 @@ namespace SDS
             return;
         }*/
 
-        auto containerChanges = static_cast<ExtraContainerChanges*>(a_actor->extraData.GetByType(kExtraData_ContainerChanges));
+        auto containerChanges = a_actor->extraData.Get<ExtraContainerChanges>();
         if (!containerChanges) {
             return;
         }
 
         auto containerData = containerChanges->data;
-
         if (!containerData) {
             return;
         }
@@ -236,9 +238,9 @@ namespace SDS
 
         if (auto baseForm = a_actor->baseForm; baseForm)
         {
-            if (auto container = RTTI<TESContainer>()(baseForm); container)
+            if (auto npc = baseForm->As<TESNPC>(); npc)
             {
-                container->Visit(collector);
+                npc->container.Visit(collector);
             }
         }
 
@@ -287,16 +289,15 @@ namespace SDS
     {
         if (a_evn)
         {
-            auto containerForm = a_evn->newContainer.Lookup();
-            if (containerForm && containerForm->formType == Actor::kTypeID)
+            auto actor = a_evn->newContainer.As<Actor>();
+            if (actor)
             {
-                auto actor = static_cast<Actor*>(containerForm);
                 if (ActorQualifiesForEquip(actor))
                 {
-                    auto baseForm = a_evn->baseObj.Lookup();
-                    if (baseForm && baseForm->IsWeapon())
+                    auto weapon = a_evn->baseObj.As<TESObjectWEAP>();
+                    if (weapon)
                     {
-                        if (CanEquipEitherHand(baseForm))
+                        if (CanEquipEitherHand(weapon))
                         {
                             QueueEvaluateEquip(actor);
                         }

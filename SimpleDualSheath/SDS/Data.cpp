@@ -4,6 +4,8 @@
 #include "Config.h"
 #include "Util/Node.h"
 
+#include <ext/Node.h>
+
 namespace SDS
 {
     namespace Data
@@ -37,7 +39,7 @@ namespace SDS
 
         NiNode* Weapon::GetNode(NiNode* a_root, bool a_left) const
         {
-            return Node::FindNode(a_root, GetNodeName(a_left));
+            return ::Util::Node::FindNode(a_root, GetNodeName(a_left));
         }
 
         void WeaponData::SetStrings(
