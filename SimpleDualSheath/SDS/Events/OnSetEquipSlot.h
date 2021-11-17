@@ -2,11 +2,11 @@
 
 namespace SDS
 {
-    namespace Events
-    {
-        struct OnSetEquipSlot
-        {
-            //TESObjectWEAP* weapon;
-        };
-    }
+	namespace Events
+	{
+		struct OnSetEquipSlot
+		{
+			//TESObjectWEAP* weapon;
+		};
+	}
 }

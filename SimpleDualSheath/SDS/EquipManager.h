@@ -2,39 +2,34 @@
 
 namespace SDS
 {
-    struct EquipCandidateCollector
-    {
-    public:
-        EquipCandidateCollector(TESObjectWEAP* a_ignore);
+	struct EquipCandidateCollector
+	{
+	public:
+		EquipCandidateCollector(TESObjectWEAP* a_ignore);
 
-        bool Accept(TESContainer::ConfigEntry* entry);
-        bool Accept(InventoryEntryData* a_entryData);
+		bool Accept(TESContainer::ConfigEntry* entry);
+		bool Accept(InventoryEntryData* a_entryData);
 
-        std::unordered_set<TESObjectWEAP*> m_results;
-        
+		std::unordered_set<TESObjectWEAP*> m_results;
 
-    private:
-        TESObjectWEAP* m_ignore;
+	private:
+		TESObjectWEAP* m_ignore;
 
-        void Process(TESForm *a_item);
-    };
+		void Process(TESForm* a_item);
+	};
 
+	class EquipExtensions :
+		public BSTEventSink<TESContainerChangedEvent>
+	{
+	public:
+	protected:
+		static bool CheckDualWield(Actor* a_actor);
+		static bool ActorQualifiesForEquip(Actor* a_actor);
 
-    class EquipExtensions :
-        public BSTEventSink <TESContainerChangedEvent>
-    {
+		void QueueEvaluateEquip(TESObjectREFR* a_actor) const;
 
-    public:
+		void EvaluateEquip(Actor* a_actor) const;
 
-    protected:
-
-        static bool CheckDualWield(Actor* a_actor);
-        static bool ActorQualifiesForEquip(Actor* a_actor);
-
-        void QueueEvaluateEquip(TESObjectREFR* a_actor) const;
-
-        void EvaluateEquip(Actor* a_actor) const;
-
-        virtual EventResult	ReceiveEvent(TESContainerChangedEvent* a_evn, EventDispatcher<TESContainerChangedEvent>* a_dispatcher) override;
-    };
+		virtual EventResult ReceiveEvent(TESContainerChangedEvent* a_evn, EventDispatcher<TESContainerChangedEvent>* a_dispatcher) override;
+	};
 }
