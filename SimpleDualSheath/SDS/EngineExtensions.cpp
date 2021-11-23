@@ -175,7 +175,7 @@ namespace SDS
 
 				mov(rcx, ptr[rbp + 0x77]);
 				mov(rcx, ptr[rcx]);        // Biped
-				mov(r8, ptr[rbp + 0x5F]);  // attachment node
+				mov(r8, ptr[rbp + 0x5F]);  // root
 
 				if (IAL::IsAE())
 				{
@@ -340,7 +340,7 @@ namespace SDS
 				Xbyak::Label retnLabel;
 				Xbyak::Label retnNoHiddenLabel;
 
-				Xbyak::Label skipHidden;
+				Xbyak::Label skipHide;
 
 				sub(rsp, 0x40);
 
@@ -367,7 +367,7 @@ namespace SDS
 				mov(r8, ptr[r8]);  // Biped
 
 				lea(rax, ptr[rsp + 0x30]);
-				mov(ptr[rsp + 0x28], rax);  // skip hidden bool
+				mov(ptr[rsp + 0x28], rax);  // skip hide bool
 
 				call(ptr[rip + callLabel]);
 				mov(dl, byte[rsp + 0x30]);
@@ -375,14 +375,13 @@ namespace SDS
 				add(rsp, 0x40);
 
 				test(dl, dl);
-				jne(skipHidden);
+				jne(skipHide);
 
 				jmp(ptr[rip + retnLabel]);
 
-				L(skipHidden);
+				L(skipHide);
 
 				mov(rsi, rax);                        // store attachment node
-				and_(dword[rdi + 0xF4], 0xFFFFFFFE);  // clear hidden flag
 
 				jmp(ptr[rip + retnNoHiddenLabel]);
 
@@ -817,18 +816,18 @@ namespace SDS
 		Biped* a_biped,
 		std::uint32_t a_bipedSlot,
 		bool a_is1p,
-		bool& a_skipHidden)
+		bool& a_skipHide)
 	{
 		auto str = m_Instance->GetWeaponNodeName(a_biped, a_bipedSlot, a_is1p, true);
 
 		if (!str)
 		{
-			a_skipHidden = false;
+			a_skipHide = false;
 			str = std::addressof(a_nodeName);
 		}
 		else
 		{
-			a_skipHidden = true;
+			a_skipHide = true;
 		}
 
 		return GetNodeByName(a_root, *str, true);
@@ -877,7 +876,7 @@ namespace SDS
 						{
 							if (Controller::GetShieldBipedObject(actor) == a_bipedSlot)
 							{
-								if (auto str = m_Instance->m_controller->GetShieldAttachmentNodeName(actor, armor, a_is1p); str)
+								if (auto str = m_Instance->m_controller->GetShieldAttachmentNodeName(actor, armor, a_is1p))
 								{
 									return GetNodeByName(a_root, *str, true);
 								}

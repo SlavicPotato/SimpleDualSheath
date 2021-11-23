@@ -75,7 +75,7 @@ namespace SDS
 			break;
 		case SKSEMessagingInterface::kMessage_PostPostLoad:
 			{
-				auto& skse = ISKSE::GetSingleton();
+				/*auto& skse = ISKSE::GetSingleton();
 				auto mi = skse.GetInterface<SKSEMessagingInterface>();
 
 				using namespace SKSEMessaging;
@@ -122,11 +122,6 @@ namespace SDS
 					tmp.emplace_back(config.m_2hAxe.m_sheathNode.c_str());
 				}
 
-				/*if (config.m_shield.IsEnabled() && !config.m_shield.m_sheathNode.empty())
-                {
-                    tmp.emplace_back(config.m_shield.m_sheathNode.c_str());
-                }*/
-
 				data.list = tmp.data();
 				data.size = static_cast<std::uint32_t>(tmp.size());
 
@@ -135,7 +130,7 @@ namespace SDS
 					SKSEMessaging::NodeListMessage::kMessage_NodeList,
 					static_cast<void*>(std::addressof(data)),
 					sizeof(data),
-					nullptr);
+					nullptr);*/
 			}
 			break;
 		}
@@ -152,43 +147,43 @@ namespace SDS
 	}
 
 	static std::string MVResultToString(
-		EngineExtensions::MemoryValidationFlags a_flags)
+		stl::flag<EngineExtensions::MemoryValidationFlags> a_flags)
 	{
 		using flag_t = EngineExtensions::MemoryValidationFlags;
 
 		std::string result;
 
-		if ((a_flags & flag_t::kWeaponLeftAttach) == flag_t::kWeaponLeftAttach)
+		if (a_flags.test(flag_t::kWeaponLeftAttach))
 		{
 			result += "WeaponLeftAttach, ";
 		}
 
-		if ((a_flags & flag_t::kStaffAttach) == flag_t::kStaffAttach)
+		if (a_flags.test(flag_t::kStaffAttach))
 		{
 			result += "StaffAttach, ";
 		}
 
-		if ((a_flags & flag_t::kShieldAttach) == flag_t::kShieldAttach)
+		if (a_flags.test(flag_t::kShieldAttach))
 		{
 			result += "ShieldAttach, ";
 		}
 
-		if ((a_flags & flag_t::kDisableShieldHideOnSit) == flag_t::kDisableShieldHideOnSit)
+		if (a_flags.test(flag_t::kDisableShieldHideOnSit))
 		{
 			result += "DisableShieldHideOnSit, ";
 		}
 
-		if ((a_flags & flag_t::kScabbardAttach) == flag_t::kScabbardAttach)
+		if (a_flags.test(flag_t::kScabbardAttach))
 		{
 			result += "ScabbardAttach, ";
 		}
 
-		if ((a_flags & flag_t::kScabbardDetach) == flag_t::kScabbardDetach)
+		if (a_flags.test(flag_t::kScabbardDetach))
 		{
 			result += "ScabbardDetach";
 		}
 
-		if ((a_flags & flag_t::kScabbardGet) == flag_t::kScabbardGet)
+		if (a_flags.test(flag_t::kScabbardGet))
 		{
 			result += "ScabbardGet";
 		}
