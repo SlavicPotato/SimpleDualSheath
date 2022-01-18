@@ -24,8 +24,7 @@ namespace SDS
 				if (config.m_shieldToggleKeys.Has() &&
 				    config.m_shield.IsPlayerEnabled())
 				{
-					auto evd = InputEventDispatcher::GetSingleton();
-					if (evd)
+					if (auto evd = InputEventDispatcher::GetSingleton())
 					{
 						s_controller->SetKeys(
 							config.m_shieldToggleKeys.GetComboKey(),
@@ -44,18 +43,17 @@ namespace SDS
 			{
 				s_controller->InitializeData();
 
-				auto edl = GetEventDispatcherList();
-				if (edl)
+				if (auto edl = ScriptEventSourceHolder::GetSingleton())
 				{
-					edl->objectLoadedDispatcher.AddEventSink(s_controller.get());
-					edl->initScriptDispatcher.AddEventSink(s_controller.get());
+					edl->AddEventSink<TESObjectLoadedEvent>(s_controller.get());
+					edl->AddEventSink<TESInitScriptEvent>(s_controller.get());
 
 					auto& config = s_controller->GetConfig();
 
 					if (config.m_npcEquipLeft)
 					{
-						edl->equipDispatcher.AddEventSink(s_controller.get());
-						edl->containerChangedDispatcher.AddEventSink(s_controller.get());
+						edl->AddEventSink<TESEquipEvent>(s_controller.get());
+						edl->AddEventSink<TESContainerChangedEvent>(s_controller.get());
 					}
 				}
 				else
@@ -180,7 +178,7 @@ namespace SDS
 
 		if (a_flags.test(flag_t::kScabbardDetach))
 		{
-			result += "ScabbardDetach";
+			result += "ScabbardDetach, ";
 		}
 
 		if (a_flags.test(flag_t::kScabbardGet))
@@ -231,10 +229,10 @@ namespace SDS
 		}
 #endif
 
-		auto ActionEvent = static_cast<EventDispatcher<SKSEActionEvent>*>(mif->GetEventDispatcher(SKSEMessagingInterface::kDispatcher_ActionEvent));
-		if (!ActionEvent)
+		auto aed = mif->GetEventDispatcher<SKSEActionEvent>();
+		if (!aed)
 		{
-			gLog.FatalError("Could not get ActionEvent dispatcher");
+			gLog.FatalError("Could not get SKSEActionEvent dispatcher");
 			return false;
 		}
 
@@ -260,7 +258,7 @@ namespace SDS
 #ifdef _SDS_UNUSED
 		NiNodeUpdate->AddEventSink(controller.get());
 #endif
-		ActionEvent->AddEventSink(controller.get());
+		aed->AddEventSink(controller.get());
 
 		s_controller = std::move(controller);
 

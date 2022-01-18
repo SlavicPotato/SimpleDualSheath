@@ -4,20 +4,22 @@
 
 namespace SDS
 {
-	auto InputHandler::ReceiveEvent(InputEvent** evns, InputEventDispatcher* dispatcher)
+	auto InputHandler::ReceiveEvent(
+		InputEvent* const* a_evns,
+		BSTEventSource<InputEvent*>* a_dispatcher)
 		-> EventResult
 	{
-		if (!*evns)
+		if (!a_evns)
 		{
-			return kEvent_Continue;
+			return EventResult::kContinue;
 		}
 
-		for (auto inputEvent = *evns; inputEvent; inputEvent = inputEvent->next)
+		for (auto inputEvent = *a_evns; inputEvent; inputEvent = inputEvent->next)
 		{
 			if (inputEvent->eventType != InputEvent::kEventType_Button)
 				continue;
 
-			auto buttonEvent = RTTI<ButtonEvent>()(inputEvent);
+			auto buttonEvent = RTTI<ButtonEvent>::Cast(inputEvent);
 			if (!buttonEvent)
 				continue;
 
@@ -44,7 +46,7 @@ namespace SDS
 			}
 		}
 
-		return kEvent_Continue;
+		return EventResult::kContinue;
 	}
 
 	void ComboKeyPressHandler::SetComboKey(std::uint32_t a_key)

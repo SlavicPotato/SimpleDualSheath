@@ -10,9 +10,9 @@ namespace SDS
 		{
 			bool IsREFRValid(const TESObjectREFR* a_refr)
 			{
-				if (a_refr == nullptr ||
-				    a_refr->loadedState == nullptr ||
-				    (a_refr->flags & TESForm::kFlagIsDeleted) == TESForm::kFlagIsDeleted)
+				if (!a_refr ||
+				    !a_refr->loadedState ||
+				    a_refr->IsDeleted())
 				{
 					return false;
 				}

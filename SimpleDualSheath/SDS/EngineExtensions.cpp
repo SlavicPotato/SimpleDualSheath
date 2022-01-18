@@ -246,10 +246,8 @@ namespace SDS
 
 				jne(isWeaponSlot);
 
-				//mov(rcx, ptr[rbp - 0x20]); // reference - still held, should be safe to use
 				mov(rcx, ptr[rdi]);  // form
-				//mov(rdx, r12); // attachment node
-				mov(rdx, r13);  // Biped
+				mov(rdx, r13);       // Biped
 				call(ptr[rip + callLabel]);
 				test(rax, rax);
 				jne(ok);
@@ -381,7 +379,7 @@ namespace SDS
 
 				L(skipHide);
 
-				mov(rsi, rax);                        // store attachment node
+				mov(rsi, rax);  // store attachment node
 
 				jmp(ptr[rip + retnNoHiddenLabel]);
 
@@ -510,7 +508,7 @@ namespace SDS
 				}
 				else
 				{
-					mov(rax, ptr[rcx + 0x1F0]);  // TESRace*
+					mov(rax, ptr[rcx + 0x1F0]);  // TESRace
 				}
 				jmp(ptr[rip + exitContinue]);
 
@@ -767,7 +765,7 @@ namespace SDS
 			actor,
 			weapon,
 			a_root,
-			false // this hook won't run for 1p
+			false  // this hook won't run for 1p
 		);
 	}
 
@@ -902,6 +900,30 @@ namespace SDS
 		NiPointer scbLeftNode = GetNodeByName(a_node, stringHolder->m_scbLeft, true);
 
 		auto& config = m_Instance->m_controller->GetConfig();
+
+		if (config.m_disableScabbards)
+		{
+			bool shrink = false;
+
+			if (scbNode)
+			{
+				scbNode->m_parent->RemoveChild(scbNode);
+				shrink = true;
+			}
+
+			if (scbLeftNode)
+			{
+				scbLeftNode->m_parent->RemoveChild(scbLeftNode);
+				shrink = true;
+			}
+
+			if (shrink)
+			{
+				ShrinkChildrenToSize(a_node);
+			}
+
+			return nullptr;
+		}
 
 		if (!a_left ||
 		    a_is1p ||

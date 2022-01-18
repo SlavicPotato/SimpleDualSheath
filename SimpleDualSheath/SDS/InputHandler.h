@@ -3,13 +3,15 @@
 namespace SDS
 {
 	class InputHandler :
-		public BSTEventSink<InputEvent>
+		public BSTEventSink<InputEvent*>
 	{
 	private:
 		virtual void OnKeyDown(std::uint32_t a_keyCode) = 0;
 		virtual void OnKeyUp(std::uint32_t a_keyCode) = 0;
 
-		virtual EventResult ReceiveEvent(InputEvent** evns, InputEventDispatcher* dispatcher) override;
+		virtual EventResult ReceiveEvent(
+			InputEvent* const* a_evns,
+			BSTEventSource<InputEvent*>* a_dispatcher) override;
 	};
 
 	class ComboKeyPressHandler :

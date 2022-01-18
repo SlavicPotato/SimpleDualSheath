@@ -30,6 +30,8 @@ namespace SDS
 
 		void EvaluateEquip(Actor* a_actor) const;
 
-		virtual EventResult ReceiveEvent(TESContainerChangedEvent* a_evn, EventDispatcher<TESContainerChangedEvent>* a_dispatcher) override;
+		virtual EventResult ReceiveEvent(
+			const TESContainerChangedEvent* a_evn,
+			BSTEventSource<TESContainerChangedEvent>* a_dispatcher) override;
 	};
 }

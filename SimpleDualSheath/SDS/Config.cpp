@@ -81,6 +81,7 @@ namespace SDS
 
 		m_scb = reader.Get(SECT_GENERAL, "EnableLeftScabbards", true);
 		m_scbCustom = reader.Get(SECT_GENERAL, "CustomLeftScabbards", true);
+		m_disableScabbards = reader.Get(SECT_GENERAL, "DisableAllScabbards", false);
 
 		m_sword = {
 			flagParser.Parse(reader.Get(SECT_SWORD, KW_FLAGS, "Player|NPC")),

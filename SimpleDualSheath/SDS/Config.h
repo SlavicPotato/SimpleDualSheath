@@ -106,11 +106,12 @@ namespace SDS
 		ConfigEntry m_2hAxe;
 		ConfigEntry m_shield;
 
-		bool m_scb;
-		bool m_scbCustom;
-		bool m_npcEquipLeft;
-		bool m_shieldHandWorkaround;
-		bool m_shwForceIfDrawn;
+		bool m_scb{ true };
+		bool m_scbCustom{ true };
+		bool m_disableScabbards{ false };
+		bool m_npcEquipLeft{ false };
+		bool m_shieldHandWorkaround{ false };
+		bool m_shwForceIfDrawn{ false };
 
 		ConfigKeyCombo m_shieldToggleKeys;
 

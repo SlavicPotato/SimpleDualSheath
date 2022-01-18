@@ -90,7 +90,12 @@ namespace SDS
 		void LoadGameHandler(SKSESerializationInterface* a_intfc);
 
 	private:
-		[[nodiscard]] bool GetParentNodes(const Data::Weapon* a_entry, NiNode* a_root, bool a_left, NiPointer<NiNode>& a_sheathedNode, NiPointer<NiNode>& a_drawnNode) const;
+		[[nodiscard]] bool GetParentNodes(
+			const Data::Weapon* a_entry,
+			NiNode* a_root,
+			bool a_left,
+			NiPointer<NiNode>& a_sheathedNode,
+			NiPointer<NiNode>& a_drawnNode) const;
 
 		void ProcessEquippedWeapon(Actor* a_actor, const ::Util::Node::NiRootNodes& a_roots, TESObjectWEAP* a_weapon, bool a_drawn, bool a_left) const;
 		void ProcessWeaponDrawnChange(Actor* a_actor, bool a_drawn) const;
@@ -109,15 +114,15 @@ namespace SDS
 		void OnWeaponEquip(Actor* a_actor, TESObjectWEAP* a_weapon);
 
 		// Beth
-		virtual EventResult ReceiveEvent(TESObjectLoadedEvent* a_evn, EventDispatcher<TESObjectLoadedEvent>* a_dispatcher) override;
-		virtual EventResult ReceiveEvent(TESInitScriptEvent* a_evn, EventDispatcher<TESInitScriptEvent>* a_dispatcher) override;
-		virtual EventResult ReceiveEvent(TESEquipEvent* evn, EventDispatcher<TESEquipEvent>* dispatcher) override;  // shield only
+		virtual EventResult ReceiveEvent(const TESObjectLoadedEvent* a_evn, BSTEventSource<TESObjectLoadedEvent>* a_dispatcher) override;
+		virtual EventResult ReceiveEvent(const TESInitScriptEvent* a_evn, BSTEventSource<TESInitScriptEvent>* a_dispatcher) override;
+		virtual EventResult ReceiveEvent(const TESEquipEvent* evn, BSTEventSource<TESEquipEvent>* dispatcher) override;  // shield only
 
 		// SKSE
 #ifdef _SDS_UNUSED
 		virtual EventResult ReceiveEvent(SKSENiNodeUpdateEvent* a_evn, EventDispatcher<SKSENiNodeUpdateEvent>* a_dispatcher) override;
 #endif
-		virtual EventResult ReceiveEvent(SKSEActionEvent* a_evn, EventDispatcher<SKSEActionEvent>* a_dispatcher) override;
+		virtual EventResult ReceiveEvent(const SKSEActionEvent* a_evn, BSTEventSource<SKSEActionEvent>* a_dispatcher) override;
 		//virtual EventResult	ReceiveEvent(SKSECameraEvent* a_evn, EventDispatcher<SKSECameraEvent>* a_dispatcher) override;
 
 		// EngineExtensions

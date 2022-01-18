@@ -15,7 +15,9 @@ namespace SDS
 				return a_root->GetObjectByName(a_name);
 			}
 
-			void AttachToNode(NiPointer<NiAVObject>& a_object, NiPointer<NiNode>& a_node)
+			void AttachToNode(
+				NiPointer<NiAVObject>& a_object,
+				NiPointer<NiNode>& a_node)
 			{
 				if (a_object->m_parent != a_node)
 				{

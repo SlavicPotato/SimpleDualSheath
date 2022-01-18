@@ -304,7 +304,9 @@ namespace SDS
 		}
 	}
 
-	auto EquipExtensions::ReceiveEvent(TESContainerChangedEvent* a_evn, EventDispatcher<TESContainerChangedEvent>*)
+	auto EquipExtensions::ReceiveEvent(
+		const TESContainerChangedEvent* a_evn,
+		BSTEventSource<TESContainerChangedEvent>*)
 		-> EventResult
 	{
 		if (a_evn)
@@ -324,7 +326,7 @@ namespace SDS
 			}
 		}
 
-		return kEvent_Continue;
+		return EventResult::kContinue;
 	}
 
 }
