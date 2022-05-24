@@ -13,11 +13,12 @@
 
 #include "Events/CreateArmorNodeEvent.h"
 #include "Events/CreateWeaponNodesEvent.h"
-#include "Events/Dispatcher.h"
 #include "Events/OnSetEquipSlot.h"
 
 #include <ext/Node.h>
-#include <ext/Threads.h>
+#include <ext/PluginInterfaceBase.h>
+#include <ext/SDSPlayerShieldOnBackSwitchEvent.h>
+#include <ext/Events.h>
 
 namespace SDS
 {
@@ -27,19 +28,12 @@ namespace SDS
 		public BSTEventSink<TESObjectLoadedEvent>,
 		public BSTEventSink<TESInitScriptEvent>,
 		public BSTEventSink<TESEquipEvent>,
-#ifdef _SDS_UNUSED
+		public BSTEventSink<TESSwitchRaceCompleteEvent>,
 		public BSTEventSink<SKSENiNodeUpdateEvent>,
-#endif
 		public BSTEventSink<SKSEActionEvent>,
-		public Events::EventSink<Events::OnSetEquipSlot>
+		public ::Events::EventSink<Events::OnSetEquipSlot>,
+		public ::Events::ThreadSafeEventDispatcher<SDSPlayerShieldOnBackSwitchEvent>
 	{
-		enum class DrawnState : std::uint8_t
-		{
-			Determine,
-			Sheathed,
-			Drawn
-		};
-
 		enum class SerializationVersion : std::uint32_t
 		{
 			kDataVersion1 = 1
@@ -55,15 +49,22 @@ namespace SDS
 #pragma pack(pop)
 
 	public:
+		enum class DrawnState : std::uint8_t
+		{
+			Determine,
+			Sheathed,
+			Drawn
+		};
+
 		Controller(const Config& a_conf);
 
 		Controller(const Controller&) = delete;
-		Controller(Controller&&) = delete;
+		Controller(Controller&&)      = delete;
 		Controller& operator=(const Controller&) = delete;
 		Controller& operator=(Controller&&) = delete;
 
-		void InitializeData();
-		[[nodiscard]] NiNode* GetScbAttachmentNode(Actor* a_actor, TESObjectWEAP* a_form, NiNode* a_root, bool a_is1p) const;
+		void                               InitializeData();
+		[[nodiscard]] NiNode*              GetScbAttachmentNode(Actor* a_actor, TESObjectWEAP* a_form, NiNode* a_root, bool a_is1p) const;
 		[[nodiscard]] const BSFixedString* GetScbAttachmentNodeName(NiNode* a_root, TESObjectWEAP* a_form) const;
 		[[nodiscard]] const BSFixedString* GetWeaponAttachmentNodeName(Actor* a_actor, TESObjectWEAP* a_form, bool a_is1p, bool a_left) const;
 		[[nodiscard]] const BSFixedString* GetShieldAttachmentNodeName(Actor* a_actor, TESObjectARMO* a_form, bool a_is1p) const;
@@ -78,10 +79,12 @@ namespace SDS
 			return m_strings.get();
 		}
 
-		[[nodiscard]] bool IsShieldEnabled(Actor* a_actor) const;
-		[[nodiscard]] bool GetShieldOnBackSwitch(Actor* a_actor) const;
-		[[nodiscard]] bool ShouldBlockShieldHide(Actor* a_actor) const;
-		[[nodiscard]] static std::uint32_t GetShieldBipedObject(Actor* a_actor);
+		[[nodiscard]] bool                IsShieldEnabled(Actor* a_actor) const;
+		[[nodiscard]] bool                IsShieldEnabled(bool a_player) const;
+		[[nodiscard]] bool                GetShieldOnBackSwitch(Actor* a_actor) const;
+		[[nodiscard]] bool                GetShieldOnBackSwitch() const;
+		[[nodiscard]] bool                ShouldBlockShieldHide(Actor* a_actor) const;
+		[[nodiscard]] static BIPED_OBJECT GetShieldBipedObject(Actor* a_actor);
 
 		void EvaluateDrawnStateOnNearbyActors();
 
@@ -89,17 +92,17 @@ namespace SDS
 		void SaveGameHandler(SKSESerializationInterface* a_intfc);
 		void LoadGameHandler(SKSESerializationInterface* a_intfc);
 
+		void QueueProcessWeaponDrawnChange(TESObjectREFR* a_actor, DrawnState a_drawnState) const;
 	private:
 		[[nodiscard]] bool GetParentNodes(
 			const Data::Weapon* a_entry,
-			NiNode* a_root,
-			bool a_left,
-			NiPointer<NiNode>& a_sheathedNode,
-			NiPointer<NiNode>& a_drawnNode) const;
+			NiNode*             a_root,
+			bool                a_left,
+			NiNode*&            a_sheathedNode,
+			NiNode*&            a_drawnNode) const;
 
 		void ProcessEquippedWeapon(Actor* a_actor, const ::Util::Node::NiRootNodes& a_roots, TESObjectWEAP* a_weapon, bool a_drawn, bool a_left) const;
 		void ProcessWeaponDrawnChange(Actor* a_actor, bool a_drawn) const;
-		void QueueProcessWeaponDrawnChange(TESObjectREFR* a_actor, DrawnState a_drawnState) const;
 
 		void ProcessEquippedShield(Actor* a_actor, const ::Util::Node::NiRootNodes& a_roots, bool a_drawn, bool a_switch) const;
 
@@ -117,11 +120,11 @@ namespace SDS
 		virtual EventResult ReceiveEvent(const TESObjectLoadedEvent* a_evn, BSTEventSource<TESObjectLoadedEvent>* a_dispatcher) override;
 		virtual EventResult ReceiveEvent(const TESInitScriptEvent* a_evn, BSTEventSource<TESInitScriptEvent>* a_dispatcher) override;
 		virtual EventResult ReceiveEvent(const TESEquipEvent* evn, BSTEventSource<TESEquipEvent>* dispatcher) override;  // shield only
+		virtual EventResult ReceiveEvent(const TESSwitchRaceCompleteEvent* evn, BSTEventSource<TESSwitchRaceCompleteEvent>* dispatcher) override;
 
 		// SKSE
-#ifdef _SDS_UNUSED
-		virtual EventResult ReceiveEvent(SKSENiNodeUpdateEvent* a_evn, EventDispatcher<SKSENiNodeUpdateEvent>* a_dispatcher) override;
-#endif
+
+		virtual EventResult ReceiveEvent(const SKSENiNodeUpdateEvent* a_evn, BSTEventSource<SKSENiNodeUpdateEvent>* a_dispatcher) override;
 		virtual EventResult ReceiveEvent(const SKSEActionEvent* a_evn, BSTEventSource<SKSEActionEvent>* a_dispatcher) override;
 		//virtual EventResult	ReceiveEvent(SKSECameraEvent* a_evn, EventDispatcher<SKSECameraEvent>* a_dispatcher) override;
 
@@ -132,7 +135,7 @@ namespace SDS
 
 		Config m_conf;
 
-		std::shared_ptr<StringHolder> m_strings;
+		std::shared_ptr<StringHolder>     m_strings;
 		std::unique_ptr<Data::WeaponData> m_data;
 
 		std::atomic<std::uint8_t> m_shieldOnBackSwitch;

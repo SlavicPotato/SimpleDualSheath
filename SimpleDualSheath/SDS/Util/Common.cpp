@@ -11,6 +11,7 @@ namespace SDS
 			bool IsREFRValid(const TESObjectREFR* a_refr)
 			{
 				if (!a_refr ||
+				    a_refr->formID == 0 ||
 				    !a_refr->loadedState ||
 				    a_refr->IsDeleted())
 				{
@@ -21,7 +22,7 @@ namespace SDS
 
 			bool CanEquipEitherHand(TESObjectWEAP* a_weapon)
 			{
-				auto equipSlot = a_weapon->equipType.GetEquipSlot();
+				auto equipSlot = a_weapon->GetEquipSlot();
 				if (!equipSlot)
 				{
 					return false;

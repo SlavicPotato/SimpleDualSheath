@@ -11,20 +11,20 @@ namespace SDS
 		{
 		public:
 			Weapon(
-				const char* a_nodeName,
-				const char* a_nodeNameLeft,
+				const char*                     a_nodeName,
+				const char*                     a_nodeNameLeft,
 				const SDS::Config::ConfigEntry& a_config);
 
 			[[nodiscard]] const BSFixedString& GetNodeName(bool a_left) const;
-			[[nodiscard]] NiNode* GetNode(NiNode* a_root, bool a_left) const;
+			[[nodiscard]] NiNode*              GetNode(NiNode* a_root, bool a_left) const;
 
 			[[nodiscard]] inline constexpr bool FirstPerson() const noexcept
 			{
 				return m_flags.test(Flags::kFirstPerson);
 			}
 
-			BSFixedString m_nodeName;
-			BSFixedString m_nodeNameLeft;
+			BSFixedString    m_nodeName;
+			BSFixedString    m_nodeNameLeft;
 			stl::flag<Flags> m_flags{ Flags::kNone };
 		};
 
@@ -33,18 +33,18 @@ namespace SDS
 		public:
 			WeaponData() = default;
 
-			template <typename... Args>
-			void Create(std::uint32_t a_type, Args&&... a_args)
+			template <class... Args>
+			void Create(WEAPON_TYPE a_type, Args&&... a_args)
 			{
-				if (a_type < std::size(m_entries))
+				if (stl::underlying(a_type) < std::size(m_entries))
 				{
-					m_entries[a_type] = std::make_unique<Weapon>(std::forward<Args>(a_args)...);
+					m_entries[stl::underlying(a_type)] = std::make_unique<Weapon>(std::forward<Args>(a_args)...);
 				}
 			}
 
 			void SetStrings(std::uint32_t a_type, const char* a_nodeName, const char* a_nodeNameLeft);
 
-			[[nodiscard]] const Weapon* Get(Actor* a_actor, TESObjectWEAP* a_weapon, bool a_left) const;
+			[[nodiscard]] const Weapon*        Get(Actor* a_actor, TESObjectWEAP* a_weapon, bool a_left) const;
 			[[nodiscard]] const BSFixedString* GetNodeName(TESObjectWEAP* a_weapon, bool a_left) const;
 
 		private:

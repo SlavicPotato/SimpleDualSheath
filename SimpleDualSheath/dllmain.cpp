@@ -18,7 +18,7 @@ static bool Initialize(const SKSEInterface* a_skse)
 	if (ret)
 	{
 		auto usageBranch = skse.GetTrampolineUsage(TrampolineID::kBranch);
-		auto usageLocal = skse.GetTrampolineUsage(TrampolineID::kLocal);
+		auto usageLocal  = skse.GetTrampolineUsage(TrampolineID::kLocal);
 
 		gLog.Message(
 			"Loaded, trampolines: branch:[%zu/%zu] codegen:[%zu/%zu]",
@@ -89,9 +89,13 @@ extern "C" {
 		return ret;
 	}
 
+	void* SKMP_GetPluginInterface()
+	{
+		return SDS::GetPluginInterface();
+	}
+
 	SKSEPluginVersionData SKSEPlugin_Version = {
 		SKSEPluginVersionData::kVersion,
-
 		MAKE_PLUGIN_VERSION(
 			PLUGIN_VERSION_MAJOR,
 			PLUGIN_VERSION_MINOR,

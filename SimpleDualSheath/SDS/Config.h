@@ -6,7 +6,7 @@ namespace SDS
 {
 	class FlagParser
 	{
-		using string_to_flag_map_t = stl::iunordered_map<std::string, std::pair<Data::Flags, bool>, std::allocator<std::pair<const std::string, std::pair<Data::Flags, bool>>>>;
+		using string_to_flag_map_t = stl::iunordered_map<std::string, std::pair<Data::Flags, bool>>;
 
 	public:
 		FlagParser();
@@ -46,24 +46,24 @@ namespace SDS
 	struct Config
 	{
 		inline static constexpr auto SECT_GENERAL = "General";
-		inline static constexpr auto SECT_NPC = "NPC";
-		inline static constexpr auto SECT_SWORD = "Sword";
-		inline static constexpr auto SECT_AXE = "Axe";
-		inline static constexpr auto SECT_MACE = "Mace";
-		inline static constexpr auto SECT_DAGGER = "Dagger";
-		inline static constexpr auto SECT_STAFF = "Staff";
-		inline static constexpr auto SECT_SHIELD = "ShieldOnBack";
+		inline static constexpr auto SECT_NPC     = "NPC";
+		inline static constexpr auto SECT_SWORD   = "Sword";
+		inline static constexpr auto SECT_AXE     = "Axe";
+		inline static constexpr auto SECT_MACE    = "Mace";
+		inline static constexpr auto SECT_DAGGER  = "Dagger";
+		inline static constexpr auto SECT_STAFF   = "Staff";
+		inline static constexpr auto SECT_SHIELD  = "ShieldOnBack";
 		inline static constexpr auto SECT_2HSWORD = "2HSword";
-		inline static constexpr auto SECT_2HAXE = "2HAxe";
+		inline static constexpr auto SECT_2HAXE   = "2HAxe";
 
-		inline static constexpr auto KW_FLAGS = "Flags";
+		inline static constexpr auto KW_FLAGS      = "Flags";
 		inline static constexpr auto KW_SHEATHNODE = "SheathNode";
 
 	public:
 		struct ConfigEntry
 		{
 			stl::flag<Data::Flags> m_flags{ Data::Flags::kNone };
-			std::string m_sheathNode;
+			std::string            m_sheathNode;
 
 			[[nodiscard]] inline constexpr bool IsEnabled() const noexcept
 			{

@@ -26,16 +26,16 @@ public:
 		return m_Instance.GetTrampoline(TrampolineID::kLocal);
 	}
 
-	virtual void OnLogOpen() override;
+	virtual void        OnLogOpen() override;
 	virtual const char* GetLogPath() const override;
 
 private:
 	ISKSE() = default;
 
-	virtual const char* GetPluginName() const override;
+	virtual const char*   GetPluginName() const override;
 	virtual std::uint32_t GetPluginVersion() const override;
-	virtual bool CheckRuntimeVersion(std::uint32_t a_version) const override;
-	virtual bool CheckInterfaceVersion(std::uint32_t a_interfaceID, std::uint32_t a_interfaceVersion, std::uint32_t a_compiledInterfaceVersion) const override;
+	virtual bool          CheckRuntimeVersion(std::uint32_t a_version) const override;
+	virtual bool          CheckInterfaceVersion(std::uint32_t a_interfaceID, std::uint32_t a_interfaceVersion, std::uint32_t a_compiledInterfaceVersion) const override;
 
 	static ISKSE m_Instance;
 };

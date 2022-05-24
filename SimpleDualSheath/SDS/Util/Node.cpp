@@ -9,15 +9,15 @@ namespace SDS
 		namespace Node
 		{
 			NiAVObject* GetNiObject(
-				NiNode* a_root,
+				NiNode*              a_root,
 				const BSFixedString& a_name)
 			{
 				return a_root->GetObjectByName(a_name);
 			}
 
 			void AttachToNode(
-				NiPointer<NiAVObject>& a_object,
-				NiPointer<NiNode>& a_node)
+				NiAVObject* a_object,
+				NiNode*     a_node)
 			{
 				if (a_object->m_parent != a_node)
 				{

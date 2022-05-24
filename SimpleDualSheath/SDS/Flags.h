@@ -8,12 +8,12 @@ namespace SDS
 		{
 			kNone = 0,
 
-			kNPC = 1u << 0,
-			kPlayer = 1u << 1,
-			kRight = 1u << 2,
-			kSwap = 1u << 3,
+			kNPC         = 1u << 0,
+			kPlayer      = 1u << 1,
+			kRight       = 1u << 2,
+			kSwap        = 1u << 3,
 			kFirstPerson = 1u << 4,
-			kMountOnly = 1u << 7,
+			kMountOnly   = 1u << 7,
 
 			kEnabled = (kPlayer | kNPC)
 		};

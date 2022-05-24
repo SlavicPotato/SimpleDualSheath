@@ -31,9 +31,9 @@ bool ISKSE::CheckRuntimeVersion(std::uint32_t a_version) const
 }
 
 bool ISKSE::CheckInterfaceVersion(
-	std::uint32_t a_interfaceID,
-	std::uint32_t a_interfaceVersion,
-	std::uint32_t a_compiledInterfaceVersion) const
+	std::uint32_t,
+	std::uint32_t,
+	std::uint32_t) const
 {
 	return true;
 }

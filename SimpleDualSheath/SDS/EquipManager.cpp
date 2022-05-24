@@ -12,19 +12,19 @@ namespace SDS
 
 	bool EquipExtensions::CheckDualWield(Actor* a_actor)
 	{
-		auto race = Game::GetActorRace(a_actor);
+		auto race = a_actor->GetRace();
 
 		if (!race)
 		{
 			return false;
 		}
 
-		if ((race->data.raceFlags & TESRace::kRace_CanDualWield) != TESRace::kRace_CanDualWield)
+		if (!race->data.raceFlags.test(TESRace::Flag::kCanDualWield))
 		{
 			return false;
 		}
 
-		if (auto extraCombatStyle = a_actor->extraData.Get<ExtraCombatStyle>(); extraCombatStyle)
+		if (auto extraCombatStyle = a_actor->extraData.Get<ExtraCombatStyle>())
 		{
 			if (auto cs = extraCombatStyle->combatStyle)
 			{
@@ -32,14 +32,11 @@ namespace SDS
 			}
 		}
 
-		if (auto baseForm = a_actor->baseForm; baseForm)
+		if (auto npc = a_actor->GetActorBase())
 		{
-			if (auto npc = baseForm->As<TESNPC>(); npc)
+			if (auto cs = npc->combatStyle)
 			{
-				if (auto cs = npc->combatStyle)
-				{
-					return (cs->flags & TESCombatStyle::kFlag_AllowDualWielding) == TESCombatStyle::kFlag_AllowDualWielding;
-				}
+				return (cs->flags & TESCombatStyle::kFlag_AllowDualWielding) == TESCombatStyle::kFlag_AllowDualWielding;
 			}
 		}
 
@@ -57,11 +54,11 @@ namespace SDS
 	{
 	}
 
-	bool EquipCandidateCollector::Accept(TESContainer::ConfigEntry* entry)
+	bool EquipCandidateCollector::Accept(TESContainer::Entry* entry)
 	{
-		if (entry && entry->form && entry->count > 0)
+		if (entry && entry->form)
 		{
-			Process(entry->form);
+			Process(entry->form, entry->count);
 		}
 
 		return true;
@@ -69,22 +66,19 @@ namespace SDS
 
 	bool EquipCandidateCollector::Accept(InventoryEntryData* a_entryData)
 	{
-		if (a_entryData && a_entryData->type && a_entryData->countDelta > 0)
+		if (a_entryData && a_entryData->type)
 		{
-			Process(a_entryData->type);
+			Process(a_entryData->type, a_entryData->countDelta);
 		}
 
 		return true;
 	}
 
-	void EquipCandidateCollector::Process(TESForm* a_item)
+	void EquipCandidateCollector::Process(
+		TESForm*     a_item,
+		std::int64_t a_count)
 	{
 		if (a_item == m_ignore)
-		{
-			return;
-		}
-
-		if (!a_item->Has3D())
 		{
 			return;
 		}
@@ -100,7 +94,7 @@ namespace SDS
 			return;
 		}
 
-		m_results.emplace(weapon);
+		m_results.try_emplace(weapon, 0).first->second += a_count;
 	}
 
 	enum class EquipItemResult
@@ -113,10 +107,10 @@ namespace SDS
 
 	// modified EquipItemEx (SKSE)
 	static EquipItemResult EquipItem(
-		EquipManager* a_equipManager,
+		EquipManager*                a_equipManager,
 		ExtraContainerChanges::Data* a_containerData,
-		Actor* a_actor,
-		TESObjectWEAP* a_item)
+		Actor*                       a_actor,
+		TESObjectWEAP*               a_item)
 	{
 		auto targetEquipSlot = GetLeftHandSlot();
 		if (!targetEquipSlot)
@@ -137,8 +131,8 @@ namespace SDS
 		bool hasItemMinCount = itemCount > 0;
 
 		BaseExtraList* rightEquipList = nullptr;
-		BaseExtraList* leftEquipList = nullptr;
-		BaseExtraList* enchantList = nullptr;
+		BaseExtraList* leftEquipList  = nullptr;
+		BaseExtraList* enchantList    = nullptr;
 
 		if (hasItemMinCount)
 		{
@@ -159,7 +153,7 @@ namespace SDS
 			else
 			{
 				isTargetSlotInUse = false;
-				enchantList = entryData->extendDataList->GetNthItem(0);
+				enchantList       = entryData->extendDataList->GetNthItem(0);
 			}
 		}
 
@@ -187,9 +181,11 @@ namespace SDS
 
 	void EquipExtensions::QueueEvaluateEquip(TESObjectREFR* a_actor) const
 	{
-		ITaskPool::QueueActorTask(a_actor, [this](Actor* a_actor, Game::ActorHandle) {
-			EvaluateEquip(a_actor);
-		});
+		ITaskPool::QueueLoadedActorTask(
+			a_actor,
+			[this](Actor* a_actor, Game::ActorHandle) {
+				EvaluateEquip(a_actor);
+			});
 	}
 
 	void EquipExtensions::EvaluateEquip(Actor* a_actor) const
@@ -256,12 +252,9 @@ namespace SDS
 
 		EquipCandidateCollector collector(weaponRight);
 
-		if (auto baseForm = a_actor->baseForm; baseForm)
+		if (auto npc = a_actor->GetActorBase())
 		{
-			if (auto npc = baseForm->As<TESNPC>(); npc)
-			{
-				npc->container.Visit(collector);
-			}
+			npc->Visit(collector);
 		}
 
 		if (containerData->objList)
@@ -274,12 +267,17 @@ namespace SDS
 			return;
 		}
 
-		std::vector<std::pair<std::uint32_t, TESObjectWEAP*>> sortedWeapons;
+		stl::vector<std::pair<std::uint32_t, TESObjectWEAP*>> sortedWeapons;
 		sortedWeapons.reserve(collector.m_results.size());
 
 		for (const auto& e : collector.m_results)
 		{
-			auto damage = static_cast<std::uint32_t>(e->damage.attackDamage);
+			if (e.second <= 0)
+			{
+				continue;
+			}
+
+			auto damage = static_cast<std::uint32_t>(e.first->attackDamage);
 
 			auto it = std::lower_bound(
 				sortedWeapons.cbegin(),
@@ -289,13 +287,13 @@ namespace SDS
 					return a_data.first > a_value;
 				});
 
-			sortedWeapons.emplace(it, damage, e);
+			sortedWeapons.emplace(it, damage, e.first);
 		}
 
 		for (const auto& e : sortedWeapons)
 		{
-			auto res = EquipItem(equipManager, containerData, a_actor, e.second);
-			switch (res)
+			auto r = EquipItem(equipManager, containerData, a_actor, e.second);
+			switch (r)
 			{
 			case EquipItemResult::kSlotInUse:
 			case EquipItemResult::kEquipped:
@@ -311,11 +309,11 @@ namespace SDS
 	{
 		if (a_evn)
 		{
-			if (auto actor = a_evn->newContainer.As<Actor>(); actor)
+			if (auto actor = a_evn->newContainer.As<Actor>())
 			{
-				if (auto weapon = a_evn->baseObj.As<TESObjectWEAP>(); weapon)
+				if (ActorQualifiesForEquip(actor))
 				{
-					if (ActorQualifiesForEquip(actor))
+					if (auto weapon = a_evn->baseObj.As<TESObjectWEAP>())
 					{
 						if (CanEquipEitherHand(weapon))
 						{

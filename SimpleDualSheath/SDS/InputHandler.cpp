@@ -6,43 +6,39 @@ namespace SDS
 {
 	auto InputHandler::ReceiveEvent(
 		InputEvent* const* a_evns,
-		BSTEventSource<InputEvent*>* a_dispatcher)
+		BSTEventSource<InputEvent*>*)
 		-> EventResult
 	{
-		if (!a_evns)
+		if (a_evns)
 		{
-			return EventResult::kContinue;
-		}
-
-		for (auto inputEvent = *a_evns; inputEvent; inputEvent = inputEvent->next)
-		{
-			if (inputEvent->eventType != InputEvent::kEventType_Button)
-				continue;
-
-			auto buttonEvent = RTTI<ButtonEvent>::Cast(inputEvent);
-			if (!buttonEvent)
-				continue;
-
-			if (buttonEvent->deviceType != kDeviceType_Keyboard)
+			for (auto inputEvent = *a_evns; inputEvent; inputEvent = inputEvent->next)
 			{
-				continue;
-			}
+				auto buttonEvent = inputEvent->AsButtonEvent();
+				if (!buttonEvent)
+				{
+					continue;
+				}
 
-			std::uint32_t keyCode = buttonEvent->keyMask;
+				if (buttonEvent->device != INPUT_DEVICE::kKeyboard)
+				{
+					continue;
+				}
 
-			if (keyCode >= InputMap::kMaxMacros)
-				continue;
+				std::uint32_t keyCode = buttonEvent->GetIDCode();
 
-			if (buttonEvent->flags != 0)
-			{
-				if (buttonEvent->timer == 0.0f)
+				if (!keyCode || keyCode >= InputMap::kMaxMacros)
+				{
+					continue;
+				}
+
+				if (buttonEvent->IsDown())
 				{
 					OnKeyDown(keyCode);
 				}
-			}
-			else
-			{
-				OnKeyUp(keyCode);
+				else if (buttonEvent->IsUpLF())
+				{
+					OnKeyUp(keyCode);
+				}
 			}
 		}
 
@@ -62,9 +58,8 @@ namespace SDS
 
 	void ComboKeyPressHandler::SetKeys(std::uint32_t a_comboKey, std::uint32_t a_key)
 	{
-		m_comboKey = a_comboKey;
-		m_key = a_key;
-		m_comboKeyDown = false;
+		SetComboKey(a_comboKey);
+		SetKey(a_key);
 	}
 
 	void ComboKeyPressHandler::OnKeyDown(std::uint32_t a_keyCode)
@@ -74,7 +69,7 @@ namespace SDS
 			m_comboKeyDown = true;
 		}
 
-		if (a_keyCode == m_key && (!m_comboKey || m_comboKeyDown))
+		if (m_key && a_keyCode == m_key && (!m_comboKey || m_comboKeyDown))
 		{
 			OnKeyPressed();
 		}

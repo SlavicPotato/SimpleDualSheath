@@ -9,8 +9,8 @@ namespace SDS
 			NiAVObject* GetNiObject(NiNode* a_root, const BSFixedString& a_name);
 
 			void AttachToNode(
-				NiPointer<NiAVObject>& a_object,
-				NiPointer<NiNode>& a_node);
+				NiAVObject* a_object,
+				NiNode*     a_node);
 
 			void SetVisible(NiAVObject* a_object);
 

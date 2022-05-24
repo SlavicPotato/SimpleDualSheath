@@ -28,17 +28,17 @@ namespace SDS
 
 		m_data = std::make_unique<WeaponData>();
 
-		m_data->Create(TESObjectWEAP::GameData::kType_OneHandSword, StringHolder::NINODE_SWORD, StringHolder::NINODE_SWORD_LEFT, m_conf.m_sword);
-		m_data->Create(TESObjectWEAP::GameData::kType_OneHandAxe, StringHolder::NINODE_AXE, StringHolder::NINODE_AXE_LEFT, m_conf.m_axe);
-		m_data->Create(TESObjectWEAP::GameData::kType_OneHandMace, StringHolder::NINODE_MACE, StringHolder::NINODE_MACE_LEFT, m_conf.m_mace);
-		m_data->Create(TESObjectWEAP::GameData::kType_OneHandDagger, StringHolder::NINODE_DAGGER, StringHolder::NINODE_DAGGER_LEFT, m_conf.m_dagger);
-		m_data->Create(TESObjectWEAP::GameData::kType_Staff, StringHolder::NINODE_STAFF, StringHolder::NINODE_STAFF_LEFT, m_conf.m_staff);
-		m_data->Create(TESObjectWEAP::GameData::kType_TwoHandSword, StringHolder::NINODE_WEAPON_BACK, StringHolder::NINODE_SWORD_ON_BACK_LEFT, m_conf.m_2hSword);
-		m_data->Create(TESObjectWEAP::GameData::kType_TwoHandAxe, StringHolder::NINODE_WEAPON_BACK, StringHolder::NINODE_AXE_ON_BACK_LEFT, m_conf.m_2hAxe);
+		m_data->Create(WEAPON_TYPE::kOneHandSword, StringHolder::NINODE_SWORD, StringHolder::NINODE_SWORD_LEFT, m_conf.m_sword);
+		m_data->Create(WEAPON_TYPE::kOneHandAxe, StringHolder::NINODE_AXE, StringHolder::NINODE_AXE_LEFT, m_conf.m_axe);
+		m_data->Create(WEAPON_TYPE::kOneHandMace, StringHolder::NINODE_MACE, StringHolder::NINODE_MACE_LEFT, m_conf.m_mace);
+		m_data->Create(WEAPON_TYPE::kOneHandDagger, StringHolder::NINODE_DAGGER, StringHolder::NINODE_DAGGER_LEFT, m_conf.m_dagger);
+		m_data->Create(WEAPON_TYPE::kStaff, StringHolder::NINODE_STAFF, StringHolder::NINODE_STAFF_LEFT, m_conf.m_staff);
+		m_data->Create(WEAPON_TYPE::kTwoHandSword, StringHolder::NINODE_WEAPON_BACK, StringHolder::NINODE_SWORD_ON_BACK_LEFT, m_conf.m_2hSword);
+		m_data->Create(WEAPON_TYPE::kTwoHandAxe, StringHolder::NINODE_WEAPON_BACK, StringHolder::NINODE_AXE_ON_BACK_LEFT, m_conf.m_2hAxe);
 
 		if (!m_conf.m_shield.m_sheathNode.empty())
 		{
-			m_strings->m_shieldSheathNode.Set(m_conf.m_shield.m_sheathNode.c_str());
+			m_strings->m_shieldSheathNode = m_conf.m_shield.m_sheathNode.c_str();
 		}
 
 #ifdef _SDS_UNUSED
@@ -48,10 +48,10 @@ namespace SDS
 
 	bool Controller::GetParentNodes(
 		const Data::Weapon* a_entry,
-		NiNode* a_root,
-		bool a_left,
-		NiPointer<NiNode>& a_sheathedNode,
-		NiPointer<NiNode>& a_drawnNode) const
+		NiNode*             a_root,
+		bool                a_left,
+		NiNode*&            a_sheathedNode,
+		NiNode*&            a_drawnNode) const
 	{
 		auto nodea = a_entry->GetNode(a_root, a_left);
 		if (!nodea)
@@ -59,20 +59,25 @@ namespace SDS
 			return false;
 		}
 
-		auto nodeb = FindNode(a_root, a_left ? m_strings->m_shield : m_strings->m_weapon);
+		auto nodeb = FindNode(
+			a_root,
+			a_left ?
+				m_strings->m_shield :
+                m_strings->m_weapon);
+
 		if (!nodeb)
 		{
 			return false;
 		}
 
 		a_sheathedNode = nodea;
-		a_drawnNode = nodeb;
+		a_drawnNode    = nodeb;
 
 		return true;
 	}
 
 	bool Controller::GetIsDrawn(
-		Actor* a_actor,
+		Actor*     a_actor,
 		DrawnState a_state)
 	{
 		switch (a_state)
@@ -82,33 +87,33 @@ namespace SDS
 		case DrawnState::Sheathed:
 			return false;
 		default:
-			return a_actor->actorState.IsWeaponDrawn();
+			return a_actor->IsWeaponDrawn();
 		};
 	}
 
-	std::uint32_t Controller::GetShieldBipedObject(
+	BIPED_OBJECT Controller::GetShieldBipedObject(
 		Actor* a_actor)
 	{
-		if (auto baseForm = a_actor->baseForm; baseForm)
+		if (auto baseForm = a_actor->baseForm)
 		{
-			if (auto npc = baseForm->As<TESNPC>(); npc)
+			if (auto npc = baseForm->As<TESNPC>())
 			{
-				if (auto race = npc->race.race; race)
+				if (auto race = npc->race)
 				{
 					return race->data.shieldObject;
 				}
 			}
 		}
 
-		return 0xFFFFFFFF;
+		return BIPED_OBJECT::kNone;
 	}
 
 	void Controller::ProcessEquippedWeapon(
-		Actor* a_actor,
+		Actor*             a_actor,
 		const NiRootNodes& a_roots,
-		TESObjectWEAP* a_weapon,
-		bool a_drawn,
-		bool a_left) const
+		TESObjectWEAP*     a_weapon,
+		bool               a_drawn,
+		bool               a_left) const
 	{
 		auto entry = m_data->Get(a_actor, a_weapon, a_left);
 		if (!entry)
@@ -116,17 +121,12 @@ namespace SDS
 			return;
 		}
 
-		/*if (!CanEquipEitherHand(a_weapon))
-		{
-			return;
-		}*/
-
 		char buf[MAX_PATH];
 		a_weapon->GetNodeName(buf);
 
 		BSFixedString weaponNodeName(buf);
 
-		for (std::size_t i = 0; i < std::size(a_roots.m_nodes); i++)
+		for (std::uint32_t i = 0; i < std::size(a_roots.m_nodes); i++)
 		{
 			auto& root = a_roots.m_nodes[i];
 
@@ -140,32 +140,30 @@ namespace SDS
 				continue;
 			}
 
-			NiPointer<NiNode> sheathedNode, drawnNode;
+			NiNode *sheathedNode, *drawnNode;
 			if (!GetParentNodes(entry, root, a_left, sheathedNode, drawnNode))
 			{
 				continue;
 			}
 
-			auto& sourceNode = a_drawn ? sheathedNode : drawnNode;
-			auto& targetNode = a_drawn ? drawnNode : sheathedNode;
+			auto sourceNode = a_drawn ? sheathedNode : drawnNode;
+			auto targetNode = a_drawn ? drawnNode : sheathedNode;
 
-			if (NiPointer weaponNode = sourceNode->GetObjectByName(weaponNodeName))
+			if (auto w1 = FindChildObject(sourceNode, weaponNodeName))
 			{
-				AttachToNode(weaponNode, targetNode);
-				SetVisible(weaponNode);
+				AttachToNode(w1, targetNode);
+				SetVisible(w1);
 			}
-			else if (auto weaponNode = targetNode->GetObjectByName(weaponNodeName))
+			else if (auto w2 = FindChildObject(targetNode, weaponNodeName))
 			{
-				SetVisible(weaponNode);
+				SetVisible(w2);
 			}
 		}
-
-		weaponNodeName.Release();
 	}
 
 	void Controller::ProcessWeaponDrawnChange(
 		Actor* a_actor,
-		bool a_drawn) const
+		bool   a_drawn) const
 	{
 		auto pm = a_actor->processManager;
 		if (!pm)
@@ -205,9 +203,9 @@ namespace SDS
 
 	void Controller::QueueProcessWeaponDrawnChange(
 		TESObjectREFR* a_actor,
-		DrawnState a_drawnState) const
+		DrawnState     a_drawnState) const
 	{
-		ITaskPool::QueueActorTask(
+		ITaskPool::QueueLoadedActorTask(
 			a_actor,
 			[this, a_drawnState](
 				Actor* a_actor,
@@ -220,19 +218,26 @@ namespace SDS
 
 	bool Controller::IsShieldEnabled(Actor* a_actor) const
 	{
-		if (a_actor == *g_thePlayer)
-		{
-			return m_conf.m_shield.m_flags.test(Flags::kPlayer);
-		}
-		else
-		{
-			return m_conf.m_shield.m_flags.test(Flags::kNPC);
-		}
+		return a_actor == *g_thePlayer ?
+		           m_conf.m_shield.m_flags.test(Flags::kPlayer) :
+                   m_conf.m_shield.m_flags.test(Flags::kNPC);
+	}
+
+	bool Controller::IsShieldEnabled(bool a_player) const
+	{
+		return a_player ?
+		           m_conf.m_shield.m_flags.test(Flags::kPlayer) :
+                   m_conf.m_shield.m_flags.test(Flags::kNPC);
 	}
 
 	bool Controller::GetShieldOnBackSwitch(Actor* a_actor) const
 	{
 		return a_actor != *g_thePlayer || m_shieldOnBackSwitch.load(std::memory_order_acquire) != 0;
+	}
+
+	bool Controller::GetShieldOnBackSwitch() const
+	{
+		return m_shieldOnBackSwitch.load(std::memory_order_acquire) != 0;
 	}
 
 	bool Controller::ShouldBlockShieldHide(Actor* a_actor) const
@@ -254,7 +259,7 @@ namespace SDS
 
 		if (m_conf.m_shieldHideFlags.test(Flags::kMountOnly))
 		{
-			return (a_actor->flags2 & Actor::kFlags_kGettingOnOffMount) == Actor::kFlags_kGettingOnOffMount ||
+			return a_actor->flags2.test(Actor::Flags2::kGettingOnOffMount) ||
 			       a_actor->IsOnMount();
 		}
 
@@ -262,10 +267,10 @@ namespace SDS
 	}
 
 	void Controller::ProcessEquippedShield(
-		Actor* a_actor,
+		Actor*             a_actor,
 		const NiRootNodes& a_roots,
-		bool a_drawn,
-		bool a_switch) const
+		bool               a_drawn,
+		bool               a_switch) const
 	{
 		if (!IsShieldEnabled(a_actor))
 		{
@@ -273,7 +278,7 @@ namespace SDS
 		}
 
 		auto bipedObject = GetShieldBipedObject(a_actor);
-		if (bipedObject >= 42u)
+		if (bipedObject >= BIPED_OBJECT::kTotal)
 		{
 			return;
 		}
@@ -294,19 +299,13 @@ namespace SDS
 				continue;
 			}
 
-			auto bipedModel = a_actor->GetBiped(firstPerson);
+			auto& bipedModel = a_actor->GetBiped1(firstPerson);
 			if (!bipedModel)
 			{
 				continue;
 			}
 
-			auto bipedData = bipedModel->ptr;
-			if (!bipedData)
-			{
-				continue;
-			}
-
-			auto& data = bipedData->objects[bipedObject];
+			auto& data = bipedModel->objects[stl::underlying(bipedObject)];
 
 			auto form = data.item;
 			if (!form)
@@ -325,17 +324,17 @@ namespace SDS
 				continue;
 			}
 
-			NiPointer armorNode = data.object;
+			auto& armorNode = data.object;
 			if (!armorNode)
 			{
 				continue;
 			}
 
-			auto& targetNodeName = (a_drawn || !a_switch) ?
-                                       m_strings->m_shield :
-                                       m_strings->m_shieldSheathNode;
+			const auto& targetNodeName = (a_drawn || !a_switch) ?
+			                                 m_strings->m_shield :
+                                             m_strings->m_shieldSheathNode;
 
-			NiPointer targetNode = FindNode(root, targetNodeName);
+			auto targetNode = FindNode(root, targetNodeName);
 			if (!targetNode)
 			{
 				continue;
@@ -346,10 +345,10 @@ namespace SDS
 	}
 
 	NiNode* Controller::GetScbAttachmentNode(
-		Actor* a_actor,
+		Actor*         a_actor,
 		TESObjectWEAP* a_weapon,
-		NiNode* a_root,
-		bool a_is1p) const
+		NiNode*        a_root,
+		bool           a_is1p) const
 	{
 		auto entry = m_data->Get(a_actor, a_weapon, true);
 		if (!entry)
@@ -366,7 +365,7 @@ namespace SDS
 
 		if (auto rootobj = root->GetObjectByName(m_strings->m_npcroot))
 		{
-			if (auto rootnode = rootobj->GetAsNiNode())
+			if (auto rootnode = rootobj->AsNode())
 			{
 				root = rootnode;
 			}
@@ -375,16 +374,16 @@ namespace SDS
 		return entry->GetNode(root, true);
 	}
 
-	const BSFixedString* Controller::GetScbAttachmentNodeName(NiNode* a_root, TESObjectWEAP* a_form) const
+	const BSFixedString* Controller::GetScbAttachmentNodeName(NiNode*, TESObjectWEAP* a_form) const
 	{
 		return m_data->GetNodeName(a_form, true);
 	}
 
 	const BSFixedString* Controller::GetWeaponAttachmentNodeName(
-		Actor* a_actor,
+		Actor*         a_actor,
 		TESObjectWEAP* a_weapon,
-		bool a_is1p,
-		bool a_left) const
+		bool           a_is1p,
+		bool           a_left) const
 	{
 		auto entry = m_data->Get(a_actor, a_weapon, a_left);
 		if (!entry)
@@ -401,9 +400,9 @@ namespace SDS
 	}
 
 	const BSFixedString* Controller::GetShieldAttachmentNodeName(
-		Actor* a_actor,
+		Actor*         a_actor,
 		TESObjectARMO* a_armor,
-		bool a_is1p) const
+		bool           a_is1p) const
 	{
 		if (!a_armor->IsShield())
 		{
@@ -420,7 +419,7 @@ namespace SDS
 			return nullptr;
 		}
 
-		if (a_actor->actorState.IsWeaponDrawn())
+		if (a_actor->IsWeaponDrawn())
 		{
 			return nullptr;
 		}
@@ -435,11 +434,11 @@ namespace SDS
 
 	void Controller::OnActorLoad(TESObjectREFR* a_actor) const
 	{
-		ITaskPool::QueueActorTask(a_actor, [this](Actor* a_actor, Game::ActorHandle) {
+		ITaskPool::QueueLoadedActorTask(a_actor, [this](Actor* a_actor, Game::ActorHandle) {
 #ifdef _SDS_UNUSED
 			m_nodeOverride->ApplyNodeOverrides(a_actor);
 #endif
-			ProcessWeaponDrawnChange(a_actor, a_actor->actorState.IsWeaponDrawn());
+			ProcessWeaponDrawnChange(a_actor, a_actor->IsWeaponDrawn());
 
 			if (m_conf.m_npcEquipLeft && ActorQualifiesForEquip(a_actor))
 			{
@@ -465,7 +464,7 @@ namespace SDS
 	{
 		if (a_evn && a_evn->loaded)
 		{
-			if (auto actor = a_evn->formId.As<Actor>(); actor)
+			if (auto actor = a_evn->formId.As<Actor>())
 			{
 				OnActorLoad(actor);
 			}
@@ -535,18 +534,39 @@ namespace SDS
 		return EventResult::kContinue;
 	}
 
-#ifdef _SDS_UNUSED
-	auto Controller::ReceiveEvent(SKSENiNodeUpdateEvent* a_evn, EventDispatcher<SKSENiNodeUpdateEvent>*)
+	auto Controller::ReceiveEvent(
+		const TESSwitchRaceCompleteEvent* a_evn,
+		BSTEventSource<TESSwitchRaceCompleteEvent>*)
 		-> EventResult
 	{
 		if (a_evn)
 		{
-			OnNiNodeUpdate(a_evn->reference);
+			QueueProcessWeaponDrawnChange(
+				a_evn->refr,
+				DrawnState::Determine);
 		}
 
-		return kEvent_Continue;
+		return EventResult::kContinue;
 	}
+
+	auto Controller::ReceiveEvent(
+		const SKSENiNodeUpdateEvent* a_evn,
+		BSTEventSource<SKSENiNodeUpdateEvent>*)
+		-> EventResult
+	{
+		if (a_evn)
+		{
+			QueueProcessWeaponDrawnChange(
+				a_evn->reference,
+				DrawnState::Determine);
+
+#ifdef _SDS_UNUSED
+			OnNiNodeUpdate(a_evn->reference);
 #endif
+		}
+
+		return EventResult::kContinue;
+	}
 
 	auto Controller::ReceiveEvent(
 		const SKSEActionEvent* a_evn,
@@ -577,7 +597,7 @@ namespace SDS
 			{
 				ProcessWeaponDrawnChange(
 					player,
-					player->actorState.IsWeaponDrawn());
+					player->IsWeaponDrawn());
 			}
 
 			auto pl = Game::ProcessLists::GetSingleton();
@@ -607,12 +627,12 @@ namespace SDS
 
 				ProcessWeaponDrawnChange(
 					actor,
-					actor->actorState.IsWeaponDrawn());
+					actor->IsWeaponDrawn());
 			}
 		});
 	}
 
-	void Controller::Receive(const Events::OnSetEquipSlot& a_evn)
+	void Controller::Receive(const Events::OnSetEquipSlot&)
 	{
 		auto player = *g_thePlayer;
 		if (!player || !player->loadedState)
@@ -658,28 +678,33 @@ namespace SDS
 
 	void Controller::OnKeyPressed()
 	{
-		m_shieldOnBackSwitch.fetch_xor(1, std::memory_order_acq_rel);
+		auto n = m_shieldOnBackSwitch.fetch_xor(1, std::memory_order_acq_rel);
 
-		ITaskPool::QueueActorTask(*g_thePlayer, [this](Actor* a_actor, Game::ActorHandle) {
-			NiRootNodes roots(a_actor);
-			roots.GetNPCRoots(m_strings->m_npcroot);
+		SDSPlayerShieldOnBackSwitchEvent evn{ !static_cast<bool>(n) };
+		SendEvent(evn);
 
-			bool drawn = a_actor->actorState.IsWeaponDrawn();
-			bool sw = GetShieldOnBackSwitch(a_actor);
+		ITaskPool::QueueLoadedActorTask(
+			*g_thePlayer,
+			[this](Actor* a_actor, Game::ActorHandle) {
+				NiRootNodes roots(a_actor);
+				roots.GetNPCRoots(m_strings->m_npcroot);
 
-			ProcessEquippedShield(a_actor, roots, drawn, sw);
+				bool drawn = a_actor->IsWeaponDrawn();
+				bool sw    = GetShieldOnBackSwitch(a_actor);
 
-			if (!drawn &&
-			    m_conf.m_shieldHandWorkaround &&
-			    IsShieldEquipped(a_actor))
-			{
-				std::int32_t value = sw ? 0 : 10;
+				ProcessEquippedShield(a_actor, roots, drawn, sw);
 
-				a_actor->animGraphHolder.SetVariableOnGraphsInt(
-					m_strings->m_iLeftHandType,
-					value);
-			}
-		});
+				if (m_conf.m_shieldHandWorkaround &&
+			        !drawn &&
+			        IsShieldEquipped(a_actor))
+				{
+					std::int32_t value = sw ? 0 : 10;
+
+					a_actor->SetVariableOnGraphsInt(
+						m_strings->m_iLeftHandType,
+						value);
+				}
+			});
 	}
 
 }

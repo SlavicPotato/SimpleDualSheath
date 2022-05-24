@@ -7,10 +7,10 @@ namespace SDS
 		struct CreateArmorNodeEvent
 		{
 			NiPointer<TESObjectREFR> reference;
-			NiAVObject* object;
-			Biped* info;
-			BipedParam* params;
-			NiNode* objectRoot;
+			NiAVObject*              object;
+			Biped*                   info;
+			BipedParam*              params;
+			NiNode*                  objectRoot;
 		};
 	}
 }

@@ -1,8 +1,7 @@
 #ifndef PCH_H
 #define PCH_H
 
-#include <ext/ICommon.h>
-#include <ext/INIReader.h>
+#include <ext/INIConfReader.h>
 #include <ext/ITaskPool.h>
 #include <ext/ITasks.h>
 #include <ext/StrHelpers.h>

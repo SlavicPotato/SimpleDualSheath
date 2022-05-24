@@ -46,7 +46,7 @@ namespace SDS
 
 		if (config.m_shieldHideFlags.test_any(Data::Flags::kEnabled))
 		{
-			Patch_DisableShieldHideOnSit(config);
+			Patch_DisableShieldHideOnSit();
 		}
 
 		if (config.HasEnabled2HEntries())
@@ -78,24 +78,24 @@ namespace SDS
 
 		constexpr std::uint8_t d_memCall5[]{ 0xE8 };
 
-		if (!validate_mem(m_getShieldWeaponSlotNode_a, d_memCall5))
+		if (!validate_mem(m_getShieldWeaponSlotNode_a.get(), d_memCall5))
 		{
 			result |= MemoryValidationFlags::kWeaponLeftAttach;
 		}
 
-		if (!validate_mem(m_getStaffSlotNode_a, d_memCall5))
+		if (!validate_mem(m_getStaffSlotNode_a.get(), d_memCall5))
 		{
 			result |= MemoryValidationFlags::kStaffAttach;
 		}
 
-		if (!validate_mem(m_scbGet_a, d_memCall5))
+		if (!validate_mem(m_scbGet_a.get(), d_memCall5))
 		{
 			result |= MemoryValidationFlags::kScabbardGet;
 		}
 
 		if (a_config.m_shield.IsEnabled())
 		{
-			if (!validate_mem(m_getShieldArmorSlotNode_a, d_memCall5))
+			if (!validate_mem(m_getShieldArmorSlotNode_a.get(), d_memCall5))
 			{
 				result |= MemoryValidationFlags::kShieldAttach;
 			}
@@ -106,7 +106,7 @@ namespace SDS
 			if (IAL::IsAE())
 			{
 				constexpr std::uint8_t d_hideShield[]{ 0x4C, 0x8B, 0x0A, 0x4D, 0x85, 0xC9, 0x74, 0x4F };
-				if (!validate_mem(m_hideShield_a, d_hideShield))
+				if (!validate_mem(m_hideShield_a.get(), d_hideShield))
 				{
 					result |= MemoryValidationFlags::kDisableShieldHideOnSit;
 				}
@@ -114,7 +114,7 @@ namespace SDS
 			else
 			{
 				constexpr std::uint8_t d_hideShield[]{ 0x4C, 0x8B, 0x0A, 0x48, 0x8B, 0x81, 0xF0, 0x01, 0x00, 0x00 };
-				if (!validate_mem(m_hideShield_a, d_hideShield))
+				if (!validate_mem(m_hideShield_a.get(), d_hideShield))
 				{
 					result |= MemoryValidationFlags::kDisableShieldHideOnSit;
 				}
@@ -126,13 +126,13 @@ namespace SDS
 			if (IAL::IsAE())
 			{
 				constexpr std::uint8_t d_scbAttach[]{ 0x80, 0x7D, 0x6F, 0x00, 0x75, 0x1E, 0x48, 0x8B, 0x06 };
-				if (!validate_mem(m_scbAttach_a, d_scbAttach))
+				if (!validate_mem(m_scbAttach_a.get(), d_scbAttach))
 				{
 					result |= MemoryValidationFlags::kScabbardAttach;
 				}
 
 				constexpr std::uint8_t d_scbDetach[]{ 0x0F, 0x84, 0xB1, 0x00, 0x00, 0x00 };
-				if (!validate_mem(m_scbDetach_a, d_scbDetach))
+				if (!validate_mem(m_scbDetach_a.get(), d_scbDetach))
 				{
 					result |= MemoryValidationFlags::kScabbardDetach;
 				}
@@ -140,13 +140,13 @@ namespace SDS
 			else
 			{
 				constexpr std::uint8_t d_scbAttach[]{ 0x80, 0x7D, 0x6F, 0x00, 0x75, 0x1E };
-				if (!validate_mem(m_scbAttach_a, d_scbAttach))
+				if (!validate_mem(m_scbAttach_a.get(), d_scbAttach))
 				{
 					result |= MemoryValidationFlags::kScabbardAttach;
 				}
 
 				constexpr std::uint8_t d_scbDetach[]{ 0x0F, 0x84, 0xB3, 0x00, 0x00, 0x00 };
-				if (!validate_mem(m_scbDetach_a, d_scbDetach))
+				if (!validate_mem(m_scbDetach_a.get(), d_scbDetach))
 				{
 					result |= MemoryValidationFlags::kScabbardDetach;
 				}
@@ -224,8 +224,8 @@ namespace SDS
 
 		LogPatchBegin(__FUNCTION__);
 		{
-			Assembly code(m_scbAttach_a);
-			ISKSE::GetBranchTrampoline().Write6Branch(m_scbAttach_a, code.get());
+			Assembly code(m_scbAttach_a.get());
+			ISKSE::GetBranchTrampoline().Write6Branch(m_scbAttach_a.get(), code.get());
 		}
 		LogPatchEnd(__FUNCTION__);
 	}
@@ -272,8 +272,8 @@ namespace SDS
 
 		LogPatchBegin(__FUNCTION__);
 		{
-			Assembly code(m_scbDetach_a);
-			ISKSE::GetBranchTrampoline().Write6Branch(m_scbDetach_a, code.get());
+			Assembly code(m_scbDetach_a.get());
+			ISKSE::GetBranchTrampoline().Write6Branch(m_scbDetach_a.get(), code.get());
 		}
 		LogPatchEnd(__FUNCTION__);
 	}
@@ -317,8 +317,8 @@ namespace SDS
 
 		LogPatchBegin(__FUNCTION__);
 		{
-			Assembly code(m_scbGet_a);
-			ISKSE::GetBranchTrampoline().Write5Branch(m_scbGet_a, code.get());
+			Assembly code(m_scbGet_a.get());
+			ISKSE::GetBranchTrampoline().Write5Branch(m_scbGet_a.get(), code.get());
 		}
 		LogPatchEnd(__FUNCTION__);
 	}
@@ -397,13 +397,13 @@ namespace SDS
 		LogPatchBegin(__FUNCTION__);
 		{
 			{
-				Assembly code(m_getShieldWeaponSlotNode_a, std::uintptr_t(GetWeaponShieldSlotNode_Hook), IAL::IsAE() ? 0x28 : 0x26);
-				ISKSE::GetBranchTrampoline().Write5Branch(m_getShieldWeaponSlotNode_a, code.get());
+				Assembly code(m_getShieldWeaponSlotNode_a.get(), std::uintptr_t(GetWeaponShieldSlotNode_Hook), IAL::IsAE() ? 0x28 : 0x26);
+				ISKSE::GetBranchTrampoline().Write5Branch(m_getShieldWeaponSlotNode_a.get(), code.get());
 			}
 
 			{
-				Assembly code(m_getStaffSlotNode_a, std::uintptr_t(GetWeaponStaffSlotNode_Hook), IAL::IsAE() ? 0x24 : 0x26);
-				ISKSE::GetBranchTrampoline().Write5Branch(m_getStaffSlotNode_a, code.get());
+				Assembly code(m_getStaffSlotNode_a.get(), std::uintptr_t(GetWeaponStaffSlotNode_Hook), IAL::IsAE() ? 0x24 : 0x26);
+				ISKSE::GetBranchTrampoline().Write5Branch(m_getStaffSlotNode_a.get(), code.get());
 			}
 		}
 		LogPatchEnd(__FUNCTION__);
@@ -460,14 +460,13 @@ namespace SDS
 
 		LogPatchBegin(__FUNCTION__);
 		{
-			Assembly code(m_getShieldArmorSlotNode_a);
-			ISKSE::GetBranchTrampoline().Write5Branch(m_getShieldArmorSlotNode_a, code.get());
+			Assembly code(m_getShieldArmorSlotNode_a.get());
+			ISKSE::GetBranchTrampoline().Write5Branch(m_getShieldArmorSlotNode_a.get(), code.get());
 		}
 		LogPatchEnd(__FUNCTION__);
 	}
 
-	void EngineExtensions::Patch_DisableShieldHideOnSit(
-		const Config& a_config)
+	void EngineExtensions::Patch_DisableShieldHideOnSit()
 	{
 		struct Assembly : JITASM
 		{
@@ -528,8 +527,8 @@ namespace SDS
 
 		LogPatchBegin(__FUNCTION__);
 		{
-			Assembly code(m_hideShield_a);
-			ISKSE::GetBranchTrampoline().Write6Branch(m_hideShield_a, code.get());
+			Assembly code(m_hideShield_a.get());
+			ISKSE::GetBranchTrampoline().Write6Branch(m_hideShield_a.get(), code.get());
 		}
 		LogPatchEnd(__FUNCTION__);
 	}
@@ -537,7 +536,7 @@ namespace SDS
 	bool EngineExtensions::Hook_TESObjectWEAP_SetEquipSlot()
 	{
 		bool result = VTable::Detour2(
-			m_vtbl_TESObjectWEAP,
+			m_vtbl_TESObjectWEAP.get(),
 			0x86 + 0x5,
 			TESObjectWEAP_SetEquipSlot_Hook,
 			std::addressof(m_TESObjectWEAP_SetEquipSlot_o));
@@ -555,22 +554,22 @@ namespace SDS
 
 	bool EngineExtensions::Patch_ShieldHandWorkaround()
 	{
-		if (!Hook::GetDst5<0xE8>(
-				m_unk140609D50_BShkbAnimationGraph_SetGraphVariableInt_a,
+		if (!hook::get_dst5<0xE8>(
+				m_unk140609D50_BShkbAnimationGraph_SetGraphVariableInt_a.get(),
 				m_BShkbAnimationGraph_SetGraphVariableInt_o))
 		{
 			return false;
 		}
 
-		if (!Hook::GetDst5<0xE8>(
-				m_unk1406097C0_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_a,
+		if (!hook::get_dst5<0xE8>(
+				m_unk1406097C0_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_a.get(),
 				m_unk1406097C0_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_o))
 		{
 			return false;
 		}
 
-		if (!Hook::GetDst5<0xE8>(
-				m_unk140634D20_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_a,
+		if (!hook::get_dst5<0xE8>(
+				m_unk140634D20_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_a.get(),
 				m_unk140634D20_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_o))
 		{
 			return false;
@@ -597,20 +596,22 @@ namespace SDS
 				switch (a_target)
 				{
 				case HookTarget::k1:
-					targetAddr = m_unk140609D50_BShkbAnimationGraph_SetGraphVariableInt_a;
-					callAddr = std::uintptr_t(Unk140609D50_BShkbAnimationGraph_SetGraphVariableInt_Hook);
+					targetAddr = m_unk140609D50_BShkbAnimationGraph_SetGraphVariableInt_a.get();
+					callAddr   = std::uintptr_t(Unk140609D50_BShkbAnimationGraph_SetGraphVariableInt_Hook);
 					lea(r9, ptr[rbp - 0x38]);
 					break;
 				case HookTarget::k2:
-					targetAddr = m_unk1406097C0_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_a;
-					callAddr = std::uintptr_t(Unk1406097C0_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_Hook);
+					targetAddr = m_unk1406097C0_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_a.get();
+					callAddr   = std::uintptr_t(Unk1406097C0_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_Hook);
 					mov(r9, rsi);
 					break;
 				case HookTarget::k3:
-					targetAddr = m_unk140634D20_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_a;
-					callAddr = std::uintptr_t(Unk140634D20_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_Hook);
+					targetAddr = m_unk140634D20_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_a.get();
+					callAddr   = std::uintptr_t(Unk140634D20_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_Hook);
 					lea(r9, ptr[r15 - 0xB8]);
 					break;
+				default:
+					throw std::exception();
 				}
 
 				call(ptr[rip + callLabel]);
@@ -628,7 +629,7 @@ namespace SDS
 		{
 			Assembly code(HookTarget::k1);
 			ISKSE::GetBranchTrampoline().Write5Branch(
-				m_unk140609D50_BShkbAnimationGraph_SetGraphVariableInt_a,
+				m_unk140609D50_BShkbAnimationGraph_SetGraphVariableInt_a.get(),
 				code.get());
 		}
 		LogPatchEnd("Unk140609D50");
@@ -637,7 +638,7 @@ namespace SDS
 		{
 			Assembly code(HookTarget::k2);
 			ISKSE::GetBranchTrampoline().Write5Branch(
-				m_unk1406097C0_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_a,
+				m_unk1406097C0_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_a.get(),
 				code.get());
 		}
 		LogPatchEnd("Unk1406097C0");
@@ -646,7 +647,7 @@ namespace SDS
 		{
 			Assembly code(HookTarget::k3);
 			ISKSE::GetBranchTrampoline().Write5Branch(
-				m_unk140634D20_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_a,
+				m_unk140634D20_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_a.get(),
 				code.get());
 		}
 		LogPatchEnd("Unk140634D20");
@@ -657,8 +658,8 @@ namespace SDS
 	bool EngineExtensions::Unk140609D50_BShkbAnimationGraph_SetGraphVariableInt_Hook(
 		BShkbAnimationGraph* a_graph,
 		const BSFixedString& a_name,
-		std::int32_t a_value,
-		Actor* a_actor)
+		std::int32_t         a_value,
+		Actor*               a_actor)
 	{
 		auto controller = m_Instance->m_controller.get();
 
@@ -666,7 +667,7 @@ namespace SDS
 		    controller->IsShieldEnabled(a_actor) &&
 		    controller->GetShieldOnBackSwitch(a_actor) &&
 		    (controller->GetConfig().m_shwForceIfDrawn ||
-		     !a_actor->actorState.IsWeaponDrawn()) &&
+		     !a_actor->IsWeaponDrawn()) &&
 		    Common::IsShieldEquipped(a_actor))
 		{
 			a_value = 0;
@@ -676,10 +677,10 @@ namespace SDS
 	}
 
 	std::uint32_t EngineExtensions::Unk1406097C0_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_Hook(
-		IAnimationGraphManagerHolder* a_holder,
-		const BSFixedString& a_name,
-		std::int32_t a_value,
-		Actor* a_actor)
+		RE::IAnimationGraphManagerHolder* a_holder,
+		const BSFixedString&          a_name,
+		std::int32_t                  a_value,
+		Actor*                        a_actor)
 	{
 		auto controller = m_Instance->m_controller.get();
 
@@ -687,7 +688,7 @@ namespace SDS
 		    controller->IsShieldEnabled(a_actor) &&
 		    controller->GetShieldOnBackSwitch(a_actor) &&
 		    (controller->GetConfig().m_shwForceIfDrawn ||
-		     !a_actor->actorState.IsWeaponDrawn()) &&
+		     !a_actor->IsWeaponDrawn()) &&
 		    Common::IsShieldEquipped(a_actor))
 		{
 			a_value = 0;
@@ -697,10 +698,10 @@ namespace SDS
 	}
 
 	std::uint32_t EngineExtensions::Unk140634D20_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_Hook(
-		IAnimationGraphManagerHolder* a_holder,
-		const BSFixedString& a_name,
-		std::int32_t a_value,
-		Actor* a_actor)
+		RE::IAnimationGraphManagerHolder* a_holder,
+		const BSFixedString&          a_name,
+		std::int32_t                  a_value,
+		Actor*                        a_actor)
 	{
 		auto controller = m_Instance->m_controller.get();
 
@@ -727,12 +728,12 @@ namespace SDS
 	}
 
 	NiNode* EngineExtensions::GetScbAttachmentNode_Hook(
-		Biped* a_biped,
-		std::uint32_t a_bipedSlot,
-		NiNode* a_root)
+		Biped*       a_biped,
+		BIPED_OBJECT a_bipedSlot,
+		NiNode*      a_root)
 	{
 		// these checks should never fail
-		if (!a_root || !a_biped || a_bipedSlot == 0xFFFFFFFF)
+		if (!a_root || !a_biped || a_bipedSlot >= BIPED_OBJECT::kTotal)
 		{
 			return nullptr;
 		}
@@ -749,7 +750,7 @@ namespace SDS
 			return nullptr;
 		}
 
-		auto form = a_biped->objects[a_bipedSlot].item;
+		auto form = a_biped->get_object(a_bipedSlot).item;
 		if (!form)
 		{
 			return nullptr;
@@ -771,7 +772,7 @@ namespace SDS
 
 	NiNode* EngineExtensions::GetScbAttachmentNode_Cleanup_Hook(
 		TESForm* a_form,
-		Biped* a_biped)
+		Biped*   a_biped)
 	{
 		if (!a_form || !a_biped)
 		{
@@ -805,23 +806,27 @@ namespace SDS
 			return nullptr;
 		}
 
-		return object->GetAsNiNode();
+		return object->AsNode();
 	}
 
 	NiAVObject* EngineExtensions::GetWeaponShieldSlotNode_Hook(
-		NiNode* a_root,
+		NiNode*              a_root,
 		const BSFixedString& a_nodeName,
-		Biped* a_biped,
-		std::uint32_t a_bipedSlot,
-		bool a_is1p,
-		bool& a_skipHide)
+		Biped*               a_biped,
+		BIPED_OBJECT         a_bipedSlot,
+		bool                 a_is1p,
+		bool&                a_skipHide)
 	{
-		auto str = m_Instance->GetWeaponNodeName(a_biped, a_bipedSlot, a_is1p, true);
+		auto str = m_Instance->GetWeaponNodeName(
+			a_biped,
+			a_bipedSlot,
+			a_is1p,
+			true);
 
 		if (!str)
 		{
 			a_skipHide = false;
-			str = std::addressof(a_nodeName);
+			str        = std::addressof(a_nodeName);
 		}
 		else
 		{
@@ -832,19 +837,23 @@ namespace SDS
 	}
 
 	NiAVObject* EngineExtensions::GetWeaponStaffSlotNode_Hook(
-		NiNode* a_root,
+		NiNode*              a_root,
 		const BSFixedString& a_nodeName,
-		Biped* a_biped,
-		std::uint32_t a_bipedSlot,
-		bool a_is1p,
-		bool& a_skipHidden)
+		Biped*               a_biped,
+		BIPED_OBJECT         a_bipedSlot,
+		bool                 a_is1p,
+		bool&                a_skipHidden)
 	{
-		auto str = m_Instance->GetWeaponNodeName(a_biped, a_bipedSlot, a_is1p, false);
+		auto str = m_Instance->GetWeaponNodeName(
+			a_biped,
+			a_bipedSlot,
+			a_is1p,
+			false);
 
 		if (!str)
 		{
 			a_skipHidden = false;
-			str = std::addressof(a_nodeName);
+			str          = std::addressof(a_nodeName);
 		}
 		else
 		{
@@ -855,24 +864,24 @@ namespace SDS
 	}
 
 	NiAVObject* EngineExtensions::GetShieldArmorSlotNode_Hook(
-		NiNode* a_root,
+		NiNode*              a_root,
 		const BSFixedString& a_nodeName,
-		Biped* a_biped,
-		std::uint32_t a_bipedSlot,
-		bool a_is1p)
+		Biped*               a_biped,
+		BIPED_OBJECT         a_bipedSlot,
+		bool                 a_is1p)
 	{
-		if (a_biped && a_bipedSlot != 0xFFFFFFFF)
+		if (a_biped && a_bipedSlot < BIPED_OBJECT::kTotal)
 		{
 			NiPointer<TESObjectREFR> ref;
 			if (a_biped->handle.Lookup(ref))
 			{
-				if (auto actor = ref->As<Actor>(); actor)
+				if (auto actor = ref->As<Actor>())
 				{
-					if (auto form = a_biped->objects[a_bipedSlot].item; form)
+					if (actor->GetShieldBipedObject() == a_bipedSlot)
 					{
-						if (auto armor = form->As<TESObjectARMO>(); armor)
+						if (auto form = a_biped->get_object(a_bipedSlot).item)
 						{
-							if (Controller::GetShieldBipedObject(actor) == a_bipedSlot)
+							if (auto armor = form->As<TESObjectARMO>())
 							{
 								if (auto str = m_Instance->m_controller->GetShieldAttachmentNodeName(actor, armor, a_is1p))
 								{
@@ -889,14 +898,14 @@ namespace SDS
 	}
 
 	NiAVObject* EngineExtensions::GetScabbardNode_Hook(
-		NiNode* a_node,
+		NiNode*              a_node,
 		const BSFixedString& a_nodeName,  // Scb
-		bool a_left,
-		bool a_is1p)
+		bool                 a_left,
+		bool                 a_is1p)
 	{
 		auto stringHolder = m_Instance->m_controller->GetStringHolder();
 
-		NiPointer scbNode = GetNodeByName(a_node, a_nodeName, true);
+		NiPointer scbNode     = GetNodeByName(a_node, a_nodeName, true);
 		NiPointer scbLeftNode = GetNodeByName(a_node, stringHolder->m_scbLeft, true);
 
 		auto& config = m_Instance->m_controller->GetConfig();
@@ -907,19 +916,19 @@ namespace SDS
 
 			if (scbNode)
 			{
-				scbNode->m_parent->RemoveChild(scbNode);
+				scbNode->m_parent->DetachChild2(scbNode);
 				shrink = true;
 			}
 
 			if (scbLeftNode)
 			{
-				scbLeftNode->m_parent->RemoveChild(scbLeftNode);
+				scbLeftNode->m_parent->DetachChild2(scbLeftNode);
 				shrink = true;
 			}
 
 			if (shrink)
 			{
-				ShrinkChildrenToSize(a_node);
+				ShrinkToSize(a_node);
 			}
 
 			return nullptr;
@@ -932,8 +941,8 @@ namespace SDS
 		{
 			if (scbLeftNode && scbLeftNode->m_parent)
 			{
-				scbLeftNode->m_parent->RemoveChild(scbLeftNode);
-				ShrinkChildrenToSize(a_node);
+				scbLeftNode->m_parent->DetachChild2(scbLeftNode);
+				ShrinkToSize(a_node);
 			}
 
 			return scbNode;
@@ -946,8 +955,8 @@ namespace SDS
 
 		if (scbNode && scbNode->m_parent)
 		{
-			scbNode->m_parent->RemoveChild(scbNode);
-			ShrinkChildrenToSize(a_node);
+			scbNode->m_parent->DetachChild2(scbNode);
+			ShrinkToSize(a_node);
 		}
 
 		Node::SetVisible(scbLeftNode);
@@ -962,12 +971,12 @@ namespace SDS
 	}
 
 	const BSFixedString* EngineExtensions::GetWeaponNodeName(
-		Biped* a_biped,
-		std::uint32_t a_bipedSlot,
-		bool a_is1p,
-		bool a_left)
+		Biped*       a_biped,
+		BIPED_OBJECT a_bipedSlot,
+		bool         a_is1p,
+		bool         a_left)
 	{
-		if (!a_biped || a_bipedSlot == 0xFFFFFFFF)
+		if (!a_biped || a_bipedSlot == BIPED_OBJECT::kNone)
 		{
 			return nullptr;
 		}
@@ -984,7 +993,7 @@ namespace SDS
 			return nullptr;
 		}
 
-		auto form = a_biped->objects[a_bipedSlot].item;
+		auto form = a_biped->objects[stl::underlying(a_bipedSlot)].item;
 		if (!form)
 		{
 			return nullptr;

@@ -7,8 +7,8 @@ namespace SDS
 		struct CreateWeaponNodesEvent
 		{
 			TESObjectREFR* reference;
-			TESForm* object;
-			bool left;
+			TESForm*       object;
+			bool           left;
 		};
 	}
 }

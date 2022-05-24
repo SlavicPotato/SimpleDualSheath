@@ -21,7 +21,7 @@ namespace SDS
 
 	auto FlagParser::Parse(
 		const std::string& a_in,
-		bool a_internal)
+		bool               a_internal)
 		-> Flags
 	{
 		std::vector<std::string> v;
@@ -53,14 +53,14 @@ namespace SDS
 		StrHelpers::SplitString(a_input, '+', e, true, true);
 
 		m_comboKey = 0;
-		m_key = 0;
+		m_key      = 0;
 
 		auto n = e.size();
 
 		if (n > 1)
 		{
 			m_comboKey = e[0];
-			m_key = e[1];
+			m_key      = e[1];
 		}
 		else if (n == 1)
 		{
@@ -75,62 +75,62 @@ namespace SDS
 
 	bool Config::Load(const std::string& a_path)
 	{
-		INIReader reader(a_path);
+		INIConfReader reader(a_path);
 
 		FlagParser flagParser;
 
-		m_scb = reader.Get(SECT_GENERAL, "EnableLeftScabbards", true);
-		m_scbCustom = reader.Get(SECT_GENERAL, "CustomLeftScabbards", true);
-		m_disableScabbards = reader.Get(SECT_GENERAL, "DisableAllScabbards", false);
+		m_scb              = reader.GetBoolValue(SECT_GENERAL, "EnableLeftScabbards", true);
+		m_scbCustom        = reader.GetBoolValue(SECT_GENERAL, "CustomLeftScabbards", true);
+		m_disableScabbards = reader.GetBoolValue(SECT_GENERAL, "DisableAllScabbards", false);
 
 		m_sword = {
-			flagParser.Parse(reader.Get(SECT_SWORD, KW_FLAGS, "Player|NPC")),
-			reader.Get(SECT_SWORD, KW_SHEATHNODE, StringHolder::NINODE_SWORD_LEFT)
+			flagParser.Parse(reader.GetValue(SECT_SWORD, KW_FLAGS, "Player|NPC")),
+			reader.GetValue(SECT_SWORD, KW_SHEATHNODE, StringHolder::NINODE_SWORD_LEFT)
 		};
 
 		m_axe = {
-			flagParser.Parse(reader.Get(SECT_AXE, KW_FLAGS, "Player|NPC")),
-			reader.Get(SECT_AXE, KW_SHEATHNODE, StringHolder::NINODE_AXE_LEFT)
+			flagParser.Parse(reader.GetValue(SECT_AXE, KW_FLAGS, "Player|NPC")),
+			reader.GetValue(SECT_AXE, KW_SHEATHNODE, StringHolder::NINODE_AXE_LEFT)
 		};
 
 		m_mace = {
-			flagParser.Parse(reader.Get(SECT_MACE, KW_FLAGS, "Player|NPC")),
-			reader.Get(SECT_MACE, KW_SHEATHNODE, StringHolder::NINODE_MACE_LEFT)
+			flagParser.Parse(reader.GetValue(SECT_MACE, KW_FLAGS, "Player|NPC")),
+			reader.GetValue(SECT_MACE, KW_SHEATHNODE, StringHolder::NINODE_MACE_LEFT)
 		};
 
 		m_dagger = {
-			flagParser.Parse(reader.Get(SECT_DAGGER, KW_FLAGS, "Player|NPC")),
-			reader.Get(SECT_DAGGER, KW_SHEATHNODE, StringHolder::NINODE_DAGGER_LEFT)
+			flagParser.Parse(reader.GetValue(SECT_DAGGER, KW_FLAGS, "Player|NPC")),
+			reader.GetValue(SECT_DAGGER, KW_SHEATHNODE, StringHolder::NINODE_DAGGER_LEFT)
 		};
 
 		m_2hSword = {
-			flagParser.Parse(reader.Get(SECT_2HSWORD, KW_FLAGS, "")),
-			reader.Get(SECT_2HSWORD, KW_SHEATHNODE, StringHolder::NINODE_SWORD_ON_BACK_LEFT)
+			flagParser.Parse(reader.GetValue(SECT_2HSWORD, KW_FLAGS, "")),
+			reader.GetValue(SECT_2HSWORD, KW_SHEATHNODE, StringHolder::NINODE_SWORD_ON_BACK_LEFT)
 		};
 
 		m_2hAxe = {
-			flagParser.Parse(reader.Get(SECT_2HAXE, KW_FLAGS, "")),
-			reader.Get(SECT_2HAXE, KW_SHEATHNODE, StringHolder::NINODE_AXE_ON_BACK_LEFT)
+			flagParser.Parse(reader.GetValue(SECT_2HAXE, KW_FLAGS, "")),
+			reader.GetValue(SECT_2HAXE, KW_SHEATHNODE, StringHolder::NINODE_AXE_ON_BACK_LEFT)
 		};
 
 		m_staff = {
-			flagParser.Parse(reader.Get(SECT_STAFF, KW_FLAGS, "Player|NPC|Right"), true),
-			reader.Get(SECT_STAFF, KW_SHEATHNODE, StringHolder::NINODE_STAFF_LEFT)
+			flagParser.Parse(reader.GetValue(SECT_STAFF, KW_FLAGS, "Player|NPC|Right"), true),
+			reader.GetValue(SECT_STAFF, KW_SHEATHNODE, StringHolder::NINODE_STAFF_LEFT)
 		};
 
 		m_shield = {
-			flagParser.Parse(reader.Get(SECT_SHIELD, KW_FLAGS, "")),
-			reader.Get(SECT_SHIELD, KW_SHEATHNODE, StringHolder::NINODE_SHIELD_BACK)
+			flagParser.Parse(reader.GetValue(SECT_SHIELD, KW_FLAGS, "")),
+			reader.GetValue(SECT_SHIELD, KW_SHEATHNODE, StringHolder::NINODE_SHIELD_BACK)
 		};
 
-		m_shieldHandWorkaround = reader.Get(SECT_SHIELD, "ClenchedHandWorkaround", false);
-		m_shwForceIfDrawn = reader.Get(SECT_SHIELD, "ClenchedHandWorkaroundForceIfDrawn", false);
-		m_shieldHideFlags = flagParser.Parse(reader.Get(SECT_SHIELD, "DisableHideOnSit", ""));
-		m_shieldToggleKeys.Parse(reader.Get(SECT_SHIELD, "ToggleKeys", ""));
+		m_shieldHandWorkaround = reader.GetBoolValue(SECT_SHIELD, "ClenchedHandWorkaround", false);
+		m_shwForceIfDrawn      = reader.GetBoolValue(SECT_SHIELD, "ClenchedHandWorkaroundForceIfDrawn", false);
+		m_shieldHideFlags      = flagParser.Parse(reader.GetValue(SECT_SHIELD, "DisableHideOnSit", ""));
+		m_shieldToggleKeys.Parse(reader.GetValue(SECT_SHIELD, "ToggleKeys", ""));
 
-		m_npcEquipLeft = reader.Get(SECT_NPC, "EquipLeft", false);
+		m_npcEquipLeft = reader.GetBoolValue(SECT_NPC, "EquipLeft", false);
 
-		return (m_loaded = (reader.ParseError() == 0));
+		return (m_loaded = reader.is_loaded());
 	}
 
 }

@@ -13,11 +13,14 @@ namespace SDS
 		using namespace Util;
 
 		Weapon::Weapon(
-			const char* a_nodeName,
-			const char* a_nodeNameLeft,
+			const char*                a_nodeName,
+			const char*                a_nodeNameLeft,
 			const Config::ConfigEntry& a_config) :
 			m_nodeName(a_nodeName),
-			m_nodeNameLeft(a_config.m_sheathNode.empty() ? a_nodeNameLeft : a_config.m_sheathNode.c_str()),
+			m_nodeNameLeft(
+				a_config.m_sheathNode.empty() ?
+					a_nodeNameLeft :
+                    a_config.m_sheathNode.c_str()),
 			m_flags(a_config.m_flags)
 		{
 		}
@@ -43,8 +46,8 @@ namespace SDS
 
 		void WeaponData::SetStrings(
 			std::uint32_t a_type,
-			const char* a_nodeName,
-			const char* a_nodeNameLeft)
+			const char*   a_nodeName,
+			const char*   a_nodeNameLeft)
 		{
 			if (a_type < std::size(m_entries))
 			{
@@ -52,29 +55,28 @@ namespace SDS
 				{
 					if (a_nodeName)
 					{
-						entry->m_nodeName.Set(a_nodeName);
+						entry->m_nodeName = a_nodeName;
 					}
 
 					if (a_nodeNameLeft)
 					{
-						entry->m_nodeNameLeft.Set(a_nodeNameLeft);
+						entry->m_nodeNameLeft = a_nodeNameLeft;
 					}
 				}
 			}
 		}
 
 		auto WeaponData::Get(
-			Actor* a_actor,
+			Actor*         a_actor,
 			TESObjectWEAP* a_weapon,
-			bool a_left) const
+			bool           a_left) const
 			-> const Weapon*
 		{
-			auto type = a_weapon->gameData.type;
+			auto type = a_weapon->type();
 
-			if (type < std::size(m_entries))
+			if (stl::underlying(type) < std::size(m_entries))
 			{
-				auto entry = m_entries[type].get();
-				if (entry)
+				if (auto &entry = m_entries[stl::underlying(type)])
 				{
 					if (a_actor == *g_thePlayer)
 					{
@@ -96,7 +98,7 @@ namespace SDS
 						return nullptr;
 					}
 
-					return entry;
+					return entry.get();
 				}
 			}
 
@@ -105,12 +107,11 @@ namespace SDS
 
 		const BSFixedString* WeaponData::GetNodeName(TESObjectWEAP* a_weapon, bool a_left) const
 		{
-			auto type = a_weapon->gameData.type;
+			auto type = a_weapon->type();
 
-			if (type < std::size(m_entries))
+			if (stl::underlying(type) < std::size(m_entries))
 			{
-				auto entry = m_entries[type].get();
-				if (entry)
+				if (auto &entry = m_entries[stl::underlying(type)])
 				{
 					return std::addressof(entry->GetNodeName(a_left));
 				}

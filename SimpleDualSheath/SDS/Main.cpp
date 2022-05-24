@@ -5,11 +5,14 @@
 #include "Config.h"
 #include "Controller.h"
 #include "EngineExtensions.h"
+#include "PluginInterface.h"
+
 #include <ext/SKSEMessaging.h>
 
 namespace SDS
 {
-	static std::shared_ptr<Controller> s_controller;
+	static std::shared_ptr<Controller>      s_controller;
+	static std::unique_ptr<PluginInterface> s_pluginInterface;
 
 	static bool s_loaded = false;
 
@@ -47,6 +50,7 @@ namespace SDS
 				{
 					edl->AddEventSink<TESObjectLoadedEvent>(s_controller.get());
 					edl->AddEventSink<TESInitScriptEvent>(s_controller.get());
+					//edl->AddEventSink<TESSwitchRaceCompleteEvent>(s_controller.get());
 
 					auto& config = s_controller->GetConfig();
 
@@ -68,9 +72,15 @@ namespace SDS
 			{
 				s_controller->EvaluateDrawnStateOnNearbyActors();
 			}
+			// fallthrough
 		case SKSEMessagingInterface::kMessage_NewGame:
 			s_loaded = true;
 			break;
+		case SKSEMessagingInterface::kMessage_PostLoad:
+			if (s_controller)
+			{
+				s_pluginInterface = std::make_unique<PluginInterface>(s_controller);
+			}
 		case SKSEMessagingInterface::kMessage_PostPostLoad:
 			{
 				/*auto& skse = ISKSE::GetSingleton();
@@ -193,7 +203,7 @@ namespace SDS
 
 	bool Initialize(const SKSEInterface* a_skse)
 	{
-		Config config(PLUGIN_INI_FILE);
+		Config config(PLUGIN_INI_FILE_NOEXT);
 		if (!config.IsLoaded())
 		{
 			gLog.Warning("Unable to load the configuration file, using defaults");
@@ -220,14 +230,11 @@ namespace SDS
 
 		auto mif = skse.GetInterface<SKSEMessagingInterface>();
 
-#ifdef _SDS_UNUSED
-		auto NiNodeUpdate = static_cast<EventDispatcher<SKSENiNodeUpdateEvent>*>(mif->GetEventDispatcher(SKSEMessagingInterface::kDispatcher_NiNodeUpdateEvent));
-		if (!NiNodeUpdate)
+		/*auto nnupd_evd = mif->GetEventDispatcher<SKSENiNodeUpdateEvent>();
+		if (!nnupd_evd)
 		{
-			gLog.FatalError("Could not get NiNodeUpdateEvent dispatcher");
-			return false;
-		}
-#endif
+			gLog.Warning("Could not get NiNodeUpdateEvent dispatcher");
+		}*/
 
 		auto aed = mif->GetEventDispatcher<SKSEActionEvent>();
 		if (!aed)
@@ -255,13 +262,16 @@ namespace SDS
 
 		EngineExtensions::Initialize(controller);
 
-#ifdef _SDS_UNUSED
-		NiNodeUpdate->AddEventSink(controller.get());
-#endif
+		//nnupd_evd->AddEventSink(controller.get());
 		aed->AddEventSink(controller.get());
 
-		s_controller = std::move(controller);
+		s_controller = controller;
 
 		return true;
+	}
+
+	PluginInterface* GetPluginInterface()
+	{
+		return s_pluginInterface.get();
 	}
 }
