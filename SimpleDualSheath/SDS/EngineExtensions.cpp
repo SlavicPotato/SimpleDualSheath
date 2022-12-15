@@ -885,7 +885,11 @@ namespace SDS
 							{
 								if (auto str = m_Instance->m_controller->GetShieldAttachmentNodeName(actor, armor, a_is1p))
 								{
-									return GetNodeByName(a_root, *str, true);
+									if (auto result = GetNodeByName(a_root, *str, true))
+									{
+										return result;
+									} 
+									// fall back to the node requested by the game if we find nothing
 								}
 							}
 						}
