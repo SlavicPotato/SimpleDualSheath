@@ -678,9 +678,9 @@ namespace SDS
 
 	std::uint32_t EngineExtensions::Unk1406097C0_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_Hook(
 		RE::IAnimationGraphManagerHolder* a_holder,
-		const BSFixedString&          a_name,
-		std::int32_t                  a_value,
-		Actor*                        a_actor)
+		const BSFixedString&              a_name,
+		std::int32_t                      a_value,
+		Actor*                            a_actor)
 	{
 		auto controller = m_Instance->m_controller.get();
 
@@ -699,9 +699,9 @@ namespace SDS
 
 	std::uint32_t EngineExtensions::Unk140634D20_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_Hook(
 		RE::IAnimationGraphManagerHolder* a_holder,
-		const BSFixedString&          a_name,
-		std::int32_t                  a_value,
-		Actor*                        a_actor)
+		const BSFixedString&              a_name,
+		std::int32_t                      a_value,
+		Actor*                            a_actor)
 	{
 		auto controller = m_Instance->m_controller.get();
 
@@ -817,23 +817,25 @@ namespace SDS
 		bool                 a_is1p,
 		bool&                a_skipHide)
 	{
-		auto str = m_Instance->GetWeaponNodeName(
+		const auto str = m_Instance->GetWeaponNodeName(
 			a_biped,
 			a_bipedSlot,
 			a_is1p,
 			true);
 
-		if (!str)
+		if (str)
 		{
-			a_skipHide = false;
-			str        = std::addressof(a_nodeName);
-		}
-		else
-		{
-			a_skipHide = true;
+			if (auto result = GetNodeByName(a_root, *str, true))
+			{
+				a_skipHide = true;
+
+				return result;
+			}
 		}
 
-		return GetNodeByName(a_root, *str, true);
+		a_skipHide = false;
+
+		return GetNodeByName(a_root, a_nodeName, true);
 	}
 
 	NiAVObject* EngineExtensions::GetWeaponStaffSlotNode_Hook(
@@ -842,25 +844,27 @@ namespace SDS
 		Biped*               a_biped,
 		BIPED_OBJECT         a_bipedSlot,
 		bool                 a_is1p,
-		bool&                a_skipHidden)
+		bool&                a_skipHide)
 	{
-		auto str = m_Instance->GetWeaponNodeName(
+		const auto str = m_Instance->GetWeaponNodeName(
 			a_biped,
 			a_bipedSlot,
 			a_is1p,
 			false);
 
-		if (!str)
+		if (str)
 		{
-			a_skipHidden = false;
-			str          = std::addressof(a_nodeName);
-		}
-		else
-		{
-			a_skipHidden = true;
+			if (auto result = GetNodeByName(a_root, *str, true))
+			{
+				a_skipHide = true;
+
+				return result;
+			}
 		}
 
-		return GetNodeByName(a_root, *str, true);
+		a_skipHide = false;
+
+		return GetNodeByName(a_root, a_nodeName, true);
 	}
 
 	NiAVObject* EngineExtensions::GetShieldArmorSlotNode_Hook(
@@ -888,7 +892,7 @@ namespace SDS
 									if (auto result = GetNodeByName(a_root, *str, true))
 									{
 										return result;
-									} 
+									}
 									// fall back to the node requested by the game if we find nothing
 								}
 							}

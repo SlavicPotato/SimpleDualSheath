@@ -4,7 +4,6 @@
 
 #include "Events/CreateArmorNodeEvent.h"
 #include "Events/CreateWeaponNodesEvent.h"
-#include "Events/Dispatcher.h"
 #include "Events/OnSetEquipSlot.h"
 
 namespace SDS
@@ -64,8 +63,8 @@ namespace SDS
 
 		static NiNode*     GetScbAttachmentNode_Hook(Biped* a_biped, BIPED_OBJECT a_bipedSlot, NiNode* a_root);
 		static NiNode*     GetScbAttachmentNode_Cleanup_Hook(TESForm* a_form, Biped* a_biped);
-		static NiAVObject* GetWeaponShieldSlotNode_Hook(NiNode* a_root, const BSFixedString& a_nodeName, Biped* a_biped, BIPED_OBJECT a_bipedSlot, bool a_is1p, bool& a_skipCull);
-		static NiAVObject* GetWeaponStaffSlotNode_Hook(NiNode* a_root, const BSFixedString& a_nodeName, Biped* a_biped, BIPED_OBJECT a_bipedSlot, bool a_is1p, bool& a_skipCull);
+		static NiAVObject* GetWeaponShieldSlotNode_Hook(NiNode* a_root, const BSFixedString& a_nodeName, Biped* a_biped, BIPED_OBJECT a_bipedSlot, bool a_is1p, bool& a_skipHide);
+		static NiAVObject* GetWeaponStaffSlotNode_Hook(NiNode* a_root, const BSFixedString& a_nodeName, Biped* a_biped, BIPED_OBJECT a_bipedSlot, bool a_is1p, bool& a_skipHide);
 		static NiAVObject* GetShieldArmorSlotNode_Hook(NiNode* a_root, const BSFixedString& a_nodeName, Biped* a_biped, BIPED_OBJECT a_bipedSlot, bool a_is1p);
 		static NiAVObject* GetScabbardNode_Hook(NiNode* a_object, const BSFixedString& a_nodeName, bool a_left, bool a_is1p);
 		static void        TESObjectWEAP_SetEquipSlot_Hook(BGSEquipType* a_this, BGSEquipSlot* a_slot);
@@ -104,8 +103,8 @@ namespace SDS
 		inline static auto m_hideShield_a              = IAL::Address<std::uintptr_t>(36580, 37584, 0x6, 0x6);  // does other stuff but we don't care here
 		inline static auto m_vtbl_TESObjectWEAP        = IAL::Address<std::uintptr_t>(234396, 189786);
 
-		inline static auto GetNodeByName        = IAL::Address<fGetNodeByName_t>(74481, 76207);
-		inline static auto ShrinkToSize = IAL::Address<fUnk1401CDB30_t>(15571, 15748);
+		inline static auto GetNodeByName = IAL::Address<fGetNodeByName_t>(74481, 76207);
+		inline static auto ShrinkToSize  = IAL::Address<fUnk1401CDB30_t>(15571, 15748);
 
 		inline static auto m_unk140609D50_BShkbAnimationGraph_SetGraphVariableInt_a             = IAL::Address<std::uintptr_t>(36957, 37982, 0x1DA, 0x19E);  // load (iLeftHandType), rbp - 38 = Actor (BShkbAnimationGraph::SetGraphVariableInt)
 		inline static auto m_unk1406097C0_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_a = IAL::Address<std::uintptr_t>(36949, 37974, 0x48, 0x48);    // equip (iLeftHandType), rsi = Actor (IAnimationGraphManagerHolder::SetVariableOnGraphsInt)
