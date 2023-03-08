@@ -108,7 +108,7 @@ namespace SDS
 
 		inline static auto m_unk140609D50_BShkbAnimationGraph_SetGraphVariableInt_a             = IAL::Address<std::uintptr_t>(36957, 37982, 0x1DA, 0x19E);  // load (iLeftHandType), rbp - 38 = Actor (BShkbAnimationGraph::SetGraphVariableInt)
 		inline static auto m_unk1406097C0_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_a = IAL::Address<std::uintptr_t>(36949, 37974, 0x48, 0x48);    // equip (iLeftHandType), rsi = Actor (IAnimationGraphManagerHolder::SetVariableOnGraphsInt)
-		inline static auto m_unk140634D20_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_a = IAL::Address<std::uintptr_t>(37866, 38821, 0x17B, 0x13F);  // draw (iLeftHandEquipped), r15 - B8 = Actor (IAnimationGraphManagerHolder::SetVariableOnGraphsInt)
+		inline static auto m_unk140634D20_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_a = IAL::Address<std::uintptr_t>(37866, 38821, 0x17B, IAL::ver() >= VER_1_6_629 ? 0x145 : 0x13F);  // draw (iLeftHandEquipped), r15 - B8 = Actor (IAnimationGraphManagerHolder::SetVariableOnGraphsInt)
 
 		static std::unique_ptr<EngineExtensions> m_Instance;
 	};

@@ -608,7 +608,7 @@ namespace SDS
 				case HookTarget::k3:
 					targetAddr = m_unk140634D20_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_a.get();
 					callAddr   = std::uintptr_t(Unk140634D20_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_Hook);
-					lea(r9, ptr[r15 - 0xB8]);
+					lea(r9, ptr[r15 - (IAL::ver() >= VER_1_6_629 ? 0xC0 : 0xB8)]);
 					break;
 				default:
 					throw std::exception();
@@ -984,7 +984,7 @@ namespace SDS
 		bool         a_is1p,
 		bool         a_left)
 	{
-		if (!a_biped || a_bipedSlot == BIPED_OBJECT::kNone)
+		if (!a_biped || a_bipedSlot >= BIPED_OBJECT::kTotal)
 		{
 			return nullptr;
 		}
