@@ -41,7 +41,7 @@ namespace SDS
 
 		NiNode* Weapon::GetNode(NiNode* a_root, bool a_left) const
 		{
-			return ::Util::Node::FindNode(a_root, GetNodeName(a_left));
+			return ::Util::Node::GetNodeByName(a_root, GetNodeName(a_left));
 		}
 
 		void WeaponData::SetStrings(

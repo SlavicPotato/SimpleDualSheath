@@ -25,11 +25,6 @@ namespace SDS
 				}
 			}
 
-			void SetVisible(NiAVObject* a_object)
-			{
-				a_object->m_flags &= ~NiAVObject::kFlag_Hidden;
-			}
-
 		}
 	}
 }

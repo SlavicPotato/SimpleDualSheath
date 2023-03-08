@@ -77,7 +77,7 @@ namespace SDS
 		using IAnimationGraphManagerHolder_SetVariableOnGraphsInt_t = std::uint32_t (*)(RE::IAnimationGraphManagerHolder* a_holder, const BSFixedString& a_name, std::int32_t a_value);
 
 		static bool          ShouldBlockShieldHide(Actor* a_actor);
-		const BSFixedString* GetWeaponNodeName(Biped* a_biped, BIPED_OBJECT a_bipedSlot, bool a_is1p, bool a_left);
+		const BSFixedString* GetWeaponAttachmentNodeName(Biped* a_biped, BIPED_OBJECT a_bipedSlot, bool a_is1p, bool a_left);
 
 		decltype(&TESObjectWEAP_SetEquipSlot_Hook)            m_TESObjectWEAP_SetEquipSlot_o;
 		BShkbAnimationGraph_SetGraphVariableInt_t             m_BShkbAnimationGraph_SetGraphVariableInt_o;

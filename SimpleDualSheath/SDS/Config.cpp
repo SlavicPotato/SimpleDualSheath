@@ -25,7 +25,7 @@ namespace SDS
 		-> Flags
 	{
 		std::vector<std::string> v;
-		StrHelpers::SplitString(a_in, '|', v, true);
+		stl::split_string(a_in, '|', v, true);
 
 		Flags out(Flags::kNone);
 
@@ -50,7 +50,7 @@ namespace SDS
 		const std::string& a_input)
 	{
 		std::vector<std::uint32_t> e;
-		StrHelpers::SplitString(a_input, '+', e, true, true);
+		stl::split_string(a_input, '+', e, true, true);
 
 		m_comboKey = 0;
 		m_key      = 0;

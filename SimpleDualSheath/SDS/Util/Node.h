@@ -12,8 +12,6 @@ namespace SDS
 				NiAVObject* a_object,
 				NiNode*     a_node);
 
-			void SetVisible(NiAVObject* a_object);
-
 		}
 	}
 }

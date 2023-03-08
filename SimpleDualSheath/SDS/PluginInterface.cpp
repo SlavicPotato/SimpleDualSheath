@@ -37,7 +37,7 @@ namespace SDS
 
 	std::uint64_t PluginInterface::GetUniqueID() const
 	{
-		return hash::fnv1::hash_64_fnv1a_const(PLUGIN_AUTHOR "_" PLUGIN_NAME);
+		return hash::fnv1::compute_hash_string_fnv1a_const(PLUGIN_AUTHOR "_" PLUGIN_NAME);
 	}
 
 	bool PluginInterface::GetShieldOnBackEnabled(Actor* a_actor) const

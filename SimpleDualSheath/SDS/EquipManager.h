@@ -10,12 +10,13 @@ namespace SDS
 		bool Accept(TESContainer::Entry* entry);
 		bool Accept(InventoryEntryData* a_entryData);
 
-		std::unordered_map<TESObjectWEAP*, std::int64_t> m_results;
+		stl::flat_map<TESObjectWEAP*, std::int32_t> m_results;
 
 	private:
 		TESObjectWEAP* m_ignore;
 
-		void Process(TESForm* a_item, std::int64_t a_count);
+		template <class T>
+		void Process(TESForm* a_item, T a_count);
 	};
 
 	class EquipExtensions :

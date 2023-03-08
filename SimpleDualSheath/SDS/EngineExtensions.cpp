@@ -817,7 +817,7 @@ namespace SDS
 		bool                 a_is1p,
 		bool&                a_skipHide)
 	{
-		const auto str = m_Instance->GetWeaponNodeName(
+		const auto str = m_Instance->GetWeaponAttachmentNodeName(
 			a_biped,
 			a_bipedSlot,
 			a_is1p,
@@ -846,7 +846,7 @@ namespace SDS
 		bool                 a_is1p,
 		bool&                a_skipHide)
 	{
-		const auto str = m_Instance->GetWeaponNodeName(
+		const auto str = m_Instance->GetWeaponAttachmentNodeName(
 			a_biped,
 			a_bipedSlot,
 			a_is1p,
@@ -967,7 +967,7 @@ namespace SDS
 			ShrinkToSize(a_node);
 		}
 
-		Node::SetVisible(scbLeftNode);
+		scbLeftNode->SetVisible(true);
 
 		return scbLeftNode;
 	}
@@ -978,7 +978,7 @@ namespace SDS
 		return m_Instance->m_controller->ShouldBlockShieldHide(a_actor);
 	}
 
-	const BSFixedString* EngineExtensions::GetWeaponNodeName(
+	const BSFixedString* EngineExtensions::GetWeaponAttachmentNodeName(
 		Biped*       a_biped,
 		BIPED_OBJECT a_bipedSlot,
 		bool         a_is1p,
@@ -997,6 +997,11 @@ namespace SDS
 
 		auto actor = ref->As<Actor>();
 		if (!actor)
+		{
+			return nullptr;
+		}
+
+		if (actor->IsWeaponDrawn())
 		{
 			return nullptr;
 		}

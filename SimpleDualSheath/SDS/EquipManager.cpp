@@ -28,7 +28,7 @@ namespace SDS
 		{
 			if (auto cs = extraCombatStyle->combatStyle)
 			{
-				return (cs->flags & TESCombatStyle::kFlag_AllowDualWielding) == TESCombatStyle::kFlag_AllowDualWielding;
+				return cs->csflags.test(TESCombatStyle::FLAG::kAllowDualWielding);
 			}
 		}
 
@@ -36,7 +36,7 @@ namespace SDS
 		{
 			if (auto cs = npc->combatStyle)
 			{
-				return (cs->flags & TESCombatStyle::kFlag_AllowDualWielding) == TESCombatStyle::kFlag_AllowDualWielding;
+				return cs->csflags.test(TESCombatStyle::FLAG::kAllowDualWielding);
 			}
 		}
 
@@ -74,9 +74,10 @@ namespace SDS
 		return true;
 	}
 
+	template <class T>
 	void EquipCandidateCollector::Process(
-		TESForm*     a_item,
-		std::int64_t a_count)
+		TESForm* a_item,
+		T        a_count)
 	{
 		if (a_item == m_ignore)
 		{
@@ -153,11 +154,14 @@ namespace SDS
 			else
 			{
 				isTargetSlotInUse = false;
-				enchantList       = entryData->extendDataList->GetNthItem(0);
+				if (entryData->extraLists && !entryData->extraLists->empty())
+				{
+					enchantList = entryData->extraLists->front();
+				}
 			}
 		}
 
-		entryData->Delete();
+		delete entryData;
 
 		if (isTargetSlotInUse)
 		{
@@ -259,7 +263,13 @@ namespace SDS
 
 		if (containerData->objList)
 		{
-			containerData->objList->Visit(collector);
+			for (auto& e : *containerData->objList)
+			{
+				if (e)
+				{
+					collector.Accept(e);
+				}
+			}
 		}
 
 		if (collector.m_results.empty())

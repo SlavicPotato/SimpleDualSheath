@@ -11,23 +11,22 @@ class ISKSE :
 		720>
 {
 public:
-	[[nodiscard]] SKMP_FORCEINLINE static auto& GetSingleton()
+	[[nodiscard]] inline constexpr static auto& GetSingleton()
 	{
 		return m_Instance;
 	}
 
-	[[nodiscard]] SKMP_FORCEINLINE static auto& GetBranchTrampoline()
+	[[nodiscard]] inline constexpr static auto& GetBranchTrampoline()
 	{
 		return m_Instance.GetTrampoline(TrampolineID::kBranch);
 	}
 
-	[[nodiscard]] SKMP_FORCEINLINE static auto& GetLocalTrampoline()
+	[[nodiscard]] inline constexpr static auto& GetLocalTrampoline()
 	{
 		return m_Instance.GetTrampoline(TrampolineID::kLocal);
 	}
 
 	virtual void        OnLogOpen() override;
-	virtual const char* GetLogPath() const override;
 
 private:
 	ISKSE() = default;

@@ -72,7 +72,7 @@ namespace SDS
 			{
 				s_controller->EvaluateDrawnStateOnNearbyActors();
 			}
-			// fallthrough
+			[[fallthrough]];
 		case SKSEMessagingInterface::kMessage_NewGame:
 			s_loaded = true;
 			break;
@@ -81,66 +81,6 @@ namespace SDS
 			{
 				s_pluginInterface = std::make_unique<PluginInterface>(s_controller);
 			}
-		case SKSEMessagingInterface::kMessage_PostPostLoad:
-			{
-				/*auto& skse = ISKSE::GetSingleton();
-				auto mi = skse.GetInterface<SKSEMessagingInterface>();
-
-				using namespace SKSEMessaging;
-
-				NodeListMessage data;
-
-				std::vector<NodeListMessage::Entry> tmp;
-
-				auto& config = s_controller->GetConfig();
-
-				if (config.m_sword.IsEnabled() && !config.m_sword.m_sheathNode.empty())
-				{
-					tmp.emplace_back(config.m_sword.m_sheathNode.c_str());
-				}
-
-				if (config.m_axe.IsEnabled() && !config.m_axe.m_sheathNode.empty())
-				{
-					tmp.emplace_back(config.m_axe.m_sheathNode.c_str());
-				}
-
-				if (config.m_mace.IsEnabled() && !config.m_mace.m_sheathNode.empty())
-				{
-					tmp.emplace_back(config.m_mace.m_sheathNode.c_str());
-				}
-
-				if (config.m_dagger.IsEnabled() && !config.m_dagger.m_sheathNode.empty())
-				{
-					tmp.emplace_back(config.m_dagger.m_sheathNode.c_str());
-				}
-
-				if (config.m_staff.IsEnabled() && !config.m_staff.m_sheathNode.empty())
-				{
-					tmp.emplace_back(config.m_staff.m_sheathNode.c_str());
-					tmp.emplace_back(StringHolder::NINODE_STAFF);
-				}
-
-				if (config.m_2hSword.IsEnabled() && !config.m_2hSword.m_sheathNode.empty())
-				{
-					tmp.emplace_back(config.m_2hSword.m_sheathNode.c_str());
-				}
-
-				if (config.m_2hAxe.IsEnabled() && !config.m_2hAxe.m_sheathNode.empty())
-				{
-					tmp.emplace_back(config.m_2hAxe.m_sheathNode.c_str());
-				}
-
-				data.list = tmp.data();
-				data.size = static_cast<std::uint32_t>(tmp.size());
-
-				mi->Dispatch(
-					skse.GetPluginHandle(),
-					SKSEMessaging::NodeListMessage::kMessage_NodeList,
-					static_cast<void*>(std::addressof(data)),
-					sizeof(data),
-					nullptr);*/
-			}
-			break;
 		}
 	}
 
@@ -196,7 +136,7 @@ namespace SDS
 			result += "ScabbardGet";
 		}
 
-		StrHelpers::rtrim(result, ", ");
+		stl::rtrim(result, ", ");
 
 		return result;
 	}

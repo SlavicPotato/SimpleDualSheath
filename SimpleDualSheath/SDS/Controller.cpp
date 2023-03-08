@@ -59,11 +59,11 @@ namespace SDS
 			return false;
 		}
 
-		auto nodeb = FindNode(
+		auto nodeb = GetNodeByName(
 			a_root,
 			a_left ?
 				m_strings->m_shield :
-                m_strings->m_weapon);
+				m_strings->m_weapon);
 
 		if (!nodeb)
 		{
@@ -152,11 +152,11 @@ namespace SDS
 			if (auto w1 = FindChildObject(sourceNode, weaponNodeName))
 			{
 				AttachToNode(w1, targetNode);
-				SetVisible(w1);
+				w1->SetVisible(true);
 			}
 			else if (auto w2 = FindChildObject(targetNode, weaponNodeName))
 			{
-				SetVisible(w2);
+				w2->SetVisible(true);
 			}
 		}
 	}
@@ -220,14 +220,14 @@ namespace SDS
 	{
 		return a_actor == *g_thePlayer ?
 		           m_conf.m_shield.m_flags.test(Flags::kPlayer) :
-                   m_conf.m_shield.m_flags.test(Flags::kNPC);
+		           m_conf.m_shield.m_flags.test(Flags::kNPC);
 	}
 
 	bool Controller::IsShieldEnabled(bool a_player) const
 	{
 		return a_player ?
 		           m_conf.m_shield.m_flags.test(Flags::kPlayer) :
-                   m_conf.m_shield.m_flags.test(Flags::kNPC);
+		           m_conf.m_shield.m_flags.test(Flags::kNPC);
 	}
 
 	bool Controller::GetShieldOnBackSwitch(Actor* a_actor) const
@@ -332,9 +332,9 @@ namespace SDS
 
 			const auto& targetNodeName = (a_drawn || !a_switch) ?
 			                                 m_strings->m_shield :
-                                             m_strings->m_shieldSheathNode;
+			                                 m_strings->m_shieldSheathNode;
 
-			auto targetNode = FindNode(root, targetNodeName);
+			auto targetNode = GetNodeByName(root, targetNodeName);
 			if (!targetNode)
 			{
 				continue;
@@ -606,7 +606,7 @@ namespace SDS
 				return;
 			}
 
-			for (auto handle : pl->highActorHandles)
+			for (const auto& handle : pl->highActorHandles)
 			{
 				if (!handle || !handle.IsValid())
 				{
@@ -678,7 +678,7 @@ namespace SDS
 
 	void Controller::OnKeyPressed()
 	{
-		auto n = m_shieldOnBackSwitch.fetch_xor(1, std::memory_order_acq_rel);
+		const auto n = m_shieldOnBackSwitch.fetch_xor(1, std::memory_order_acq_rel);
 
 		SDSPlayerShieldOnBackSwitchEvent evn{ !static_cast<bool>(n) };
 		SendEvent(evn);
@@ -698,7 +698,7 @@ namespace SDS
 			        !drawn &&
 			        IsShieldEquipped(a_actor))
 				{
-					std::int32_t value = sw ? 0 : 10;
+					const std::int32_t value = sw ? 0 : 10;
 
 					a_actor->SetVariableOnGraphsInt(
 						m_strings->m_iLeftHandType,

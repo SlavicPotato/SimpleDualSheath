@@ -39,6 +39,16 @@ extern "C" {
 
 	bool SKSEPlugin_Load(const SKSEInterface* a_skse)
 	{
+#if defined(SKMP_AE_POST_629)
+		if (a_skse->runtimeVersion < RUNTIME_VERSION_1_6_629)
+		{
+			WinApi::MessageBoxErrorLog(
+				PLUGIN_NAME,
+				"Not supported on versions prior to 1.6.629");
+			return false;
+		}
+#endif
+
 		using namespace SDS::Util::Logging;
 
 		if (IAL::IsAE())
@@ -84,7 +94,7 @@ extern "C" {
 		}
 
 		IAL::Release();
-		gLog.Close();
+		//gLog.Close();
 
 		return ret;
 	}
@@ -103,7 +113,12 @@ extern "C" {
 		PLUGIN_NAME,
 		PLUGIN_AUTHOR,
 		"n/a",
-		SKSEPluginVersionData::kVersionIndependent_AddressLibraryPostAE,
+		SKSEPluginVersionData::kVersionIndependentEx_None,
+		SKSEPluginVersionData::kVersionIndependent_AddressLibraryPostAE
+#if defined(SKMP_AE_POST_629)
+			| SKSEPluginVersionData::kVersionIndependent_StructsPost629
+#endif
+		,
 		{ RUNTIME_VERSION_1_6_318, RUNTIME_VERSION_1_6_323, 0 },
 		0,
 	};
