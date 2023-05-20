@@ -237,6 +237,8 @@ copy "$(TargetPath)" "$(ENDERAL_SE_PATH)\Data\SKSE\Plugins\" /Y</Command>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <Optimization>MaxSpeed</Optimization>
       <DisableSpecificWarnings>4324</DisableSpecificWarnings>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <BuildStlModules>false</BuildStlModules>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -316,6 +318,8 @@ copy "$(TargetPath)" "$(ENDERAL_SE_PATH)\Data\SKSE\Plugins\" /Y</Command>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <Optimization>MaxSpeed</Optimization>
       <DisableSpecificWarnings>4324</DisableSpecificWarnings>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <BuildStlModules>false</BuildStlModules>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -396,7 +400,6 @@ copy "$(TargetPath)" "$(SSE_AE_PATH)\Data\SKSE\Plugins\" /Y</Command>
     <ClInclude Include="SDS\Flags.h" />
     <ClInclude Include="SDS\InputHandler.h" />
     <ClInclude Include="SDS\Main.h" />
-    <ClInclude Include="SDS\NodeOverride.h" />
     <ClInclude Include="SDS\PluginInterface.h" />
     <ClInclude Include="SDS\StringHolder.h" />
     <ClInclude Include="SDS\Util\Common.h" />
@@ -422,7 +425,6 @@ copy "$(TargetPath)" "$(SSE_AE_PATH)\Data\SKSE\Plugins\" /Y</Command>
     <ClCompile Include="SDS\EquipManager.cpp" />
     <ClCompile Include="SDS\InputHandler.cpp" />
     <ClCompile Include="SDS\Main.cpp" />
-    <ClCompile Include="SDS\NodeOverride.cpp" />
     <ClCompile Include="SDS\PluginInterface.cpp" />
     <ClCompile Include="SDS\StringHolder.cpp" />
     <ClCompile Include="SDS\Util\Common.cpp" />

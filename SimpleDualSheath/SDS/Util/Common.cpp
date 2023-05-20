@@ -20,7 +20,7 @@ namespace SDS
 				return true;
 			}
 
-			bool CanEquipEitherHand(TESObjectWEAP* a_weapon)
+			bool CanEquipEitherHand(const TESObjectWEAP* a_weapon)
 			{
 				auto equipSlot = a_weapon->GetEquipSlot();
 				if (!equipSlot)
@@ -34,26 +34,26 @@ namespace SDS
 					equipSlot == GetLeftHandSlot());
 			}
 
-			bool IsShieldEquipped(Actor* a_actor)
+			bool IsShieldEquipped(const Actor* a_actor)
 			{
 				if (!a_actor)
 				{
 					return false;
 				}
 
-				auto pm = a_actor->processManager;
+				const auto* const pm = a_actor->processManager;
 				if (!pm)
 				{
 					return false;
 				}
 
-				auto form = pm->equippedObject[ActorProcessManager::kEquippedHand_Left];
+				const auto* const form = pm->equippedObject[ActorProcessManager::kEquippedHand_Left];
 				if (!form)
 				{
 					return false;
 				}
 
-				auto armor = form->As<TESObjectARMO>();
+				const auto armor = form->As<const TESObjectARMO>();
 				if (!armor)
 				{
 					return false;

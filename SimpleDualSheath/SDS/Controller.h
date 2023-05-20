@@ -15,14 +15,15 @@
 #include "Events/CreateWeaponNodesEvent.h"
 #include "Events/OnSetEquipSlot.h"
 
+#include <ext/Events.h>
 #include <ext/Node.h>
 #include <ext/PluginInterfaceBase.h>
 #include <ext/SDSPlayerShieldOnBackSwitchEvent.h>
-#include <ext/Events.h>
 
 namespace SDS
 {
 	class Controller :
+		public stl::intrusive_ref_counted,
 		public EquipExtensions,
 		public ComboKeyPressHandler,
 		public BSTEventSink<TESObjectLoadedEvent>,
@@ -58,10 +59,10 @@ namespace SDS
 
 		Controller(const Config& a_conf);
 
-		Controller(const Controller&) = delete;
-		Controller(Controller&&)      = delete;
+		Controller(const Controller&)            = delete;
+		Controller(Controller&&)                 = delete;
 		Controller& operator=(const Controller&) = delete;
-		Controller& operator=(Controller&&) = delete;
+		Controller& operator=(Controller&&)      = delete;
 
 		void                               InitializeData();
 		[[nodiscard]] NiNode*              GetScbAttachmentNode(Actor* a_actor, TESObjectWEAP* a_form, NiNode* a_root, bool a_is1p) const;
@@ -93,6 +94,7 @@ namespace SDS
 		void LoadGameHandler(SKSESerializationInterface* a_intfc);
 
 		void QueueProcessWeaponDrawnChange(TESObjectREFR* a_actor, DrawnState a_drawnState) const;
+
 	private:
 		[[nodiscard]] bool GetParentNodes(
 			const Data::Weapon* a_entry,
@@ -101,7 +103,7 @@ namespace SDS
 			NiNode*&            a_sheathedNode,
 			NiNode*&            a_drawnNode) const;
 
-		void ProcessEquippedWeapon(Actor* a_actor, const ::Util::Node::NiRootNodes& a_roots, TESObjectWEAP* a_weapon, bool a_drawn, bool a_left) const;
+		void ProcessEquippedWeapon(Actor* a_actor, const ::Util::Node::NiRootNodes& a_roots, const TESObjectWEAP* a_weapon, bool a_drawn, bool a_left) const;
 		void ProcessWeaponDrawnChange(Actor* a_actor, bool a_drawn) const;
 
 		void ProcessEquippedShield(Actor* a_actor, const ::Util::Node::NiRootNodes& a_roots, bool a_drawn, bool a_switch) const;
@@ -114,7 +116,7 @@ namespace SDS
 #ifdef _SDS_UNUSED
 		void OnNiNodeUpdate(TESObjectREFR* a_actor);
 #endif
-		void OnWeaponEquip(Actor* a_actor, TESObjectWEAP* a_weapon);
+		void OnWeaponEquip(Actor* a_actor, const TESObjectWEAP* a_weapon);
 
 		// Beth
 		virtual EventResult ReceiveEvent(const TESObjectLoadedEvent* a_evn, BSTEventSource<TESObjectLoadedEvent>* a_dispatcher) override;
@@ -133,9 +135,9 @@ namespace SDS
 
 		virtual void OnKeyPressed() override;
 
-		Config m_conf;
+		const Config m_conf;
 
-		std::shared_ptr<StringHolder>     m_strings;
+		stl::smart_ptr<StringHolder>      m_strings;
 		std::unique_ptr<Data::WeaponData> m_data;
 
 		std::atomic<std::uint8_t> m_shieldOnBackSwitch;

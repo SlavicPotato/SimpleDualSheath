@@ -11,7 +11,9 @@ namespace SDS
 	{
 	public:
 
-		PluginInterface(const std::shared_ptr<Controller>& a_controller);
+		static constexpr auto UNIQUE_ID = stl::fnv1a_64::hash_string(PLUGIN_AUTHOR "_" PLUGIN_NAME);
+
+		PluginInterface(const stl::smart_ptr<Controller>& a_controller);
 
 		virtual std::uint32_t GetPluginVersion() const override;
 		virtual const char*   GetPluginName() const override;
@@ -25,6 +27,6 @@ namespace SDS
 		virtual void RegisterForPlayerShieldOnBackEvent(::Events::EventSink<SDSPlayerShieldOnBackSwitchEvent>* a_sink);
 
 	private:
-		const std::shared_ptr<Controller> m_controller;
+		const stl::smart_ptr<Controller> m_controller;
 	};
 }

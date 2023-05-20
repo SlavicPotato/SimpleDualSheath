@@ -7,17 +7,23 @@ namespace SDS
 {
 	using namespace Data;
 
-	FlagParser::FlagParser() :
-		m_map{
-			{ "NPC", { Flags::kNPC, false } },
-			{ "Player", { Flags::kPlayer, false } },
-			{ "FirstPerson", { Flags::kFirstPerson, false } },
-			{ "MountOnly", { Flags::kMountOnly, false } },
-			{ "Right", { Flags::kRight, true } },
-			{ "Swap", { Flags::kSwap, true } }
-		}
-	{
-	}
+	using flag_key_hasher =
+		stl::hasher<
+			stl::fnv_hasher<std::uint64_t, stl::fnv_variant::fnv1a>,
+			stl::charproc_tolower>;
+
+	static_assert(flag_key_hasher::hash_string("NPC") == flag_key_hasher::hash_string("nPc"));
+
+	constexpr auto s_flag_data = stl::make_array(
+
+		std::make_tuple(flag_key_hasher::hash_string("NPC"), Flags::kNPC, false),
+		std::make_tuple(flag_key_hasher::hash_string("Player"), Flags::kPlayer, false),
+		std::make_tuple(flag_key_hasher::hash_string("FirstPerson"), Flags::kFirstPerson, false),
+		std::make_tuple(flag_key_hasher::hash_string("MountOnly"), Flags::kMountOnly, false),
+		std::make_tuple(flag_key_hasher::hash_string("Right"), Flags::kRight, true),
+		std::make_tuple(flag_key_hasher::hash_string("Swap"), Flags::kSwap, true)
+
+	);
 
 	auto FlagParser::Parse(
 		const std::string& a_in,
@@ -27,19 +33,25 @@ namespace SDS
 		std::vector<std::string> v;
 		stl::split_string(a_in, '|', v, true);
 
-		Flags out(Flags::kNone);
+		auto out = Flags::kNone;
 
 		for (const auto& e : v)
 		{
-			auto it = m_map.find(e);
-			if (it != m_map.end())
-			{
-				if (it->second.second && !a_internal)
-				{
-					continue;
-				}
+			const auto h = flag_key_hasher::hash_string(e);
 
-				out |= it->second.first;
+			const auto it = std::find_if(
+				s_flag_data.begin(),
+				s_flag_data.end(),
+				[&](auto& a_v) {
+					return std::get<0>(a_v) == h;
+				});
+
+			if (it != s_flag_data.end())
+			{
+				if (!std::get<2>(*it) || a_internal)
+				{
+					out |= std::get<1>(*it);
+				}
 			}
 		}
 
@@ -77,55 +89,52 @@ namespace SDS
 	{
 		INIConfReader reader(a_path);
 
-		FlagParser flagParser;
-
-		m_scb              = reader.GetBoolValue(SECT_GENERAL, "EnableLeftScabbards", true);
-		m_scbCustom        = reader.GetBoolValue(SECT_GENERAL, "CustomLeftScabbards", true);
-		m_disableScabbards = reader.GetBoolValue(SECT_GENERAL, "DisableAllScabbards", false);
+		m_disableScabbards       = reader.GetBoolValue(SECT_GENERAL, "DisableAllScabbards", false);
+		m_disableWeapNodeSharing = reader.GetBoolValue(SECT_GENERAL, "DisableWeaponNodeSharing", false);
 
 		m_sword = {
-			flagParser.Parse(reader.GetValue(SECT_SWORD, KW_FLAGS, "Player|NPC")),
+			FlagParser::Parse(reader.GetValue(SECT_SWORD, KW_FLAGS, "Player|NPC")),
 			reader.GetValue(SECT_SWORD, KW_SHEATHNODE, StringHolder::NINODE_SWORD_LEFT)
 		};
 
 		m_axe = {
-			flagParser.Parse(reader.GetValue(SECT_AXE, KW_FLAGS, "Player|NPC")),
+			FlagParser::Parse(reader.GetValue(SECT_AXE, KW_FLAGS, "Player|NPC")),
 			reader.GetValue(SECT_AXE, KW_SHEATHNODE, StringHolder::NINODE_AXE_LEFT)
 		};
 
 		m_mace = {
-			flagParser.Parse(reader.GetValue(SECT_MACE, KW_FLAGS, "Player|NPC")),
+			FlagParser::Parse(reader.GetValue(SECT_MACE, KW_FLAGS, "Player|NPC")),
 			reader.GetValue(SECT_MACE, KW_SHEATHNODE, StringHolder::NINODE_MACE_LEFT)
 		};
 
 		m_dagger = {
-			flagParser.Parse(reader.GetValue(SECT_DAGGER, KW_FLAGS, "Player|NPC")),
+			FlagParser::Parse(reader.GetValue(SECT_DAGGER, KW_FLAGS, "Player|NPC")),
 			reader.GetValue(SECT_DAGGER, KW_SHEATHNODE, StringHolder::NINODE_DAGGER_LEFT)
 		};
 
 		m_2hSword = {
-			flagParser.Parse(reader.GetValue(SECT_2HSWORD, KW_FLAGS, "")),
+			FlagParser::Parse(reader.GetValue(SECT_2HSWORD, KW_FLAGS, "")),
 			reader.GetValue(SECT_2HSWORD, KW_SHEATHNODE, StringHolder::NINODE_SWORD_ON_BACK_LEFT)
 		};
 
 		m_2hAxe = {
-			flagParser.Parse(reader.GetValue(SECT_2HAXE, KW_FLAGS, "")),
+			FlagParser::Parse(reader.GetValue(SECT_2HAXE, KW_FLAGS, "")),
 			reader.GetValue(SECT_2HAXE, KW_SHEATHNODE, StringHolder::NINODE_AXE_ON_BACK_LEFT)
 		};
 
 		m_staff = {
-			flagParser.Parse(reader.GetValue(SECT_STAFF, KW_FLAGS, "Player|NPC|Right"), true),
+			FlagParser::Parse(reader.GetValue(SECT_STAFF, KW_FLAGS, "Player|NPC|Right"), true),
 			reader.GetValue(SECT_STAFF, KW_SHEATHNODE, StringHolder::NINODE_STAFF_LEFT)
 		};
 
 		m_shield = {
-			flagParser.Parse(reader.GetValue(SECT_SHIELD, KW_FLAGS, "")),
+			FlagParser::Parse(reader.GetValue(SECT_SHIELD, KW_FLAGS, "")),
 			reader.GetValue(SECT_SHIELD, KW_SHEATHNODE, StringHolder::NINODE_SHIELD_BACK)
 		};
 
 		m_shieldHandWorkaround = reader.GetBoolValue(SECT_SHIELD, "ClenchedHandWorkaround", false);
 		m_shwForceIfDrawn      = reader.GetBoolValue(SECT_SHIELD, "ClenchedHandWorkaroundForceIfDrawn", false);
-		m_shieldHideFlags      = flagParser.Parse(reader.GetValue(SECT_SHIELD, "DisableHideOnSit", ""));
+		m_shieldHideFlags      = FlagParser::Parse(reader.GetValue(SECT_SHIELD, "DisableHideOnSit", ""));
 		m_shieldToggleKeys.Parse(reader.GetValue(SECT_SHIELD, "ToggleKeys", ""));
 
 		m_npcEquipLeft = reader.GetBoolValue(SECT_NPC, "EquipLeft", false);

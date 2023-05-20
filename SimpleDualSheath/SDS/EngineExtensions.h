@@ -14,12 +14,10 @@ namespace SDS
 		ILog
 	{
 	public:
-		EngineExtensions(const std::shared_ptr<Controller>& a_controller);
+		EngineExtensions(const stl::smart_ptr<Controller>& a_controller);
 
-		EngineExtensions(const EngineExtensions&) = delete;
-		EngineExtensions(EngineExtensions&&)      = delete;
+		EngineExtensions(const EngineExtensions&)            = delete;
 		EngineExtensions& operator=(const EngineExtensions&) = delete;
-		EngineExtensions& operator=(EngineExtensions&&) = delete;
 
 		enum class MemoryValidationFlags : std::uint8_t
 		{
@@ -32,9 +30,10 @@ namespace SDS
 			kScabbardAttach         = 1ui8 << 4,
 			kScabbardDetach         = 1ui8 << 5,
 			kScabbardGet            = 1ui8 << 6,
+			kRemoveWeaponScabbard   = 1ui8 << 7,
 		};
 
-		static void                  Initialize(const std::shared_ptr<Controller>& a_controller);
+		static void                  Initialize(const stl::smart_ptr<Controller>& a_controller);
 		static MemoryValidationFlags ValidateMemory(const Config& a_config);
 
 		inline static auto GetSingleton() noexcept
@@ -53,11 +52,13 @@ namespace SDS
 		void Patch_SCB_Attach();
 		void Patch_SCB_Detach();
 		void Patch_SCB_Get();
+		void Patch_RemoveWeaponScabbard();
 		void Patch_WeaponObjects_Attach();
-		void Patch_ShieldObject_Attach();
+		void Patch_ObjectAttachDefault();
 		void Patch_DisableShieldHideOnSit();
 		bool Hook_TESObjectWEAP_SetEquipSlot();
 		bool Patch_ShieldHandWorkaround();
+		void Patch_WeapTypeToNodeArrayInit();
 
 		static_assert(std::is_same_v<std::underlying_type_t<BIPED_OBJECT>, std::uint32_t>);
 
@@ -65,13 +66,18 @@ namespace SDS
 		static NiNode*     GetScbAttachmentNode_Cleanup_Hook(TESForm* a_form, Biped* a_biped);
 		static NiAVObject* GetWeaponShieldSlotNode_Hook(NiNode* a_root, const BSFixedString& a_nodeName, Biped* a_biped, BIPED_OBJECT a_bipedSlot, bool a_is1p, bool& a_skipHide);
 		static NiAVObject* GetWeaponStaffSlotNode_Hook(NiNode* a_root, const BSFixedString& a_nodeName, Biped* a_biped, BIPED_OBJECT a_bipedSlot, bool a_is1p, bool& a_skipHide);
-		static NiAVObject* GetShieldArmorSlotNode_Hook(NiNode* a_root, const BSFixedString& a_nodeName, Biped* a_biped, BIPED_OBJECT a_bipedSlot, bool a_is1p);
+		static NiAVObject* GetSlotNodeDefault_Hook(NiNode* a_root, const BSFixedString& a_nodeName, Biped* a_biped, BIPED_OBJECT a_bipedSlot, bool a_is1p);
 		static NiAVObject* GetScabbardNode_Hook(NiNode* a_object, const BSFixedString& a_nodeName, bool a_left, bool a_is1p);
 		static void        TESObjectWEAP_SetEquipSlot_Hook(BGSEquipType* a_this, BGSEquipSlot* a_slot);
 
 		static bool          Unk140609D50_BShkbAnimationGraph_SetGraphVariableInt_Hook(BShkbAnimationGraph* a_graph, const BSFixedString& a_name, std::int32_t a_value, Actor* a_actor);
 		static std::uint32_t Unk1406097C0_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_Hook(RE::IAnimationGraphManagerHolder* a_holder, const BSFixedString& a_name, std::int32_t a_value, Actor* a_actor);
 		static std::uint32_t Unk140634D20_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_Hook(RE::IAnimationGraphManagerHolder* a_holder, const BSFixedString& a_name, std::int32_t a_value, Actor* a_actor);
+		
+		static const BSFixedString& WeapTypeToNodeInit1_Hook();
+		static const BSFixedString& WeapTypeToNodeInit2_Hook();
+
+		static bool RemoveWeaponScabbard_Rpl(NiNode* a_node);
 
 		using BShkbAnimationGraph_SetGraphVariableInt_t             = bool (*)(BShkbAnimationGraph* a_graph, const BSFixedString& a_name, std::int32_t a_value);
 		using IAnimationGraphManagerHolder_SetVariableOnGraphsInt_t = std::uint32_t (*)(RE::IAnimationGraphManagerHolder* a_holder, const BSFixedString& a_name, std::int32_t a_value);
@@ -92,7 +98,7 @@ namespace SDS
 			::Events::EventDispatcher<Events::OnSetEquipSlot> m_setEquipSlot;
 		} m_dispatchers;
 
-		std::shared_ptr<Controller> m_controller;
+		stl::smart_ptr<Controller> m_controller;
 
 		inline static auto m_scbAttach_a               = IAL::Address<std::uintptr_t>(15569, 15746, 0x3A3, 0x3BA);
 		inline static auto m_scbGet_a                  = IAL::Address<std::uintptr_t>(15569, 15746, 0x383, 0x396);
@@ -101,14 +107,18 @@ namespace SDS
 		inline static auto m_getShieldArmorSlotNode_a  = IAL::Address<std::uintptr_t>(15569, 15746, 0x260, 0x255);
 		inline static auto m_scbDetach_a               = IAL::Address<std::uintptr_t>(15496, 15661, 0x1A3, 0x1A5);
 		inline static auto m_hideShield_a              = IAL::Address<std::uintptr_t>(36580, 37584, 0x6, 0x6);  // does other stuff but we don't care here
-		inline static auto m_vtbl_TESObjectWEAP        = IAL::Address<std::uintptr_t>(234396, 189786);
+		inline static auto m_vtbl_TESObjectWEAP_a      = IAL::Address<std::uintptr_t>(234396, 189786);
 
 		inline static auto GetNodeByName = IAL::Address<fGetNodeByName_t>(74481, 76207);
 		inline static auto ShrinkToSize  = IAL::Address<fUnk1401CDB30_t>(15571, 15748);
 
-		inline static auto m_unk140609D50_BShkbAnimationGraph_SetGraphVariableInt_a             = IAL::Address<std::uintptr_t>(36957, 37982, 0x1DA, 0x19E);  // load (iLeftHandType), rbp - 38 = Actor (BShkbAnimationGraph::SetGraphVariableInt)
-		inline static auto m_unk1406097C0_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_a = IAL::Address<std::uintptr_t>(36949, 37974, 0x48, 0x48);    // equip (iLeftHandType), rsi = Actor (IAnimationGraphManagerHolder::SetVariableOnGraphsInt)
+		inline static auto m_unk140609D50_BShkbAnimationGraph_SetGraphVariableInt_a             = IAL::Address<std::uintptr_t>(36957, 37982, 0x1DA, 0x19E);                                      // load (iLeftHandType), rbp - 38 = Actor (BShkbAnimationGraph::SetGraphVariableInt)
+		inline static auto m_unk1406097C0_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_a = IAL::Address<std::uintptr_t>(36949, 37974, 0x48, 0x48);                                        // equip (iLeftHandType), rsi = Actor (IAnimationGraphManagerHolder::SetVariableOnGraphsInt)
 		inline static auto m_unk140634D20_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_a = IAL::Address<std::uintptr_t>(37866, 38821, 0x17B, IAL::ver() >= VER_1_6_629 ? 0x145 : 0x13F);  // draw (iLeftHandEquipped), r15 - B8 = Actor (IAnimationGraphManagerHolder::SetVariableOnGraphsInt)
+
+		inline static auto m_removeWeaponScabbard_a = IAL::Address<std::uintptr_t>(15646, 15872);
+
+		inline static auto m_initWeapTypeToNodeArray_a = IAL::Address<std::uintptr_t>(17742, 18062); // inlined on AE
 
 		static std::unique_ptr<EngineExtensions> m_Instance;
 	};

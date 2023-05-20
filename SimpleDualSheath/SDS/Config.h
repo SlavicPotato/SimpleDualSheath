@@ -6,15 +6,8 @@ namespace SDS
 {
 	class FlagParser
 	{
-		using string_to_flag_map_t = stl::iunordered_map<std::string, std::pair<Data::Flags, bool>>;
-
 	public:
-		FlagParser();
-
-		Data::Flags Parse(const std::string& a_in, bool a_internal = false);
-
-	private:
-		string_to_flag_map_t m_map;
+		static Data::Flags Parse(const std::string& a_in, bool a_internal = false);
 	};
 
 	class ConfigKeyCombo
@@ -106,12 +99,11 @@ namespace SDS
 		ConfigEntry m_2hAxe;
 		ConfigEntry m_shield;
 
-		bool m_scb{ true };
-		bool m_scbCustom{ true };
 		bool m_disableScabbards{ false };
 		bool m_npcEquipLeft{ false };
 		bool m_shieldHandWorkaround{ false };
 		bool m_shwForceIfDrawn{ false };
+		bool m_disableWeapNodeSharing{ false };
 
 		ConfigKeyCombo m_shieldToggleKeys;
 

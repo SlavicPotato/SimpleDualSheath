@@ -89,9 +89,6 @@
     <ClInclude Include="SDS\EquipManager.h">
       <Filter>Header Files\SDS</Filter>
     </ClInclude>
-    <ClInclude Include="SDS\NodeOverride.h">
-      <Filter>Header Files\SDS</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -140,9 +137,6 @@
       <Filter>Source Files\SDS\Util</Filter>
     </ClCompile>
     <ClCompile Include="SDS\EquipManager.cpp">
-      <Filter>Source Files\SDS</Filter>
-    </ClCompile>
-    <ClCompile Include="SDS\NodeOverride.cpp">
       <Filter>Source Files\SDS</Filter>
     </ClCompile>
     <ClCompile Include="SDS\InputHandler.cpp">

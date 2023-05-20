@@ -24,7 +24,7 @@ namespace SDS
 
 	void Controller::InitializeData()
 	{
-		m_strings = std::make_shared<StringHolder>();
+		m_strings = stl::make_smart<StringHolder>();
 
 		m_data = std::make_unique<WeaponData>();
 
@@ -53,13 +53,13 @@ namespace SDS
 		NiNode*&            a_sheathedNode,
 		NiNode*&            a_drawnNode) const
 	{
-		auto nodea = a_entry->GetNode(a_root, a_left);
+		const auto nodea = a_entry->GetNode(a_root, a_left);
 		if (!nodea)
 		{
 			return false;
 		}
 
-		auto nodeb = GetNodeByName(
+		const auto nodeb = GetNodeByName(
 			a_root,
 			a_left ?
 				m_strings->m_shield :
@@ -94,11 +94,11 @@ namespace SDS
 	BIPED_OBJECT Controller::GetShieldBipedObject(
 		Actor* a_actor)
 	{
-		if (auto baseForm = a_actor->baseForm)
+		if (const auto* const baseForm = a_actor->baseForm)
 		{
-			if (auto npc = baseForm->As<TESNPC>())
+			if (const auto* const npc = baseForm->As<TESNPC>())
 			{
-				if (auto race = npc->race)
+				if (const auto* const race = npc->race)
 				{
 					return race->data.shieldObject;
 				}
@@ -109,22 +109,22 @@ namespace SDS
 	}
 
 	void Controller::ProcessEquippedWeapon(
-		Actor*             a_actor,
-		const NiRootNodes& a_roots,
-		TESObjectWEAP*     a_weapon,
-		bool               a_drawn,
-		bool               a_left) const
+		Actor*               a_actor,
+		const NiRootNodes&   a_roots,
+		const TESObjectWEAP* a_weapon,
+		bool                 a_drawn,
+		bool                 a_left) const
 	{
-		auto entry = m_data->Get(a_actor, a_weapon, a_left);
+		const auto entry = m_data->Get(a_actor, a_weapon, a_left);
 		if (!entry)
 		{
 			return;
 		}
 
-		char buf[MAX_PATH];
+		char buf[1024];
 		a_weapon->GetNodeName(buf);
 
-		BSFixedString weaponNodeName(buf);
+		const BSFixedString weaponNodeName(buf);
 
 		for (std::uint32_t i = 0; i < std::size(a_roots.m_nodes); i++)
 		{
@@ -165,7 +165,7 @@ namespace SDS
 		Actor* a_actor,
 		bool   a_drawn) const
 	{
-		auto pm = a_actor->processManager;
+		const auto* const pm = a_actor->processManager;
 		if (!pm)
 		{
 			return;
@@ -174,16 +174,16 @@ namespace SDS
 		NiRootNodes roots(a_actor);
 		roots.GetNPCRoots(m_strings->m_npcroot);
 
-		auto form = pm->equippedObject[ActorProcessManager::kEquippedHand_Left];
+		const auto* form = pm->equippedObject[ActorProcessManager::kEquippedHand_Left];
 		if (form)
 		{
 			if (form->IsWeapon())
 			{
-				ProcessEquippedWeapon(a_actor, roots, static_cast<TESObjectWEAP*>(form), a_drawn, true);
+				ProcessEquippedWeapon(a_actor, roots, static_cast<const TESObjectWEAP*>(form), a_drawn, true);
 			}
 			else if (form->IsArmor())
 			{
-				auto armor = static_cast<TESObjectARMO*>(form);
+				const auto armor = static_cast<const TESObjectARMO*>(form);
 				if (armor->IsShield() && m_conf.m_shield.IsEnabled())
 				{
 					ProcessEquippedShield(a_actor, roots, a_drawn, GetShieldOnBackSwitch(a_actor));
@@ -194,7 +194,7 @@ namespace SDS
 		form = pm->equippedObject[ActorProcessManager::kEquippedHand_Right];
 		if (form)
 		{
-			if (auto weapon = form->As<TESObjectWEAP>())
+			if (const auto weapon = form->As<TESObjectWEAP>())
 			{
 				ProcessEquippedWeapon(a_actor, roots, weapon, a_drawn, false);
 			}
@@ -277,7 +277,7 @@ namespace SDS
 			return;
 		}
 
-		auto bipedObject = GetShieldBipedObject(a_actor);
+		const auto bipedObject = GetShieldBipedObject(a_actor);
 		if (bipedObject >= BIPED_OBJECT::kTotal)
 		{
 			return;
@@ -307,13 +307,13 @@ namespace SDS
 
 			auto& data = bipedModel->objects[stl::underlying(bipedObject)];
 
-			auto form = data.item;
+			const auto* const form = data.item;
 			if (!form)
 			{
 				continue;
 			}
 
-			auto armor = form->As<TESObjectARMO>();
+			const auto armor = form->As<TESObjectARMO>();
 			if (!armor)
 			{
 				continue;
@@ -486,7 +486,7 @@ namespace SDS
 		return EventResult::kContinue;
 	}
 
-	void Controller::OnWeaponEquip(Actor* a_actor, TESObjectWEAP* a_weapon)
+	void Controller::OnWeaponEquip(Actor* a_actor, const TESObjectWEAP* a_weapon)
 	{
 		if (!m_conf.m_npcEquipLeft)
 		{
@@ -522,9 +522,9 @@ namespace SDS
 	{
 		if (a_evn && a_evn->equipped && a_evn->actor)
 		{
-			if (auto actor = a_evn->actor->As<Actor>(); actor)
+			if (const auto actor = a_evn->actor->As<Actor>())
 			{
-				if (auto weapon = a_evn->baseObject.As<TESObjectWEAP>(); weapon)
+				if (const auto weapon = a_evn->baseObject.As<TESObjectWEAP>())
 				{
 					OnWeaponEquip(actor, weapon);
 				}
@@ -648,7 +648,7 @@ namespace SDS
 		a_intfc->OpenRecord('DSDS', stl::underlying(SerializationVersion::kDataVersion1));
 
 		SerializedData data{
-			m_shieldOnBackSwitch.load()
+			m_shieldOnBackSwitch.load(std::memory_order_acquire)
 		};
 
 		a_intfc->WriteRecordData(&data, sizeof(data));
@@ -668,7 +668,7 @@ namespace SDS
 
 					if (a_intfc->ReadRecordData(std::addressof(data), sizeof(data)) == sizeof(data))
 					{
-						m_shieldOnBackSwitch.store(data.shieldOnBackSwitch);
+						m_shieldOnBackSwitch.store(data.shieldOnBackSwitch, std::memory_order_acquire);
 					}
 				}
 				break;
@@ -680,7 +680,7 @@ namespace SDS
 	{
 		const auto n = m_shieldOnBackSwitch.fetch_xor(1, std::memory_order_acq_rel);
 
-		SDSPlayerShieldOnBackSwitchEvent evn{ !static_cast<bool>(n) };
+		const SDSPlayerShieldOnBackSwitchEvent evn{ !static_cast<bool>(n) };
 		SendEvent(evn);
 
 		ITaskPool::QueueLoadedActorTask(
@@ -689,8 +689,8 @@ namespace SDS
 				NiRootNodes roots(a_actor);
 				roots.GetNPCRoots(m_strings->m_npcroot);
 
-				bool drawn = a_actor->IsWeaponDrawn();
-				bool sw    = GetShieldOnBackSwitch(a_actor);
+				const bool drawn = a_actor->IsWeaponDrawn();
+				const bool sw    = GetShieldOnBackSwitch(a_actor);
 
 				ProcessEquippedShield(a_actor, roots, drawn, sw);
 

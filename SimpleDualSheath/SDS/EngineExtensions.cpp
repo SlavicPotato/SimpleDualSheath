@@ -19,28 +19,28 @@ namespace SDS
 	std::unique_ptr<EngineExtensions> EngineExtensions::m_Instance;
 
 	EngineExtensions::EngineExtensions(
-		const std::shared_ptr<Controller>& a_controller)
+		const stl::smart_ptr<Controller>& a_controller)
 	{
 		auto& config = a_controller->GetConfig();
 
 		Patch_WeaponObjects_Attach();
 		Patch_SCB_Get();
+		Patch_SCB_Attach();
+		Patch_SCB_Detach();
+		Patch_RemoveWeaponScabbard();
 
-		if (config.m_scb)
+		if (config.m_shield.IsEnabled() ||
+		    config.m_disableWeapNodeSharing)
 		{
-			Patch_SCB_Attach();
-			Patch_SCB_Detach();
+			Patch_ObjectAttachDefault();
 		}
 
-		if (config.m_shield.IsEnabled())
+		if (config.m_shield.IsEnabled() &&
+		    config.m_shieldHandWorkaround)
 		{
-			Patch_ShieldObject_Attach();
-			if (config.m_shieldHandWorkaround)
+			if (!Patch_ShieldHandWorkaround())
 			{
-				if (!Patch_ShieldHandWorkaround())
-				{
-					Error("Shield hand patches failed");
-				}
+				Error("Shield hand patches failed");
 			}
 		}
 
@@ -57,11 +57,16 @@ namespace SDS
 			}
 		}
 
+		if (config.m_disableWeapNodeSharing)
+		{
+			Patch_WeapTypeToNodeNameArrayInit();
+		}
+
 		m_controller = a_controller;
 	}
 
 	void EngineExtensions::Initialize(
-		const std::shared_ptr<Controller>& a_controller)
+		const stl::smart_ptr<Controller>& a_controller)
 	{
 		if (!m_Instance)
 		{
@@ -121,36 +126,39 @@ namespace SDS
 			}
 		}
 
-		if (a_config.m_scb)
+		if (IAL::IsAE())
 		{
-			if (IAL::IsAE())
+			constexpr std::uint8_t d_scbAttach[]{ 0x80, 0x7D, 0x6F, 0x00, 0x75, 0x1E, 0x48, 0x8B, 0x06 };
+			if (!validate_mem(m_scbAttach_a.get(), d_scbAttach))
 			{
-				constexpr std::uint8_t d_scbAttach[]{ 0x80, 0x7D, 0x6F, 0x00, 0x75, 0x1E, 0x48, 0x8B, 0x06 };
-				if (!validate_mem(m_scbAttach_a.get(), d_scbAttach))
-				{
-					result |= MemoryValidationFlags::kScabbardAttach;
-				}
-
-				constexpr std::uint8_t d_scbDetach[]{ 0x0F, 0x84, 0xB1, 0x00, 0x00, 0x00 };
-				if (!validate_mem(m_scbDetach_a.get(), d_scbDetach))
-				{
-					result |= MemoryValidationFlags::kScabbardDetach;
-				}
+				result |= MemoryValidationFlags::kScabbardAttach;
 			}
-			else
+
+			constexpr std::uint8_t d_scbDetach[]{ 0x0F, 0x84, 0xB1, 0x00, 0x00, 0x00 };
+			if (!validate_mem(m_scbDetach_a.get(), d_scbDetach))
 			{
-				constexpr std::uint8_t d_scbAttach[]{ 0x80, 0x7D, 0x6F, 0x00, 0x75, 0x1E };
-				if (!validate_mem(m_scbAttach_a.get(), d_scbAttach))
-				{
-					result |= MemoryValidationFlags::kScabbardAttach;
-				}
-
-				constexpr std::uint8_t d_scbDetach[]{ 0x0F, 0x84, 0xB3, 0x00, 0x00, 0x00 };
-				if (!validate_mem(m_scbDetach_a.get(), d_scbDetach))
-				{
-					result |= MemoryValidationFlags::kScabbardDetach;
-				}
+				result |= MemoryValidationFlags::kScabbardDetach;
 			}
+		}
+		else
+		{
+			constexpr std::uint8_t d_scbAttach[]{ 0x80, 0x7D, 0x6F, 0x00, 0x75, 0x1E };
+			if (!validate_mem(m_scbAttach_a.get(), d_scbAttach))
+			{
+				result |= MemoryValidationFlags::kScabbardAttach;
+			}
+
+			constexpr std::uint8_t d_scbDetach[]{ 0x0F, 0x84, 0xB3, 0x00, 0x00, 0x00 };
+			if (!validate_mem(m_scbDetach_a.get(), d_scbDetach))
+			{
+				result |= MemoryValidationFlags::kScabbardDetach;
+			}
+		}
+
+		constexpr std::uint8_t d_removeScb[]{ 0x48, 0x89, 0x5C, 0x24, 0x08 };
+		if (!validate_mem(m_removeWeaponScabbard_a.get(), d_removeScb))
+		{
+			result |= MemoryValidationFlags::kRemoveWeaponScabbard;
 		}
 
 		return result;
@@ -323,6 +331,32 @@ namespace SDS
 		LogPatchEnd(__FUNCTION__);
 	}
 
+	void EngineExtensions::Patch_RemoveWeaponScabbard()
+	{
+		struct Assembly : JITASM
+		{
+			Assembly() :
+				JITASM(ISKSE::GetLocalTrampoline())
+			{
+				Xbyak::Label rplLabel;
+
+				jmp(ptr[rip + rplLabel]);
+
+				L(rplLabel);
+				dq(std::uintptr_t(RemoveWeaponScabbard_Rpl));
+			}
+		};
+
+		LogPatchBegin();
+		{
+			Assembly code;
+			ISKSE::GetBranchTrampoline().Write5Branch(
+				m_removeWeaponScabbard_a.get(),
+				code.get());
+		}
+		LogPatchEnd();
+	}
+
 	// right staff and shield slot (weapon)
 	void EngineExtensions::Patch_WeaponObjects_Attach()
 	{
@@ -409,7 +443,7 @@ namespace SDS
 		LogPatchEnd(__FUNCTION__);
 	}
 
-	void EngineExtensions::Patch_ShieldObject_Attach()
+	void EngineExtensions::Patch_ObjectAttachDefault()
 	{
 		struct Assembly : JITASM
 		{
@@ -454,7 +488,7 @@ namespace SDS
 				dq(a_targetAddr + 0x5);
 
 				L(callLabel);
-				dq(std::uintptr_t(GetShieldArmorSlotNode_Hook));
+				dq(std::uintptr_t(GetSlotNodeDefault_Hook));
 			}
 		};
 
@@ -536,7 +570,7 @@ namespace SDS
 	bool EngineExtensions::Hook_TESObjectWEAP_SetEquipSlot()
 	{
 		bool result = VTable::Detour2(
-			m_vtbl_TESObjectWEAP.get(),
+			m_vtbl_TESObjectWEAP_a.get(),
 			0x86 + 0x5,
 			TESObjectWEAP_SetEquipSlot_Hook,
 			std::addressof(m_TESObjectWEAP_SetEquipSlot_o));
@@ -655,6 +689,45 @@ namespace SDS
 		return true;
 	}
 
+	void EngineExtensions::Patch_WeapTypeToNodeNameArrayInit()
+	{
+		const auto func = [&](std::uintptr_t a_offset, std::uintptr_t a_callAddr) {
+			struct Assembly : ::JITASM::JITASM
+			{
+				Assembly(
+					std::uintptr_t a_targetAddr,
+					std::uintptr_t a_callAddr) :
+					::JITASM::JITASM(ISKSE::GetLocalTrampoline())
+				{
+					Xbyak::Label callLabel;
+					Xbyak::Label retnLabel;
+
+					call(ptr[rip + callLabel]);
+					mov(rdx, rax);
+					jmp(ptr[rip + retnLabel]);
+
+					L(callLabel);
+					dq(a_callAddr);
+
+					L(retnLabel);
+					dq(a_targetAddr + 0xC);
+				}
+			};
+
+			LogPatchBegin();
+			{
+				const auto addr = m_initWeapTypeToNodeArray_a.get() + a_offset;
+
+				Assembly code(addr, a_callAddr);
+				ISKSE::GetBranchTrampoline().Write5Branch(addr, code.get());
+			}
+			LogPatchEnd();
+		};
+
+		func(IAL::IsAE() ? 0xBE : 0xB1, std::uintptr_t(WeapTypeToNodeInit1_Hook));
+		func(IAL::IsAE() ? 0x106 : 0xF9, std::uintptr_t(WeapTypeToNodeInit2_Hook));
+	}
+
 	bool EngineExtensions::Unk140609D50_BShkbAnimationGraph_SetGraphVariableInt_Hook(
 		BShkbAnimationGraph* a_graph,
 		const BSFixedString& a_name,
@@ -716,6 +789,57 @@ namespace SDS
 		}
 
 		return m_Instance->m_unk140634D20_IAnimationGraphManagerHolder_SetVariableOnGraphsInt_o(a_holder, a_name, a_value);
+	}
+
+	const BSFixedString& EngineExtensions::WeapTypeToNodeInit1_Hook()
+	{
+		return m_Instance->m_controller->GetStringHolder()->m_weaponBackAxeMace;
+	}
+
+	const BSFixedString& EngineExtensions::WeapTypeToNodeInit2_Hook()
+	{
+		return m_Instance->m_controller->GetStringHolder()->m_weaponCrossbow;
+	}
+
+	static bool RemoveWeaponScabbardImpl(NiNode* a_node, const char* a_scbNodeName)
+	{
+		for (std::uint32_t i = 0; i < a_node->m_children.freeidx(); i++)
+		{
+			if (const auto& e = a_node->m_children[static_cast<std::uint16_t>(i)])
+			{
+				if (const auto p = e->m_name.__ptr())
+				{
+					if (::_stricmp(p, a_scbNodeName) == 0)
+					{
+						a_node->DetachChildAt2(i);
+						return true;
+					}
+					if (::_strnicmp(p, "FadeNode ", 9) == 0)
+					{
+						if (const auto n = e->AsNode())
+						{
+							return RemoveWeaponScabbardImpl(n, a_scbNodeName);
+						}
+						break;
+					}
+				}
+			}
+		}
+
+		return false;
+	}
+
+	bool EngineExtensions::RemoveWeaponScabbard_Rpl(NiNode* a_node)
+	{
+		bool result = false;
+
+		if (a_node)
+		{
+			result |= RemoveWeaponScabbardImpl(a_node, "Scb");
+			result |= RemoveWeaponScabbardImpl(a_node, "ScbLeft");
+		}
+
+		return true;
 	}
 
 	void EngineExtensions::TESObjectWEAP_SetEquipSlot_Hook(BGSEquipType* a_this, BGSEquipSlot* a_slot)
@@ -867,7 +991,7 @@ namespace SDS
 		return GetNodeByName(a_root, a_nodeName, true);
 	}
 
-	NiAVObject* EngineExtensions::GetShieldArmorSlotNode_Hook(
+	NiAVObject* EngineExtensions::GetSlotNodeDefault_Hook(
 		NiNode*              a_root,
 		const BSFixedString& a_nodeName,
 		Biped*               a_biped,
@@ -879,22 +1003,50 @@ namespace SDS
 			NiPointer<TESObjectREFR> ref;
 			if (a_biped->handle.Lookup(ref))
 			{
-				if (auto actor = ref->As<Actor>())
+				if (const auto actor = ref->As<Actor>())
 				{
-					if (actor->GetShieldBipedObject() == a_bipedSlot)
+					if (const auto form = a_biped->get_object(a_bipedSlot).item)
 					{
-						if (auto form = a_biped->get_object(a_bipedSlot).item)
+						if (actor->GetShieldBipedObject() == a_bipedSlot)
 						{
-							if (auto armor = form->As<TESObjectARMO>())
+							if (const auto armor = form->As<TESObjectARMO>())
 							{
-								if (auto str = m_Instance->m_controller->GetShieldAttachmentNodeName(actor, armor, a_is1p))
+								if (const auto str = m_Instance->m_controller->GetShieldAttachmentNodeName(actor, armor, a_is1p))
 								{
-									if (auto result = GetNodeByName(a_root, *str, true))
+									if (const auto result = GetNodeByName(a_root, *str, true))
 									{
 										return result;
 									}
 									// fall back to the node requested by the game if we find nothing
 								}
+							}
+						}
+						else if (m_Instance->m_controller->GetConfig().m_disableWeapNodeSharing)
+						{
+							switch (a_bipedSlot)
+							{
+							case BIPED_OBJECT::kTwoHandMelee:
+								if (const auto weap = form->As<TESObjectWEAP>())
+								{
+									if (weap->type() == WEAPON_TYPE::kTwoHandAxe)
+									{
+										const auto stringHolder = m_Instance->m_controller->GetStringHolder();
+
+										return GetNodeByName(a_root, stringHolder->m_weaponBackAxeMace, true);
+									}
+								}
+								break;
+							case BIPED_OBJECT::kCrossbow:
+								if (const auto weap = form->As<TESObjectWEAP>())
+								{
+									if (weap->type() == WEAPON_TYPE::kCrossbow)
+									{
+										const auto stringHolder = m_Instance->m_controller->GetStringHolder();
+
+										return GetNodeByName(a_root, stringHolder->m_weaponCrossbow, true);
+									}
+								}
+								break;
 							}
 						}
 					}
@@ -942,10 +1094,7 @@ namespace SDS
 			return nullptr;
 		}
 
-		if (!a_left ||
-		    a_is1p ||
-		    !config.m_scb ||
-		    !config.m_scbCustom)
+		if (!a_left || a_is1p)
 		{
 			if (scbLeftNode && scbLeftNode->m_parent)
 			{
@@ -1001,10 +1150,10 @@ namespace SDS
 			return nullptr;
 		}
 
-		if (actor->IsWeaponDrawn())
+		/*if (actor->IsWeaponDrawn())
 		{
 			return nullptr;
-		}
+		}*/
 
 		auto form = a_biped->objects[stl::underlying(a_bipedSlot)].item;
 		if (!form)

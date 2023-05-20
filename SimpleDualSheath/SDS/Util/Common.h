@@ -7,8 +7,8 @@ namespace SDS
 		namespace Common
 		{
 			bool IsREFRValid(const TESObjectREFR* a_refr);
-			bool CanEquipEitherHand(TESObjectWEAP* item);
-			bool IsShieldEquipped(Actor* a_actor);
+			bool CanEquipEitherHand(const TESObjectWEAP* item);
+			bool IsShieldEquipped(const Actor* a_actor);
 
 		}
 	}

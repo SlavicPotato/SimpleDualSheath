@@ -7,8 +7,8 @@ class ISKSE :
 		SKSEInterfaceFlags::kMessaging |
 			SKSEInterfaceFlags::kSerialization |
 			SKSEInterfaceFlags::kTrampoline,
-		160,
-		720>
+		180,
+		740>
 {
 public:
 	[[nodiscard]] inline constexpr static auto& GetSingleton()

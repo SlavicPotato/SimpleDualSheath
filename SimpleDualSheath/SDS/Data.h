@@ -44,8 +44,8 @@ namespace SDS
 
 			void SetStrings(std::uint32_t a_type, const char* a_nodeName, const char* a_nodeNameLeft);
 
-			[[nodiscard]] const Weapon*        Get(Actor* a_actor, TESObjectWEAP* a_weapon, bool a_left) const;
-			[[nodiscard]] const BSFixedString* GetNodeName(TESObjectWEAP* a_weapon, bool a_left) const;
+			[[nodiscard]] const Weapon*        Get(Actor* a_actor, const TESObjectWEAP* a_weapon, bool a_left) const;
+			[[nodiscard]] const BSFixedString* GetNodeName(const TESObjectWEAP* a_weapon, bool a_left) const;
 
 		private:
 			std::unique_ptr<Weapon> m_entries[10];

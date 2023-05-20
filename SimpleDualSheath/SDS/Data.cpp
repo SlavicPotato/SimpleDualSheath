@@ -20,7 +20,7 @@ namespace SDS
 			m_nodeNameLeft(
 				a_config.m_sheathNode.empty() ?
 					a_nodeNameLeft :
-                    a_config.m_sheathNode.c_str()),
+					a_config.m_sheathNode.c_str()),
 			m_flags(a_config.m_flags)
 		{
 		}
@@ -67,16 +67,16 @@ namespace SDS
 		}
 
 		auto WeaponData::Get(
-			Actor*         a_actor,
-			TESObjectWEAP* a_weapon,
-			bool           a_left) const
+			Actor*               a_actor,
+			const TESObjectWEAP* a_weapon,
+			bool                 a_left) const
 			-> const Weapon*
 		{
 			auto type = a_weapon->type();
 
 			if (stl::underlying(type) < std::size(m_entries))
 			{
-				if (auto &entry = m_entries[stl::underlying(type)])
+				if (auto& entry = m_entries[stl::underlying(type)])
 				{
 					if (a_actor == *g_thePlayer)
 					{
@@ -105,13 +105,15 @@ namespace SDS
 			return nullptr;
 		}
 
-		const BSFixedString* WeaponData::GetNodeName(TESObjectWEAP* a_weapon, bool a_left) const
+		const BSFixedString* WeaponData::GetNodeName(
+			const TESObjectWEAP* a_weapon,
+			bool                 a_left) const
 		{
 			auto type = a_weapon->type();
 
 			if (stl::underlying(type) < std::size(m_entries))
 			{
-				if (auto &entry = m_entries[stl::underlying(type)])
+				if (auto& entry = m_entries[stl::underlying(type)])
 				{
 					return std::addressof(entry->GetNodeName(a_left));
 				}

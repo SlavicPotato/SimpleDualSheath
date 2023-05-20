@@ -10,6 +10,8 @@
 #include <ext/INIConfReader.h>
 #include <ext/ITaskPool.h>
 #include <ext/ITasks.h>
+#include <ext/stl_hash.h>
+#include <ext/stl_smart_pointer.h>
 #include <ext/stl_str_helpers.h>
 #include <skse64/FormTraits.h>
 #include <skse64/GameData.h>

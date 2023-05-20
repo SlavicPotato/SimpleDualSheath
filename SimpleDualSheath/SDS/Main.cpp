@@ -11,7 +11,7 @@
 
 namespace SDS
 {
-	static std::shared_ptr<Controller>      s_controller;
+	static stl::smart_ptr<Controller>       s_controller;
 	static std::unique_ptr<PluginInterface> s_pluginInterface;
 
 	static bool s_loaded = false;
@@ -133,7 +133,12 @@ namespace SDS
 
 		if (a_flags.test(flag_t::kScabbardGet))
 		{
-			result += "ScabbardGet";
+			result += "ScabbardGet, ";
+		}
+
+		if (a_flags.test(flag_t::kRemoveWeaponScabbard))
+		{
+			result += "RemoveWeaponScabbard";
 		}
 
 		stl::rtrim(result, ", ");
@@ -164,7 +169,7 @@ namespace SDS
 			return false;
 		}
 
-		auto controller = std::make_shared<Controller>(config);
+		auto controller = stl::make_smart<Controller>(config);
 
 		auto& skse = ISKSE::GetSingleton();
 
