@@ -22,7 +22,7 @@ namespace SDS
 
 	std::uint32_t PluginInterface::GetInterfaceVersion() const
 	{
-		return 1;
+		return 2;
 	}
 
 	const char* PluginInterface::GetPluginName() const
@@ -57,5 +57,10 @@ namespace SDS
 		{
 			m_controller->AddSink(a_sink);
 		}
+	}
+
+	bool PluginInterface::IsWeaponNodeSharingDisabled() const
+	{
+		return m_controller->GetConfig().m_disableWeapNodeSharing;
 	}
 }

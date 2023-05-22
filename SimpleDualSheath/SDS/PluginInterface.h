@@ -25,6 +25,7 @@ namespace SDS
 
 		virtual bool GetShieldOnBackEnabled(Actor* a_actor) const;
 		virtual void RegisterForPlayerShieldOnBackEvent(::Events::EventSink<SDSPlayerShieldOnBackSwitchEvent>* a_sink);
+		virtual bool IsWeaponNodeSharingDisabled() const;
 
 	private:
 		const stl::smart_ptr<Controller> m_controller;
